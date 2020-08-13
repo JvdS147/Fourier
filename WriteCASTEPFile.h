@@ -67,6 +67,7 @@ private:
     std::string base_name_;
     CrystalStructure crystal_structure_;
     double cut_off_energy_;
+    bool dummy_; // To test if I can check in on GitHub
 };
 
 #endif // WRITECASTEPFILE_H
