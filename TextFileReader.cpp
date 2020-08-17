@@ -75,6 +75,7 @@ bool TextFileReader::get_next_line( std::string & line )
     {
         if ( ! getline( input_file_, line_ ) )
             return false;
+        // remove \r
         line_ = remove( line_, '\r');
         ++line_number_;
         // Skip comments

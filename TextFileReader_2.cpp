@@ -54,6 +54,7 @@ void TextFileReader_2::read_file( const FileName & file_name )
             input_file.close();
             return;
         }
+        // remove \r
         line = remove( line, '\r');
         lines_.push_back( line );
     }
