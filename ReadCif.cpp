@@ -446,7 +446,6 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
     Angle alpha;
     Angle beta;
     Angle gamma;
-    bool is_keyword;
     std::vector< std::string > words;
     while ( text_file_reader.get_next_line( words ) )
     {

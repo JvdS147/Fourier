@@ -167,6 +167,8 @@ int SymmetryOperator::rotation_part_type() const
         case  2 : return 6;
         case  3 : return 1;
     }
+    throw std::runtime_error( "SymmetryOperator::rotation_part_type(): Error." );
+
 }
 
 // ********************************************************************************
