@@ -218,11 +218,11 @@ char FileName::slash_character() const
 void FileName::set_slash_character( const char slash_character )
 {
     if ( slash_character == '/' )
-        slash_character_ == "/";
+        slash_character_ = "/";
     else if ( slash_character == '\\' )
-        slash_character_ == "\\";
+        slash_character_ = "\\";
     else
-        throw std::runtime_error( "FileName::set_slash_character(): slash character ust be / or \\." );
+        throw std::runtime_error( "FileName::set_slash_character(): slash character must be / or \\." );
 }
 
 // ********************************************************************************
