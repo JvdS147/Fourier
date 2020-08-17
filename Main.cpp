@@ -178,7 +178,6 @@ struct SimulatedPowderPatternCrystalStructure
 // Add Marcus' cell deformation measure.
 // Number of molecules for hemihydrate must be 1 API plus 1/2 H2O
 // Could now add CrystalStructure::CrystalStructure( const FileName & )
-// Convert AMS_List_File to FileList
 // FileList::save()
 // A "DoubleChecked" class: check that adding two numbers changes the result (i.e. check if one is too small to be added to the other),
 //    a bool to keep track whether the value has been initialised. Function to convert everything smaller than e.g. 1E-6 to 0.0.
@@ -1520,6 +1519,66 @@ int main( int argc, char** argv )
         powder_pattern.save_xye( append_to_file_name( input_file_name, "_NOBKGR" ), true );
     MACRO_END_GAME
 
+    try // Print molecular weight for chemical formula.
+    {
+        ChemicalFormula chemical_formula( "C29H28N2O5S" );
+        std::cout << chemical_formula.to_string( true, true ) << std::endl;
+        std::cout << chemical_formula.to_string( false, false ) << std::endl;
+     //   std::cout << "Total number of atoms = " << tot_atoms << std::endl;
+        std::cout << double2string( chemical_formula.solid_state_volume() ) << " A3" << std::endl;
+        std::cout << double2string( chemical_formula.molecular_weight() ) << " g/mol" << std::endl;
+    MACRO_END_GAME
+
+    try // Generate a powder pattern based on a list of d-spacings and intensities
+    {
+        // We need a dummy crystal stucture.
+        CrystalStructure crystal_structure;
+        crystal_structure.apply_space_group_symmetry();
+        PowderPatternCalculator powder_pattern_calculator( crystal_structure );
+        powder_pattern_calculator.set_two_theta_start( Angle::from_degrees( 0.0 ) );
+        powder_pattern_calculator.set_two_theta_end( Angle::from_degrees( 47.0 ) );
+        powder_pattern_calculator.set_two_theta_step( Angle::from_degrees( 0.02 ) );
+        PowderPattern powder_pattern;
+        double FWHM = 0.5;
+        double lambda = 1.54056;
+        std::vector< double > peak_positions;
+        std::vector< double > F2_values;
+        std::vector< double > FWHM_values;
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 9.23 ) ).value_in_degrees() ); F2_values.push_back(   500.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 7.51 ) ).value_in_degrees() ); F2_values.push_back(   500.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 6.31 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 5.80 ) ).value_in_degrees() ); F2_values.push_back(  2000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 5.44 ) ).value_in_degrees() ); F2_values.push_back(  1000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 5.22 ) ).value_in_degrees() ); F2_values.push_back(  4000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 4.91 ) ).value_in_degrees() ); F2_values.push_back(   500.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 4.55 ) ).value_in_degrees() ); F2_values.push_back( 10000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 4.31 ) ).value_in_degrees() ); F2_values.push_back(  4000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 4.13 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 3.99 ) ).value_in_degrees() ); F2_values.push_back(  9000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 3.78 ) ).value_in_degrees() ); F2_values.push_back(  2000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 3.63 ) ).value_in_degrees() ); F2_values.push_back( 10000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 3.46 ) ).value_in_degrees() ); F2_values.push_back(  1000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 3.24 ) ).value_in_degrees() ); F2_values.push_back(  4000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 3.17 ) ).value_in_degrees() ); F2_values.push_back(  5000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 3.04 ) ).value_in_degrees() ); F2_values.push_back(  1000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.93 ) ).value_in_degrees() ); F2_values.push_back(  4000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.87 ) ).value_in_degrees() ); F2_values.push_back(  5000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.78 ) ).value_in_degrees() ); F2_values.push_back(  4000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.72 ) ).value_in_degrees() ); F2_values.push_back(  5000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.69 ) ).value_in_degrees() ); F2_values.push_back(  1000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.58 ) ).value_in_degrees() ); F2_values.push_back(  2000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.46 ) ).value_in_degrees() ); F2_values.push_back(  8000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.44 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.36 ) ).value_in_degrees() ); F2_values.push_back(  1000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.31 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.25 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.12 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.06 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
+        peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 1.99 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
+        powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, powder_pattern );
+        powder_pattern.save_xye( FileName( "/Volumes/Staff/jvds/AMS_ModelSystems/EthylenediamineTartrate/powder_pattern.xye" ), false );
+    MACRO_END_GAME
+
     try // Find voids for FileList.txt.
     {
         MACRO_ONE_FILELISTNAME_AS_ARGUMENT
@@ -1587,7 +1646,7 @@ int main( int argc, char** argv )
 
         if ( iStart == nfiles )
         {
-            text_file_writer.write_line( "There are no voids greater than 20 Å3/Z." );
+            text_file_writer.write_line( "There are no voids greater than 20 A3/Z." );
         }
         else
         {
@@ -1601,7 +1660,7 @@ int main( int argc, char** argv )
                 text_file_writer.write( size_t2string( sorted_map[iStart] + 1 ) );
                 text_file_writer.write( " contains voids amounting to " );
                 text_file_writer.write( double2string_2( voids_volumes_per_Z[sorted_map[iStart]], 0 ) );
-                text_file_writer.write( " Å3/Z." );
+                text_file_writer.write( " A3/Z." );
             }
             else
             {
@@ -1629,6 +1688,30 @@ int main( int argc, char** argv )
             text_file_writer.write( " Of interest are voids that are greater than about 20 Å3/Z: 21.5 Å3/Z suffices to store a water molecule (at least in terms of volume), a chloride ion is about 25 Å3/Z." );
             text_file_writer.write_line( " Voids between 15 and 20 Å3/Z are quite common, but voids over 25 Å3/Z are rare." );
         }
+    MACRO_END_GAME
+
+    // Calculate powder diffraction pattern.
+    try
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        crystal_structure.apply_space_group_symmetry();
+        Angle two_theta_start( 3.0, Angle::DEGREES );
+        Angle two_theta_end(  35.0, Angle::DEGREES );
+        Angle two_theta_step( 0.01, Angle::DEGREES );
+        double FWHM( 0.1 );
+        PowderPattern powder_pattern;
+        PowderPatternCalculator powder_pattern_calculator( crystal_structure );
+        powder_pattern_calculator.set_wavelength( 1.54056 );
+        powder_pattern_calculator.set_two_theta_start( two_theta_start );
+        powder_pattern_calculator.set_two_theta_end( two_theta_end );
+        powder_pattern_calculator.set_two_theta_step( two_theta_step );
+        powder_pattern_calculator.set_FWHM( FWHM );
+        
+        // ### PREFERRED ORIENTATION ###
+      //  powder_pattern_calculator.set_preferred_orientation( MillerIndices( 0, 0, 1 ), 1.0 );
+        
+        powder_pattern_calculator.calculate( powder_pattern );
+        powder_pattern.save_xye( replace_extension( input_file_name, "xye" ), false );
     MACRO_END_GAME
 
     // Find voids.
@@ -1716,29 +1799,117 @@ int main( int argc, char** argv )
         std::cout << double2string( chemical_formula.molecular_weight() ) << " g/mol" << std::endl;
     MACRO_END_GAME
 
-    try // Fake powder pattern consisting of two peaks..
+    try // Fake powder pattern consisting of two peaks.
     {
+        TextFileWriter text_file_writer( FileName( "/Volumes/Staff/jvds/AMS_ModelSystems/EthylenediamineTartrate/powder_pattern.txt" ) );
         // We need a dummy crystal stucture.
         CrystalStructure crystal_structure;
         crystal_structure.apply_space_group_symmetry();
         PowderPatternCalculator powder_pattern_calculator( crystal_structure );
         powder_pattern_calculator.set_two_theta_start( Angle::from_degrees( 0.0 ) );
-        powder_pattern_calculator.set_two_theta_end( Angle::from_degrees( 1000.0 ) );
+        powder_pattern_calculator.set_two_theta_end( Angle::from_degrees( 50.0 ) );
         powder_pattern_calculator.set_two_theta_step( Angle::from_degrees( 0.01 ) );
-        powder_pattern_calculator.set_FWHM( 0.1 );
-        PowderPattern powder_pattern;
-        powder_pattern_calculator.calculate_for_testing( powder_pattern );
-    //    powder_pattern.save_xye( FileName( "C:\\Users\\jacco\\Documents\\TwoPeaks.xye" ), false );
+        PowderPattern reference_powder_pattern;
+        {
+        std::vector< double > peak_positions;
+        std::vector< double > F2_values;
+        std::vector< double > FWHM_values;
+        peak_positions.push_back( 10.0 );
+        F2_values.push_back( 100.0 );
+        FWHM_values.push_back( 0.1 );
+        peak_positions.push_back( 20.0 );
+        F2_values.push_back( 10.0 );
+        FWHM_values.push_back( 0.1 );
+        powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, reference_powder_pattern );
+        }
         for ( size_t i( 0 ); i != 1000; ++i )
         {
-            // Because powder patterns are always positive, returns a value between 0.0 and 1.0
-            // Assumes uniform 2theta step size
-            double normalised_weighted_cross_correlation( const PowderPattern & lhs, const PowderPattern & rhs, Angle l = Angle( 3.0, Angle::DEGREES ) );
-
+            std::vector< double > peak_positions;
+            std::vector< double > F2_values;
+            std::vector< double > FWHM_values;
+            peak_positions.push_back( 10.0 + ( i * powder_pattern_calculator.two_theta_step().value_in_degrees() ) );
+            F2_values.push_back( 100.0 );
+            FWHM_values.push_back( 0.15 );
+            peak_positions.push_back( 20.0 - ( i * powder_pattern_calculator.two_theta_step().value_in_degrees() ) );
+            F2_values.push_back( 10.0 );
+            FWHM_values.push_back( 0.15 );
+            PowderPattern powder_pattern;
+            powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, powder_pattern );
+            double nwcc = normalised_weighted_cross_correlation( reference_powder_pattern, powder_pattern, Angle::from_degrees( 3.0 ) );
             // The first pattern is supposed to be the experimental pattern, and its ESDs are used as "the" weights. The ESDs of the second pattern are ignored.
-            // Since the background cannot be determined from the input, it cannot be subtracted.
-            double Rwp( const PowderPattern & lhs, const PowderPattern & rhs );
+            double R_wp = Rwp( reference_powder_pattern, powder_pattern );
+            text_file_writer.write_line( size_t2string( i ) + " " + double2string( nwcc ) + " " + double2string( 1.0 - ( R_wp / 16.0 ) ) );
+        }
+//        powder_pattern.save_xye( FileName( "C:\\Data_Win\\TwoPeaks.xye" ), false );
+    MACRO_END_GAME
 
+    try // From R-centred to primitive, then find unit-cell angles close to 90 degrees.
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        Matrix3D R_to_P( 2.0/3.0, 1.0/3.0, 1.0/3.0,
+                         1.0/3.0, 2.0/3.0, 2.0/3.0,
+                             0.0,     0.0,     1.0 );
+        crystal_structure.transform( R_to_P );
+        SpaceGroup space_group = crystal_structure.space_group();
+        // In Mercury, if the space-group name and the set of symmetry operators do not match up,
+        // the space-group name takes precedence, so we have to erase it to ensure that the
+        // symmetry operators are used instead.
+        space_group.set_name( "" );
+        space_group.remove_duplicate_symmetry_operators();
+        crystal_structure.set_space_group( space_group );
+        CrystalLattice old_crystal_lattice = crystal_structure.crystal_lattice();
+        Matrix3D identity_matrix;
+        int limit = 3;
+        for ( int i1( -limit ); i1 != limit+1; ++i1 )
+        {
+        for ( int i2( -limit ); i2 != limit+1; ++i2 )
+        {
+        for ( int i3( -limit ); i3 != limit+1; ++i3 )
+        {
+            for ( int j1( -limit ); j1 != limit+1; ++j1 )
+            {
+            for ( int j2( -limit ); j2 != limit+1; ++j2 )
+            {
+            for ( int j3( -limit ); j3 != limit+1; ++j3 )
+            {
+                for ( int k1( -limit ); k1 != limit+1; ++k1 )
+                {
+                for ( int k2( -limit ); k2 != limit+1; ++k2 )
+                {
+                for ( int k3( -limit ); k3 != limit+1; ++k3 )
+                {
+                    // Make a copy
+                    CrystalLattice new_lattice( old_crystal_lattice );
+                    // Transform
+                    Matrix3D transformation_matrix( i1, i2, i3, j1, j2, j3, k1, k2, k3 );
+                    if ( ! nearly_equal( transformation_matrix.determinant(), 1.0 ) )
+                        continue;
+                    new_lattice.transform( transformation_matrix );
+                    Angle tolerance = Angle::from_degrees( 68.0 );
+                    if ( ( new_lattice.alpha() < tolerance ) || ( new_lattice.alpha() > ( Angle::angle_180_degrees() - tolerance ) ) )
+                        continue;
+                    if ( ( new_lattice.beta()  < tolerance ) || ( new_lattice.beta()  > ( Angle::angle_180_degrees() - tolerance ) ) )
+                        continue;
+                    if ( ( new_lattice.gamma() < tolerance ) || ( new_lattice.gamma() > ( Angle::angle_180_degrees() - tolerance ) ) )
+                        continue;
+                    {
+                        transformation_matrix.show();
+                        ( transformation_matrix * R_to_P ).show();
+                        new_lattice.print();
+                        Angle biggest_difference = absolute( new_lattice.alpha() - Angle::angle_90_degrees() );
+                        biggest_difference = std::max( biggest_difference, absolute( new_lattice.beta() - Angle::angle_90_degrees() ) );
+                        biggest_difference = std::max( biggest_difference, absolute( new_lattice.gamma() - Angle::angle_90_degrees() ) );
+                        std::cout << "  " << (transformation_matrix-identity_matrix).sum_of_absolute_elements() << "   biggest diff = " << biggest_difference << std::endl;
+                        std::cout << std::endl;
+                    }
+                }
+                }
+                }
+            }
+            }
+            }
+        }
+        }
         }
     MACRO_END_GAME
 
@@ -2483,30 +2654,6 @@ int main( int argc, char** argv )
         similarity_matrix.save( FileName( file_list_file_name.directory(), "SimilarityMatrix", "txt" ) );
     MACRO_END_GAME
 
-    // Calculate powder diffraction pattern.
-    try
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        crystal_structure.apply_space_group_symmetry();
-        Angle two_theta_start( 3.0, Angle::DEGREES );
-        Angle two_theta_end(  35.0, Angle::DEGREES );
-        Angle two_theta_step( 0.01, Angle::DEGREES );
-        double FWHM( 0.1 );
-        PowderPattern powder_pattern;
-        PowderPatternCalculator powder_pattern_calculator( crystal_structure );
-        powder_pattern_calculator.set_wavelength( 1.54056 );
-        powder_pattern_calculator.set_two_theta_start( two_theta_start );
-        powder_pattern_calculator.set_two_theta_end( two_theta_end );
-        powder_pattern_calculator.set_two_theta_step( two_theta_step );
-        powder_pattern_calculator.set_FWHM( FWHM );
-        
-        // ### PREFERRED ORIENTATION ###
-      //  powder_pattern_calculator.set_preferred_orientation( MillerIndices( 0, 0, 1 ), 1.0 );
-        
-        powder_pattern_calculator.calculate( powder_pattern );
-        powder_pattern.save_xye( replace_extension( input_file_name, "xye" ), false );
-    MACRO_END_GAME
-
     try // Split reflections from SHELX .hkl file into +(hkl) and -(hkl).
     {
         // We need a CrystalLattice and a space group
@@ -2852,7 +2999,7 @@ int main( int argc, char** argv )
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_asgs" ) );
     MACRO_END_GAME
 
-    try // Invert structure by multiplying all coordinates by -1.0
+    try // Invert structure by multiplying all coordinates by -1.0.
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
         Matrix3D rotation( -1.0,  0.0,  0.0,
@@ -2868,7 +3015,7 @@ int main( int argc, char** argv )
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_inverted" ) );
     MACRO_END_GAME
 
-    // Add hydrogen atom to sp2 ring carbon
+    // Add hydrogen atom to sp2 ring carbon.
     try
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -2879,13 +3026,13 @@ int main( int argc, char** argv )
         Vector3D atom_C = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_C_label ) ).position() );
         Vector3D neighbour_1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( neighbour_1_label ) ).position() );
         Vector3D neighbour_2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( neighbour_2_label ) ).position() );
-        Vector3D hydrogen_atom = add_hydrogen_atom_to_sp2_carbon( atom_C, neighbour_1, neighbour_2 );
+        Vector3D hydrogen_atom = add_hydrogen_atom_to_sp2_atom( atom_C, Element( "C" ), neighbour_1, neighbour_2 );
         crystal_structure.add_atom( Atom( Element( "H" ), crystal_structure.crystal_lattice().orthogonal_to_fractional( hydrogen_atom ), "H" + size_t2string( crystal_structure.natoms() ) ) );
         }
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_CH_added" ) );
     MACRO_END_GAME
 
-    // Correct carbon atom in aromatic ring
+    // Correct carbon atom in aromatic ring.
     try
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -2920,7 +3067,7 @@ int main( int argc, char** argv )
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_C_added" ) );
     MACRO_END_GAME
 
-    // Add hydrogen atoms to sp3 nitrogen with hydrogen bond
+    // Add hydrogen atoms to sp3 nitrogen with hydrogen bond.
     try
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -3515,14 +3662,7 @@ int main( int argc, char** argv )
         crystal_lattice.print();
     MACRO_END_GAME
 
-    try // Calculate correlation matrix.
-    {
-        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
-        CorrelationMatrix correlation_matrix = calculate_correlation_matrix( file_list );
-        correlation_matrix.save( append_to_file_name( file_list_file_name, "_correlation_matrix" ) );
-    MACRO_END_GAME
-
-    // Move group of atoms.
+   // Move group of atoms.
     try
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -3538,7 +3678,7 @@ int main( int argc, char** argv )
         // NB fractional vs orthogonal coordinates
 
         Vector3D difference_frac;
-        if ( false )
+        if ( (false) )
         {
             // Move along C3-O1 in the direction of C3.
             std::string from_atom_label( "O1" );
@@ -4669,7 +4809,7 @@ int main( int argc, char** argv )
         // Input: a FileList of FileList objects
         // The files must have a directory specified
         FileName file_list_of_file_lists_file_name;
-        if ( false )
+        if ( (false) )
         {
             if ( argc != 2 )
                 throw std::runtime_error( "Please give the name of a FileList of FileList files." );
