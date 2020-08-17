@@ -35,6 +35,13 @@ class FileName;
 #include <vector>
 
 // Reads one line at a time
+// New lines:
+// Windows       : \r\n
+// Linux         : \n
+// MacOS < 10    : \r
+// MacOS >= 10   : \n
+// C++ in principle uses (e.g. absorbs upon reading) \n
+// This class deletes all \r characters from all input.
 class TextFileReader
 {
 public:

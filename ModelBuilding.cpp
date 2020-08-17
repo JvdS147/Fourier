@@ -102,9 +102,6 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & a
     double sine_phi = H_direction * basis_vector_2;
     double cosine_phi = H_direction * basis_vector_3;
     Angle angle = ATAN2( sine_phi, cosine_phi );
-
-//    result.push_back( atom_1 + bx * basis_vector_1 + projection * angle.sine() * basis_vector_2 + projection * angle.cosine() * basis_vector_3 );
-    
     result.push_back( atom_N + bx * basis_vector_1 + projection * ( angle + Angle::from_degrees( 120.0 ) ).sine() * basis_vector_2 + projection * ( angle + Angle::from_degrees( 120.0 ) ).cosine() * basis_vector_3 );
     result.push_back( atom_N + bx * basis_vector_1 + projection * ( angle + Angle::from_degrees( 240.0 ) ).sine() * basis_vector_2 + projection * ( angle + Angle::from_degrees( 240.0 ) ).cosine() * basis_vector_3 );
     return result;
@@ -112,20 +109,27 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & a
 
 // ********************************************************************************
 
-Vector3D add_hydrogen_atom_to_sp2_carbon( const Vector3D & atom_C, const Vector3D & neighbour_1, const Vector3D & neighbour_2 )
+Vector3D add_hydrogen_atom_to_sp2_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 )
 {
-    Vector3D difference_vector_1 = neighbour_1 - atom_C;
+    Vector3D difference_vector_1 = neighbour_1 - central_atom;
     if ( difference_vector_1.length() < 0.001 )
         throw std::runtime_error( "add_hydrogen_atom_to_sp2_carbon() : atoms are too close together 1." );
     difference_vector_1.set_length( 1.0 );
-    Vector3D difference_vector_2 = neighbour_2 - atom_C;
+    Vector3D difference_vector_2 = neighbour_2 - central_atom;
     if ( difference_vector_2.length() < 0.001 )
         throw std::runtime_error( "add_hydrogen_atom_to_sp2_carbon() : atoms are too close together 2." );
     difference_vector_2.set_length( 1.0 );
     Vector3D average_vector = ( difference_vector_1 + difference_vector_2 ) / 2.0;
     average_vector *= -1.0;
-    average_vector.set_length( 1.089 );
-    return atom_C + average_vector;
+    double target_bond_length( 1.0 );
+    if ( element_central_atom == Element( "C" ) )
+        target_bond_length = 1.089;
+    else if ( element_central_atom == Element( "N" ) )
+        target_bond_length = 1.015;
+    else if ( element_central_atom == Element( "O" ) )
+        target_bond_length = 0.993;
+    average_vector.set_length( target_bond_length );
+    return central_atom + average_vector;
 }
 
 // ********************************************************************************
