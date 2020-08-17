@@ -106,6 +106,7 @@ std::string Wavelength::cif_style() const
             return result;
         }
     }
+    return "Nonsense";
     // @@ When we are here, we are in trouble.
 }
 

@@ -53,14 +53,14 @@ std::string ASCII_histogram( const double min, const double max, const double va
 
 char to_upper( const char argument )
 {
-    return ( ( argument < 'a' ) || ( argument > 'z' ) ) ? argument : char( int(argument) + int('A') - int('a') );
+    return ( ( 'z' < argument ) || ( argument < 'a' ) ) ? argument : char( int(argument) + int('A') - int('a') );
 }
 
 // ********************************************************************************
 
 char to_lower( const char argument )
 {
-    return ( ( argument < 'A' ) || ( argument > 'Z' ) ) ? argument : char( int(argument) + int('a') - int('A') );
+    return ( ( 'Z' < argument ) || ( argument < 'A' ) ) ? argument : char( int(argument) + int('a') - int('A') );
 }
 
 // ********************************************************************************
@@ -81,6 +81,27 @@ std::string to_lower( const std::string & argument )
     for ( size_t i( 0 ); i != argument.length(); ++i )
         result += to_lower( argument[i] );
     return result;
+}
+
+// ********************************************************************************
+
+bool is_upper_case_letter( const char argument )
+{
+    return ( ( 'A' <= argument ) && ( argument <= 'Z' ) );
+}
+
+// ********************************************************************************
+
+bool is_lower_case_letter( const char argument )
+{
+    return ( ( 'a' <= argument ) && ( argument <= 'z' ) );
+}
+
+// ********************************************************************************
+
+bool is_digit( const char argument )
+{
+    return ( ( '0' <= argument ) && ( argument <= '9' ) );
 }
 
 // ********************************************************************************
@@ -764,4 +785,3 @@ std::string append_backslash( const std::string & input )
 }
 
 // ********************************************************************************
-

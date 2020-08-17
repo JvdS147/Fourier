@@ -63,6 +63,12 @@ std::string to_upper( const std::string & argument );
 
 std::string to_lower( const std::string & argument );
 
+bool is_upper_case_letter( const char argument );
+
+bool is_lower_case_letter( const char argument );
+
+bool is_digit( const char argument );
+
 // Removes all occurences of char c from input string
 std::string remove( const std::string & input, const char c );
 
