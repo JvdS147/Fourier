@@ -33,10 +33,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream> // For debugging
 
+const char default_slash_character = '/';
+
 // ********************************************************************************
 
 FileName::FileName()
 {
+    slash_character_ = default_slash_character;
     set_directory( "" );
     set_file_name( "" );
     set_extension( "" );
@@ -46,6 +49,7 @@ FileName::FileName()
 
 FileName::FileName( std::string input )
 {
+    slash_character_ = default_slash_character;
     check_if_quotes_correct( input ); // @@ Has not been programmed yet
     input = strip( input );
     input = remove_delimiters( input, "\"", "\"" );
@@ -105,6 +109,7 @@ FileName::FileName( std::string input )
 
 FileName::FileName( const std::string & directory, const std::string & file_name, const std::string & extension )
 {
+    slash_character_ = default_slash_character;
     set_directory( directory );
     set_file_name( file_name );
     set_extension( extension );
@@ -153,7 +158,7 @@ void FileName::set_file_name( const std::string & file_name )
         file_name_ = file_name_.substr( 1 );
     size_t iPos = file_name_.find( "\\" );
     if ( iPos != std::string::npos )
-        throw std::runtime_error( "set_file_name(): file name contains \\: " + file_name );
+        throw std::runtime_error( "FileName::set_file_name(): file name contains \\: " + file_name );
 
     //    @@ We should check here for other things that are not allowed in file names
         
@@ -164,7 +169,7 @@ void FileName::set_file_name( const std::string & file_name )
     if ( file_name_.empty() )
         return;
     if ( file_name_.substr( file_name_.length()-1, 1 ) == "." )
-        throw std::runtime_error( "set_file_name(): file name ends in multiple dots." );
+        throw std::runtime_error( "FileName::set_file_name(): file name ends in multiple dots." );
 }
 
 // ********************************************************************************
@@ -178,7 +183,7 @@ void FileName::set_extension( const std::string & extension )
     if ( extension_.substr( 0, 1 ) == "." )
         extension_ = extension_.substr( 1 );
     if ( extension_.find( "." ) != std::string::npos )
-        throw std::runtime_error( "set_extension(): extension contains multiple dots." );
+        throw std::runtime_error( "FileName::set_extension(): extension contains multiple dots." );
 }
 
 // ********************************************************************************
@@ -199,6 +204,25 @@ bool FileName::exists() const
        return false;
     input_file.close();
     return true;
+}
+
+// ********************************************************************************
+
+char FileName::slash_character() const
+{
+    return slash_character_[0];
+}
+
+// ********************************************************************************
+
+void FileName::set_slash_character( const char slash_character )
+{
+    if ( slash_character == '/' )
+        slash_character_ == "/";
+    else if ( slash_character == '\\' )
+        slash_character_ == "\\";
+    else
+        throw std::runtime_error( "FileName::set_slash_character(): slash character ust be / or \\." );
 }
 
 // ********************************************************************************
@@ -228,7 +252,7 @@ std::string FileName::assemble_file_name() const
         result += "." + extension_;
     if ( contains_space )
         result = "\"" + result + "\"";
-    return result;
+    return correct_slashes( result );
 }
 
 // ********************************************************************************
@@ -258,3 +282,9 @@ FileName generate_unique_file_name( const FileName & file_name )
 
 // ********************************************************************************
 
+std::string FileName::correct_slashes( const std::string & input ) const
+{
+    return replace( input, "\\", slash_character_ );
+}
+
+// ********************************************************************************
