@@ -247,6 +247,7 @@ MoleculeInCrystal CrystalStructure::molecule_in_crystal( const size_t i ) const
 
 bool CrystalStructure::molecule_is_on_special_position( const size_t i ) const
 {
+    return true;
 }
 
 // ********************************************************************************
@@ -960,7 +961,7 @@ double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, co
         double occupancy = 1.0;
         nnon_H_atoms += occupancy;
         double displacement;
-        //  Cartesian displacement = (|G1 · r1 - G1 · r2| + |G2 · r1 - G2 · r2|) / 2.
+        //  Cartesian displacement = (|G1 * r1 - G1 * r2| + |G2 * r1 - G2 * r2|) / 2.
         displacement = ( (lhs.crystal_lattice().fractional_to_orthogonal( lhs.atom( i ).position() ) - lhs.crystal_lattice().fractional_to_orthogonal( rhs.atom( i ).position() )).length() +
                          (rhs.crystal_lattice().fractional_to_orthogonal( lhs.atom( i ).position() ) - rhs.crystal_lattice().fractional_to_orthogonal( rhs.atom( i ).position() )).length() ) / 2.0;
         result += occupancy * square( displacement );
@@ -1100,7 +1101,7 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
             continue;
         ++nnon_H_atoms;
         double displacement;
-        //  Cartesian displacement = (|G1 · r1 - G1 · r2| + |G2 · r1 - G2 · r2|) / 2.
+        //  Cartesian displacement = (|G1 * r1 - G1 * r2| + |G2 * r1 - G2 * r2|) / 2.
         displacement = ( ( lhs.crystal_lattice().fractional_to_orthogonal( lhs.atom( i ).position() ) - lhs.crystal_lattice().fractional_to_orthogonal( best_matches[i] ) ).length() +
                          ( rhs.crystal_lattice().fractional_to_orthogonal( lhs.atom( i ).position() ) - rhs.crystal_lattice().fractional_to_orthogonal( best_matches[i] ) ).length() ) / 2.0;
         result += square( displacement );
