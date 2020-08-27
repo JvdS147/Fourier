@@ -242,6 +242,165 @@ int main( int argc, char** argv )
         std::cout << e.what() << std::endl;
     }
 
+    // Detect pseudo-inversion symmetry
+    // Crude algorithm, only works if there are only two fragments in the asymmetric unit
+    // Assumes that the first half of the atoms is one molecule in the asymmetric unit,
+    // the second half of the atoms the second molecule
+    // The algorithm to detect floating axes works for up to and including orthorhombic, I do not know about the other space groups.
+    try
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        if ( is_odd( crystal_structure.natoms() ) )
+            throw std::runtime_error( "Z' must be 2 and number of atoms must therefore be even." );
+        CrystalStructure original_crystal_structure( crystal_structure );
+        SpaceGroup original_space_group = crystal_structure.space_group();
+        Matrix3D sum( 0.0 );
+        for ( size_t k( 0 ); k != original_space_group.nsymmetry_operators(); ++k )
+            sum += original_space_group.symmetry_operator( k ).rotation();
+        for ( size_t iSymmOp( 0 ); iSymmOp != original_space_group.nsymmetry_operators(); ++iSymmOp )
+        {
+            crystal_structure = original_crystal_structure;
+            // Split the atoms into two. Assume first half is one molecule, second half is the other.
+            // Apply each symmetry operator (including the identity) in turn to the second molecule.
+            for ( size_t i( crystal_structure.natoms() / 2 ); i != crystal_structure.natoms(); ++i )
+            {
+                Atom new_atom( crystal_structure.atom( i ) );
+                new_atom.set_position( original_space_group.symmetry_operator( iSymmOp ) * crystal_structure.atom( i ).position() );
+                if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+                    new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), original_space_group.symmetry_operator( iSymmOp ).rotation(), crystal_structure.crystal_lattice() ) );
+                crystal_structure.set_atom( i, new_atom );
+            }
+            SpaceGroup space_group = crystal_structure.space_group();
+            Vector3D com = crystal_structure.centre_of_mass();
+            std::cout << "Centre of mass = " << std::endl;
+            com.show();
+            Vector3D shift; // Floating axes are set to -(c.o.m.)
+            Vector3D translation_for_symmetry_operators; // Floating axes are set to 0.0
+            for ( size_t i( 0 ); i != 3; ++i )
+            {
+                if ( nearly_equal( sum.value( i, i ), 0.0 ) )
+                {
+                    // Not a floating axis
+                    // Round to nearest 1/24
+                    Fraction fraction = double2fraction( -com.value(i), Fraction( 1, 24 ) );
+                    shift.set_value( i, fraction.to_double() );
+                    translation_for_symmetry_operators.set_value( i, shift.value( i ) );
+                }
+                else
+                {
+                    std::cout << "Floating axis found " << Vector3D::index2string( i ) << std::endl;
+                    shift.set_value( i, -com.value(i) );
+                }
+            }
+            Matrix3D rotation( 1.0, 0.0, 0.0,
+                               0.0, 1.0, 0.0,
+                               0.0, 0.0, 1.0 );
+            SymmetryOperator symmetry_operator( rotation, translation_for_symmetry_operators ); // "x-1/4,y,z-3/4"
+            // In Mercury, if the space-group name and the set of symmetry operators do not match up,
+            // the space-group name takes precedence, so we have to erase it to ensure that the
+            // symmetry operators are used instead.
+            space_group.set_name( "" );
+            space_group.apply_similarity_transformation( symmetry_operator );
+            space_group.add_inversion_at_origin();
+            crystal_structure.set_space_group( space_group );
+            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+            {
+                Atom new_atom( crystal_structure.atom( i ) );
+                new_atom.set_position( ( rotation * crystal_structure.atom( i ).position() ) + shift );
+                if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+                    new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_structure.crystal_lattice() ) );
+                crystal_structure.set_atom( i, new_atom );
+            }
+            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse" ) );
+            for ( size_t i( crystal_structure.natoms() / 2 ); i != crystal_structure.natoms(); ++i )
+                crystal_structure.set_suppressed( i, true );
+            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse_1" ) );
+            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+                crystal_structure.set_suppressed( i, !crystal_structure.suppressed( i ) );
+            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse_2" ) );
+        }
+    MACRO_END_GAME
+
+    // Normalise hydrogen atoms.
+    try
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        normalise_X_H_bonds( crystal_structure );
+        crystal_structure.save_cif( append_to_file_name( input_file_name, "_H_norm" ) );
+    MACRO_END_GAME
+
+    try // RMSD
+    {
+        // Diflunisal 26
+        // o-Acetamidobenzamide 23
+        // Gestodene 49
+        size_t natoms( 49 );
+        TextFileReader_2 text_file_reader( FileName( "/Volumes/customer-projects/c74/p0008/PBE_NP_Gestodene.txt" ) );
+        std::vector< double > list_1;
+        for ( size_t i( 0 ); i != text_file_reader.size(); ++i )
+            list_1.push_back( string2double( text_file_reader.line( i ) ) * natoms );
+        text_file_reader.read_file( FileName( "/Volumes/customer-projects/c74/p0008/DREIDING_SC_Gestodene.txt" ) );
+        std::vector< double > list_2;
+        for ( size_t i( 0 ); i != text_file_reader.size(); ++i )
+            list_2.push_back( string2double( text_file_reader.line( i ) ) * natoms );
+        double RMSD = calculate_sample_RMSD( list_1, list_2 );
+        std::cout << "Number of atoms = " << natoms << std::endl;
+        std::cout << "RMSD = " << RMSD << ", N = " << list_1.size() << std::endl;
+    MACRO_END_GAME
+
+    try // Print chemical formula for molecule from .cif or .xyz file.
+    {
+        if ( argc == 1 )
+        {
+            char a;
+            std::cout << "Usage:" << std::endl;
+            std::cout << std::endl;
+            std::cout << "ChemicalFormula.exe <CrystalStructure.cif>" << std::endl;
+            std::cout << "ChemicalFormula.exe <Molecule.xyz>" << std::endl;
+            std::cout << std::endl;
+            std::cout << "Output: a chemical formula." << std::endl;
+            std::cin >> a;
+            return 0;
+        }
+        FileName file_name( argv[ 1 ] );
+        std::string extension = to_lower( file_name.extension() );
+        ChemicalFormula chemical_formula;
+        size_t tot_atoms( 0 );
+        if ( extension == "cif" )
+        {
+            std::cout << "Now reading cif... " + file_name.full_name() << std::endl;
+            CrystalStructure crystal_structure;
+            read_cif( file_name, crystal_structure );
+            tot_atoms = crystal_structure.natoms();
+            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+                chemical_formula.add_element( crystal_structure.atom( i ).element() );
+        }
+        else if ( extension == "xyz" )
+        {
+            std::cout << "Now reading xyz... " + file_name.full_name() << std::endl;
+            std::vector< Atom > atoms;
+            read_xyz( file_name, atoms );
+            tot_atoms = atoms.size();
+            for ( size_t i( 0 ); i != atoms.size(); ++i )
+                chemical_formula.add_element( atoms[ i ].element() );
+		}
+        std::cout << chemical_formula.to_string( true, true ) << std::endl;
+        std::cout << chemical_formula.to_string( false, false ) << std::endl;
+        std::cout << "Total number of atoms = " << tot_atoms << std::endl;
+        std::cout << double2string( chemical_formula.solid_state_volume() ) << " A3" << std::endl;
+        std::cout << double2string( chemical_formula.molecular_weight() ) << " g/mol" << std::endl;
+    MACRO_END_GAME
+
+    try // Print molecular weight for chemical formula.
+    {
+        ChemicalFormula chemical_formula( "C29H28N2O5S" );
+        std::cout << chemical_formula.to_string( true, true ) << std::endl;
+        std::cout << chemical_formula.to_string( false, false ) << std::endl;
+     //   std::cout << "Total number of atoms = " << tot_atoms << std::endl;
+        std::cout << double2string( chemical_formula.solid_state_volume() ) << " A3" << std::endl;
+        std::cout << double2string( chemical_formula.molecular_weight() ) << " g/mol" << std::endl;
+    MACRO_END_GAME
+
     try // RMSD
     {
         {
@@ -548,7 +707,7 @@ int main( int argc, char** argv )
         for ( size_t i( 0 ); i != 1; ++i )
             reflection_list.push_back( MillerIndices( rng.next_number( -100, 100 ), rng.next_number( -100, 100 ), rng.next_number( -100, 100 ) ), 1.0, 1.0, 2 );
         std::vector< MillerIndices > PO_directions;
-        if ( false )
+        if ( (false) )
         {
             for ( size_t i( 0 ); i != 3; ++i )
             {
@@ -660,85 +819,6 @@ int main( int argc, char** argv )
             }
             iLine += 10;
         }
-    MACRO_END_GAME
-
-    // Detect pseudo-inversion symmetry
-    // Crude algorithm, only works if there are only two fragments in the asymmetric unit
-    // Assumes that the first half of the atoms is one molecule in the asymmetric unit,
-    // the second half of the atoms the second molecule
-    // The algorithm to detect floating axes works for up to and including orthorhombic, I do not know about the other space groups.
-    try
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        if ( is_odd( crystal_structure.natoms() ) )
-            throw std::runtime_error( "Z' must be 2 and number of atoms must therefore be even." );
-        CrystalStructure original_crystal_structure( crystal_structure );
-        SpaceGroup original_space_group = crystal_structure.space_group();
-        Matrix3D sum( 0.0 );
-        for ( size_t k( 0 ); k != original_space_group.nsymmetry_operators(); ++k )
-            sum += original_space_group.symmetry_operator( k ).rotation();
-        for ( size_t iSymmOp( 0 ); iSymmOp != original_space_group.nsymmetry_operators(); ++iSymmOp )
-        {
-            crystal_structure = original_crystal_structure;
-            // Split the atoms into two. Assume first half is one molecule, second half is the other.
-            // Apply each symmetry operator (including the identity) in turn to the second molecule.            
-            for ( size_t i( crystal_structure.natoms() / 2 ); i != crystal_structure.natoms(); ++i )
-            {
-                Atom new_atom( crystal_structure.atom( i ) );
-                new_atom.set_position( original_space_group.symmetry_operator( iSymmOp ) * crystal_structure.atom( i ).position() );
-                if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
-                    new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), original_space_group.symmetry_operator( iSymmOp ).rotation(), crystal_structure.crystal_lattice() ) );
-                crystal_structure.set_atom( i, new_atom );
-            }
-            SpaceGroup space_group = crystal_structure.space_group();
-            Vector3D com = crystal_structure.centre_of_mass();
-            std::cout << "Centre of mass = " << std::endl;
-            com.show();
-            Vector3D shift; // Floating axes are set to -(c.o.m.)
-            Vector3D translation_for_symmetry_operators; // Floating axes are set to 0.0
-            for ( size_t i( 0 ); i != 3; ++i )
-            {
-                if ( nearly_equal( sum.value( i, i ), 0.0 ) )
-                {
-                    // Not a floating axis
-                    // Round to nearest 1/24
-                    Fraction fraction = double2fraction( -com.value(i), Fraction( 1, 24 ) );
-                    shift.set_value( i, fraction.to_double() );
-                    translation_for_symmetry_operators.set_value( i, shift.value( i ) );
-                }
-                else
-                {
-                    std::cout << "Floating axis found " << Vector3D::index2string( i ) << std::endl;
-                    shift.set_value( i, -com.value(i) );
-                }
-            }
-            Matrix3D rotation( 1.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0,
-                               0.0, 0.0, 1.0 );
-            SymmetryOperator symmetry_operator( rotation, translation_for_symmetry_operators ); // "x-1/4,y,z-3/4"
-            // In Mercury, if the space-group name and the set of symmetry operators do not match up,
-            // the space-group name takes precedence, so we have to erase it to ensure that the
-            // symmetry operators are used instead.
-            space_group.set_name( "" );
-            space_group.apply_similarity_transformation( symmetry_operator );
-            space_group.add_inversion_at_origin();
-            crystal_structure.set_space_group( space_group );
-            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-            {
-                Atom new_atom( crystal_structure.atom( i ) );
-                new_atom.set_position( ( rotation * crystal_structure.atom( i ).position() ) + shift );
-                if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
-                    new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_structure.crystal_lattice() ) );
-                crystal_structure.set_atom( i, new_atom );
-            }
-            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse" ) );
-            for ( size_t i( crystal_structure.natoms() / 2 ); i != crystal_structure.natoms(); ++i )
-                crystal_structure.set_suppressed( i, true );
-            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse_1" ) );
-            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-                crystal_structure.set_suppressed( i, !crystal_structure.suppressed( i ) );            
-            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse_2" ) );
-        }   
     MACRO_END_GAME
 
     // Transformation of the crystal structure (unit cell + atomic coordinates including ADPs + space group)
@@ -879,7 +959,7 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
-    try // Write out line number, R(, F( of TMFF file
+    try // Write out line number, R(, F( of TMFF file.
     {
         if ( argc != 2 )
         {
@@ -991,7 +1071,7 @@ int main( int argc, char** argv )
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_group_rotated" ) );
     MACRO_END_GAME
 
-    // Simulate an experimental powder diffraction pattern
+    // Simulate an experimental powder diffraction pattern.
     try
     {
         std::vector< SimulatedPowderPatternCrystalStructure > crystal_structures;
@@ -1157,7 +1237,7 @@ int main( int argc, char** argv )
         powder_pattern_1.save_xye( FileName( "W:\\c71\\p0024\\Form_I_sum.xye" ), true );
     MACRO_END_GAME
 
-    try // find_match( CrystalStructure, CrystalStructure ) crystal structure 2 (rhs) is the one that gets changed, so 1 is the target
+    try // find_match( CrystalStructure, CrystalStructure ) crystal structure 2 (rhs) is the one that gets changed, so 1 is the target.
     {
         if ( argc < 3 )
             throw std::runtime_error( "Please give the name of two .cif files." );
@@ -1270,7 +1350,7 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
-    // Add methyl hydrogen atoms
+    // Add methyl hydrogen atoms.
     try
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -1519,17 +1599,7 @@ int main( int argc, char** argv )
         powder_pattern.save_xye( append_to_file_name( input_file_name, "_NOBKGR" ), true );
     MACRO_END_GAME
 
-    try // Print molecular weight for chemical formula.
-    {
-        ChemicalFormula chemical_formula( "C29H28N2O5S" );
-        std::cout << chemical_formula.to_string( true, true ) << std::endl;
-        std::cout << chemical_formula.to_string( false, false ) << std::endl;
-     //   std::cout << "Total number of atoms = " << tot_atoms << std::endl;
-        std::cout << double2string( chemical_formula.solid_state_volume() ) << " A3" << std::endl;
-        std::cout << double2string( chemical_formula.molecular_weight() ) << " g/mol" << std::endl;
-    MACRO_END_GAME
-
-    try // Generate a powder pattern based on a list of d-spacings and intensities
+    try // Generate a powder pattern based on a list of d-spacings and intensities.
     {
         // We need a dummy crystal stucture.
         CrystalStructure crystal_structure;
@@ -1575,7 +1645,7 @@ int main( int argc, char** argv )
         peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.12 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
         peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 2.06 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
         peak_positions.push_back( 2.0 * arcsine( lambda / ( 2.0 * 1.99 ) ).value_in_degrees() ); F2_values.push_back(  3000.0 ); FWHM_values.push_back( FWHM );
-        powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, powder_pattern );
+     //   powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, powder_pattern );
         powder_pattern.save_xye( FileName( "/Volumes/Staff/jvds/AMS_ModelSystems/EthylenediamineTartrate/powder_pattern.xye" ), false );
     MACRO_END_GAME
 
@@ -1683,10 +1753,10 @@ int main( int argc, char** argv )
                         text_file_writer.write( ", "  );
                     text_file_writer.write( double2string_2( voids_volumes_per_Z[ sorted_map[i] ], 0 ) );
                 }
-                text_file_writer.write( " Å3/Z, respectively." );
+                text_file_writer.write( " A3/Z, respectively." );
             }
-            text_file_writer.write( " Of interest are voids that are greater than about 20 Å3/Z: 21.5 Å3/Z suffices to store a water molecule (at least in terms of volume), a chloride ion is about 25 Å3/Z." );
-            text_file_writer.write_line( " Voids between 15 and 20 Å3/Z are quite common, but voids over 25 Å3/Z are rare." );
+            text_file_writer.write( " Of interest are voids that are greater than about 20 A3/Z: 21.5 A3/Z suffices to store a water molecule (at least in terms of volume), a chloride ion is about 25 A3/Z." );
+            text_file_writer.write_line( " Voids between 15 and 20 A3/Z are quite common, but voids over 25 A3/Z are rare." );
         }
     MACRO_END_GAME
 
@@ -1732,14 +1802,6 @@ int main( int argc, char** argv )
         powder_pattern.save_xye( append_to_file_name( input_file_name, "_new_ESDs" ), true );
     MACRO_END_GAME
 
-    // Normalise hydrogen atoms.
-    try
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        normalise_X_H_bonds( crystal_structure );
-        crystal_structure.save_cif( append_to_file_name( input_file_name, "_H_norm" ) );
-    MACRO_END_GAME
-
     // Add OH hydrogen atom.
     try
     {
@@ -1754,49 +1816,6 @@ int main( int argc, char** argv )
         for ( size_t i( 0 ); i != nhydrogen_atoms; ++i )
             crystal_structure.add_atom( Atom( Element( "H" ), crystal_structure.crystal_lattice().orthogonal_to_fractional( hydrogen_atoms[i] ), "H" + size_t2string( crystal_structure.natoms() ) ) );
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_H_added" ) );
-    MACRO_END_GAME
-
-    try // Print chemical formula for molecule from .cif or .xyz file.
-    {
-        if ( argc == 1 )
-        {
-            char a;
-            std::cout << "Usage:" << std::endl;
-            std::cout << std::endl;
-            std::cout << "ChemicalFormula.exe <CrystalStructure.cif>" << std::endl;
-            std::cout << "ChemicalFormula.exe <Molecule.xyz>" << std::endl;
-            std::cout << std::endl;
-            std::cout << "Output: a chemical formula." << std::endl;
-            std::cin >> a;
-            return 0;
-        }
-        FileName file_name( argv[ 1 ] );
-        std::string extension = to_lower( file_name.extension() );
-        ChemicalFormula chemical_formula;
-        size_t tot_atoms( 0 );
-        if ( extension == "cif" )
-        {
-            std::cout << "Now reading cif... " + file_name.full_name() << std::endl;
-            CrystalStructure crystal_structure;
-            read_cif( file_name, crystal_structure );
-            tot_atoms = crystal_structure.natoms();
-            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-                chemical_formula.add_element( crystal_structure.atom( i ).element() );
-        }
-        else if ( extension == "xyz" )
-        {
-            std::cout << "Now reading xyz... " + file_name.full_name() << std::endl;
-            std::vector< Atom > atoms;
-            read_xyz( file_name, atoms );
-            tot_atoms = atoms.size();
-            for ( size_t i( 0 ); i != atoms.size(); ++i )
-                chemical_formula.add_element( atoms[ i ].element() );
-		}
-        std::cout << chemical_formula.to_string( true, true ) << std::endl;
-        std::cout << chemical_formula.to_string( false, false ) << std::endl;
-        std::cout << "Total number of atoms = " << tot_atoms << std::endl;
-        std::cout << double2string( chemical_formula.solid_state_volume() ) << " A3" << std::endl;
-        std::cout << double2string( chemical_formula.molecular_weight() ) << " g/mol" << std::endl;
     MACRO_END_GAME
 
     try // Fake powder pattern consisting of two peaks.
@@ -1820,7 +1839,7 @@ int main( int argc, char** argv )
         peak_positions.push_back( 20.0 );
         F2_values.push_back( 10.0 );
         FWHM_values.push_back( 0.1 );
-        powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, reference_powder_pattern );
+    //    powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, reference_powder_pattern );
         }
         for ( size_t i( 0 ); i != 1000; ++i )
         {
@@ -1834,7 +1853,7 @@ int main( int argc, char** argv )
             F2_values.push_back( 10.0 );
             FWHM_values.push_back( 0.15 );
             PowderPattern powder_pattern;
-            powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, powder_pattern );
+    //        powder_pattern_calculator.calculate_for_testing( peak_positions, F2_values, FWHM_values, powder_pattern );
             double nwcc = normalised_weighted_cross_correlation( reference_powder_pattern, powder_pattern, Angle::from_degrees( 3.0 ) );
             // The first pattern is supposed to be the experimental pattern, and its ESDs are used as "the" weights. The ESDs of the second pattern are ignored.
             double R_wp = Rwp( reference_powder_pattern, powder_pattern );
@@ -2708,8 +2727,6 @@ int main( int argc, char** argv )
             F_squared_m /= nreflections_m;
             if ( F_squared_m < 0.0 )
                 F_squared_m = 0.0;
-            Vector3D H = reciprocal_lattice_point( miller_indices_p, crystal_structure.crystal_lattice() );
-            double d = 1.0 / ( H.length() );
             if ( miller_indices_m < miller_indices_p )
                 text_file_writer.write_line( miller_indices_p.to_string() + " " + double2string( F_squared_p ) + " " + double2string( F_squared_m ) );
             else

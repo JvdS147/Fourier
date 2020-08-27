@@ -38,7 +38,7 @@ public:
     explicit CheckFoundItem( double & value ): value_(value), found_(false) {}
     CheckFoundItem( double & value, const std::string & identifier ): value_(value), found_(false),identifier_(identifier) {}
 
-    ~CheckFoundItem() { if ( ! found_ ) throw std::runtime_error( "CheckFoundItem(): item not found." ); }
+  //  ~CheckFoundItem() { if ( ! found_ ) throw std::runtime_error( "CheckFoundItem(): item not found." ); }
 
 private:
     double & value_;
@@ -47,4 +47,3 @@ private:
 };
 
 #endif // CHECKFOUNDITEM_H
-

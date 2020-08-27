@@ -46,6 +46,7 @@ void TextFileReader_2::read_file( const FileName & file_name )
     std::ifstream input_file( file_name.full_name().c_str() );
     if ( ! input_file )
        throw std::runtime_error( std::string( "TextFileReader::read_file(): Could not open file " ) + file_name.full_name() );
+    lines_.clear();
     std::string line;
     do
     {
