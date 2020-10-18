@@ -58,7 +58,7 @@ public:
     // 2theta and intensity are recalculated as averages, the ESDs are recalculated as the square root of the sum of the squares.
     void rebin( const size_t bin_size );
 
-    // returns the *nearest* 2theta value
+    // Returns the *nearest* 2theta value
     size_t find_two_theta( const Angle two_theta_value ) const;
 
     Angle two_theta( const size_t i ) const { return two_theta_values_[i]; }

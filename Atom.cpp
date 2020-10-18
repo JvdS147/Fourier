@@ -27,13 +27,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Atom.h"
 
+#include <stdexcept>
+
 // ********************************************************************************
 
 Atom::Atom( const Element & element,
             const Vector3D & position,
             const std::string & label ):
-position_(position),
 element_(element),
+position_(position),
 label_(label),
 charge_(0.0),
 ADPs_type_(NONE),
@@ -48,8 +50,8 @@ Atom::Atom( const Element & element,
             const Vector3D & position,
             const std::string & label,
             const AnisotropicDisplacementParameters & anisotropic_displacement_parameters ):
-position_(position),
 element_(element),
+position_(position),
 label_(label),
 charge_(0.0),
 ADPs_type_(ANISOTROPIC),
@@ -66,8 +68,8 @@ Atom::Atom( const Element & element,
             const std::string & label,
             const double charge,
             const AnisotropicDisplacementParameters & anisotropic_displacement_parameters ):
-position_(position),
 element_(element),
+position_(position),
 label_(label),
 charge_(charge),
 ADPs_type_(ANISOTROPIC),
@@ -87,6 +89,8 @@ AnisotropicDisplacementParameters Atom::anisotropic_displacement_parameters() co
         return AnisotropicDisplacementParameters( Uiso_ );
     if ( ADPs_type_ == ANISOTROPIC )
         return anisotropic_displacement_parameters_;
+    throw std::runtime_error( "Error." );
+
 }
 
 // ********************************************************************************
@@ -108,8 +112,10 @@ double Atom::Uiso() const
         return Uiso_;
     if ( ADPs_type_ == ANISOTROPIC )
         return anisotropic_displacement_parameters_.U_iso();
+    throw std::runtime_error( "Error." );
+
 }
-    
+
 // ********************************************************************************
 
 void Atom::set_Uiso( const double Uiso )
@@ -118,6 +124,5 @@ void Atom::set_Uiso( const double Uiso )
     anisotropic_displacement_parameters_ = AnisotropicDisplacementParameters( Uiso_ );
     ADPs_type_ = ISOTROPIC;
 }
-    
-// ********************************************************************************
 
+// ********************************************************************************

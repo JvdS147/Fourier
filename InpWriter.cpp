@@ -156,7 +156,8 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "  start_X       " + double2string( powder_pattern.two_theta_start().value_in_degrees() ) );
     text_file_writer.write_line( "  finish_X      " + double2string( powder_pattern.two_theta_end().value_in_degrees() ) );
     text_file_writer.write_line( "  x_calculation_step " + double2string( powder_pattern.average_two_theta_step().value_in_degrees() ) );
-    text_file_writer.write_line( "'  Specimen_Displacement( @, 0.0 )" );
+    text_file_writer.write_line( "'  Specimen_Displacement(@ , 0.0 )" );
+    text_file_writer.write_line( "'  Absorption(@ , 0,0 )" );
     text_file_writer.write_line( "  Zero_Error(@ , 0.0 )" );
     text_file_writer.write_line( "'Synchrotron use: LP_Factor( 90.0 )" );
     text_file_writer.write_line( "'Neutrons use: LP_Factor( 90.0 )" );
@@ -165,7 +166,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "'Graphite Monochromator, Cu radiation, use LP_Factor( 26.4 )" );
     text_file_writer.write_line( "'Quartz Monochromator, Cu radiation, use LP_Factor( 26.6 )" );
     text_file_writer.write_line( "  LP_Factor( 26.5 )" );
-    text_file_writer.write_line( "'  Variable_Divergence( @, 30.0 )" );
+    text_file_writer.write_line( "'  Variable_Divergence(@ , 30.0 )" );
     text_file_writer.write_line( "  axial_conv" );
     text_file_writer.write_line( "    filament_length @ 4.97890" );
     text_file_writer.write_line( "    sample_length @ 2.43658" );
@@ -275,7 +276,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    MVW( 0.0, 0.0, 0.0 )");
     text_file_writer.write_line( "    space_group \"" + remove( remove( crystal_structure.space_group().name(), '_' ), ' ') + "\"");
     text_file_writer.write_line( "    scale @  0.0001" );
-    text_file_writer.write_line( "'    PO(@, 1.0, , 1 0 0 )" );
+    text_file_writer.write_line( "'    PO(@ , 1.0, , 1 0 0 )" );
     text_file_writer.write_line( "    macro ref_flag" + aal + " { @ }" );
     text_file_writer.write_line( "    prm    bnonh" + aal + " 3.0" );
     text_file_writer.write_line( "    prm bh" + aal + " = 1.2 * bnonh" + aal + ";" );
@@ -331,4 +332,3 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
 }
 
 // ********************************************************************************
-

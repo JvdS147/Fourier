@@ -41,7 +41,7 @@ class ConvexPolygon
 public:
 
     // Default constructor
-//    ConvexPolygon();
+    ConvexPolygon();
     
     size_t nvertices() const { return vertices_.size(); }
     

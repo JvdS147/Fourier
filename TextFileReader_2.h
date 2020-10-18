@@ -38,6 +38,13 @@ class FileName;
 // Only suitable for small files!
 // Pretty much entirely identical in behaviour to a std::vector< std::string >
 // In keeping with C++ convention: zero-based.
+// New lines:
+// Windows       : \r\n
+// Linux         : \n
+// MacOS < 10    : \r
+// MacOS >= 10   : \n
+// C++ in principle uses (e.g. absorbs upon reading) \n
+// This class deletes all \r characters from all input.
 class TextFileReader_2
 {
 public:

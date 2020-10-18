@@ -115,7 +115,7 @@ CrystalLattice read_lattice_parameters( TextFileReader_2 & input_file )
                     {
                         try
                         {
-                            double dummy = TOPASstring2double( words[2] );
+                            /* double dummy = */ TOPASstring2double( words[2] );
                             found = true;
                         }
                         catch ( std::exception & e ) {}
@@ -125,7 +125,7 @@ CrystalLattice read_lattice_parameters( TextFileReader_2 & input_file )
                 {
                     try
                     {
-                        double dummy = TOPASstring2double( words[1] );
+                        /* double dummy = */ TOPASstring2double( words[1] );
                         found = true;
                     }
                     catch ( std::exception & e ) {}

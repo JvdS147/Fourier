@@ -41,7 +41,7 @@ class Triangle
 public:
 
     // Default constructor
-//    Triangle();
+    Triangle();
 
     // The normal to the plane.
     Vector3D n() const;

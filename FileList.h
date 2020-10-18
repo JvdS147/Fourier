@@ -99,7 +99,7 @@ private:
     void initialise_from_file_2( const FileName & file_name );
 };
 
-FileList merge( const FileList & lhs, const FileList & rhs );
+//FileList merge( const FileList & lhs, const FileList & rhs );
 
 #endif // FILELIST_H
 

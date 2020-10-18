@@ -36,11 +36,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         std::cout << "An exception was thrown" << std::endl; \
         std::cout << e.what() << std::endl; \
     } \
-    { \
-    char end_game_character_capture; \
-    std::cin >> end_game_character_capture; \
-    } \
     return 0;
+    
+//#define MACRO_END_GAME \
+//    std::cout << "Done" << std::endl; \
+//    } \
+//    catch ( std::exception & e ) \
+//    { \
+//        std::cout << "An exception was thrown" << std::endl; \
+//        std::cout << e.what() << std::endl; \
+//    } \
+//    { \
+//    char end_game_character_capture; \
+//    std::cin >> end_game_character_capture; \
+//    } \
+//    return 0;
 
 #endif // ENDGAME_H
 

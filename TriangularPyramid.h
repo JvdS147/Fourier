@@ -39,7 +39,7 @@ class TriangularPyramid
 public:
 
     // Default constructor
-//    TriangularPyramid();
+    TriangularPyramid();
     
     double volume() const;
     

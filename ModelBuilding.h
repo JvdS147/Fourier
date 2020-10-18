@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 class CrystalStructure;
+class Element;
 class Vector3D;
 
 #include "Angle.h"
@@ -38,23 +39,23 @@ class Vector3D;
 // The methyl group is attached to atom_1, away from atom_2
 // angle allows control over the rotation of the methyl group as it is attached.
 // Returns the coordinates of the three hydrogen atoms
-// everything in Cartesian coordinates
+// Everything in Cartesian coordinates
 std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3D & atom_2, const Angle angle = Angle() );
 
 // The hydrogen atoms are attached to atom_1, away from atom_2
 // angle allows control over the rotation of the hydrogen atoms as they are attached.
 // Returns the coordinates of the nhydrogens hydrogen atoms
-// everything in Cartesian coordinates
+// Everything in Cartesian coordinates
 std::vector< Vector3D > add_hydrogen_atoms( const Vector3D & atom_1, const Vector3D & atom_2, const size_t nhydrogens = 6, const Angle angle = Angle() );
 
 // Add two hydrogen atoms to an sp3 nitrogen atom, with atom_H pointing at the lone pair of the nitrogen atom
 // (the two hydrogen atoms are added "pointing away" from atom_H)
 // It is as if you add three hydrogen atoms to a methyl group, with the direction of one hydrogen atom supplied by the user.
-// Returns the coordinates of the three hydrogen atoms
-// everything in Cartesian coordinates
+// Returns the coordinates of the two hydrogen atoms
+// Everything in Cartesian coordinates
 std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & atom_N, const Vector3D & atom_2, const Vector3D & atom_H );
 
-Vector3D add_hydrogen_atom_to_sp2_carbon( const Vector3D & atom_C, const Vector3D & neighbour_1, const Vector3D & neighbour_2 );
+Vector3D add_hydrogen_atom_to_sp2_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 );
 
 void normalise_X_H_bonds( CrystalStructure & crystal_structure );
 

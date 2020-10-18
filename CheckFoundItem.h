@@ -28,6 +28,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include <string>
 #include <stdexcept>
 
 class CheckFoundItem
@@ -37,7 +38,7 @@ public:
     explicit CheckFoundItem( double & value ): value_(value), found_(false) {}
     CheckFoundItem( double & value, const std::string & identifier ): value_(value), found_(false),identifier_(identifier) {}
 
-    ~CheckFoundItem() { if ( ! found_ ) throw std::runtime_error( "CheckFoundItem(): item not found." ); }
+  //  ~CheckFoundItem() { if ( ! found_ ) throw std::runtime_error( "CheckFoundItem(): item not found." ); }
 
 private:
     double & value_;
@@ -46,4 +47,3 @@ private:
 };
 
 #endif // CHECKFOUNDITEM_H
-

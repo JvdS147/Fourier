@@ -42,6 +42,10 @@ public:
 
     ChemicalFormula() : sort_by_atomic_number_(false) {}
     
+    // There will always be ambiguity, e.g. "BI" can mean Bismut or Boron and Iodine.
+    // A solution would be to insist on writing "BI" as "B1I1", but that is unusal
+    // and the whole point of a constructor is to do the work for you.
+    // The chemical formula must be well formed, so HCl *must* be HCl, not HCL. C10C10H10 is not possible either.
     explicit ChemicalFormula( const std::string & input );
 
     void add_element( const Element element );
@@ -53,7 +57,7 @@ public:
 // in a molecule is indicated first, the number of hydrogen atoms next, and then the number of all other chemical elements subsequently, in alphabetical order of the chemical symbols. When the formula contains no carbon,
 // all the elements, including hydrogen, are listed alphabetically.
 // By sorting formulas according to the number of atoms of each element present in the formula according to these rules, with differences in earlier elements or numbers being treated as
-// more significant than differences in any later element or number—like sorting text strings into lexicographical order—it is possible to collate chemical formulas into what is known as Hill system order.
+// more significant than differences in any later element or number--like sorting text strings into lexicographical order--it is possible to collate chemical formulas into what is known as Hill system order.
 // The Hill system was first published by Edwin A. Hill of the United States Patent and Trademark Office in 1900.[3] It is the most commonly used system
 // in chemical databases and printed indexes to sort lists of compounds.[4]
 // A list of formulas in Hill system order is arranged alphabetically, as above, with single-letter elements coming before

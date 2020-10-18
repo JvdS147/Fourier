@@ -33,10 +33,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ********************************************************************************
 
+// @@ There are all sorts of special cases, e.g. C10C10H10. We do not deal with any of them.
 ChemicalFormula::ChemicalFormula( const std::string & input ) :
 sort_by_atomic_number_(false)
 {
-
+    if ( input.empty() )
+        return;
+    if ( ! is_upper_case_letter( input[0] ) )
+        throw std::runtime_error( "ChemicalFormula::ChemicalFormula(): start of new element is not an upper case letter." );
+    size_t iPos( 0 );
+    while ( iPos < input.length() )
+    {
+        // Current character is an upper case letter
+        // Find the next upper case letter
+        size_t iPos2( iPos + 1 );
+        while ( ( iPos2 < input.length() ) && ( ! is_upper_case_letter( input[iPos2] ) ) )
+            ++iPos2;
+        // We must now have C, Cc, Cdd or Ccdd, where C is upper case letter, c is lower case letter, d is digit.
+        Element element;
+        size_t count( 1 );
+        if ( ( iPos2 > ( iPos + 1 ) ) && is_lower_case_letter( input[iPos+1] ) )
+        {
+            element = Element( input.substr( iPos, 2 ) );
+            iPos += 2;
+        }
+        else
+        {
+            element = Element( input.substr( iPos, 1 ) );
+            ++iPos;
+        }
+        if ( ( iPos2 - iPos ) > 0 )
+            count = string2integer( input.substr( iPos, iPos2-iPos ) );
+        if ( contains( element ) )
+            throw std::runtime_error( "ChemicalFormula::ChemicalFormula(): element is present more than once." );
+        elements_[ element ] = count;
+        iPos = iPos2;
+    }
 }
 
 // ********************************************************************************
@@ -57,7 +89,7 @@ void ChemicalFormula::multiply( const Fraction fraction )
     {
         Fraction result = pos->second * fraction;
         if ( ! result.is_integer() )
-            throw std::runtime_error( "ChemicalFormula::multiply(): result is not an integer" );
+            throw std::runtime_error( "ChemicalFormula::multiply(): result is not an integer." );
         pos->second = result.integer_part();
     }
 }
@@ -117,9 +149,10 @@ size_t ChemicalFormula::number( const size_t i ) const
         for ( std::map< Element, size_t >::const_iterator pos( elements_.begin() ); pos != elements_.end(); ++pos )
         {
             if ( pos->first == elements[i] )
-            return pos->second;
+                return pos->second;
         }
     }
+    throw std::runtime_error( "ChemicalFormula::number( size_t ): ." );
 }
 
 // ********************************************************************************

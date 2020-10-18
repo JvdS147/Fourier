@@ -95,19 +95,27 @@ public:
     // Technically I guess it checks if the file exists and is readable.
     bool exists() const;
 
+    char slash_character() const;
+    
+    void set_slash_character( const char slash_character );
+    
 private:
 
     std::string directory_; // Always ends in backslash
     std::string file_name_; // Extension is NOT included
     std::string extension_; // Does not include dot
+    std::string slash_character_;
     
     std::string assemble_file_name() const;
+    std::string correct_slashes( const std::string & input ) const;
 };
 
 FileName replace_extension( const FileName & file_name, const std::string & new_extension );
 
 // append_to_file_name( "C:/directory/file.txt", "_2" ) => "C:/directory/file_2.txt"
 FileName append_to_file_name( const FileName & file_name, const std::string & addition );
+
+//std::string change_all_slashes_to( std::string & input,  );
 
 // Uses FileName::exists() and append_to_file_name( FileName ) to generate file names like
 // directory/file_name_0001.txt
@@ -122,4 +130,3 @@ FileName append_to_file_name( const FileName & file_name, const std::string & ad
 FileName generate_unique_file_name( const FileName & file_name );
 
 #endif // FILENAME_H
-

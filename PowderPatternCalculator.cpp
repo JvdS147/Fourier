@@ -537,4 +537,3 @@ std::set< MillerIndices > PowderPatternCalculator::calculate_equivalent_reflecti
 }
 
 // ********************************************************************************
-

@@ -376,7 +376,9 @@ void PowderPattern::read_raw( const FileName & file_name )
 //      3      2      4      3      4      3      6      4
 //      3      2      6      9      8      6      7     15
 //      9     11     21     23     24     64    188    323
-// The start is 0.4460, the step is 0.0460 and the end is 87.5240. There are 1893 points
+// The start is 0.4460, the step is 0.0460 and the end is 87.5240-0.0460. There are 1893 points
+// The 2theta end value is wrong, because the last data point is a dummy data point with a value of -1, and it is *not* counted towards the number of data points,
+// but it *is* counted towards the end 2theta value.
 void PowderPattern::read_mdi( const FileName & file_name )
 {
     *this = PowderPattern();
@@ -399,18 +401,30 @@ void PowderPattern::read_mdi( const FileName & file_name )
     Angle two_theta_step = Angle::from_degrees( string2double( words[1] ) );
     Angle two_theta_end = Angle::from_degrees( string2double( words[5] ) );
     size_t i( 0 );
+    bool we_are_done( false );
     while ( text_file_reader.get_next_line( words ) )
     {
         for ( size_t j( 0 ); j != words.size(); ++j )
         {
-            push_back( ( i * two_theta_step ) + two_theta_start, string2double( words[j] ) );
-            ++i;
+            // There is one dummy data point with value -1 after the last valid data point
+            if ( ( i == ndata_points ) && ( words[j] == "-1" ) && ( j == ( words.size() - 1 ) ) )
+            {
+                we_are_done = true;
+            }
+            else
+            {
+                if ( we_are_done )
+                    throw std::runtime_error( "PowderPattern::read_mdi(): data found after last data point." );
+                push_back( ( i * two_theta_step ) + two_theta_start, string2double( words[j] ) );
+                ++i;
+            }
         }
     }
-    // @@ There is one dummy data point with value -1 after the last valid data point
     if ( i != ndata_points )
-        std::cout << "PowderPattern::read_mdi(): Warning: the number of data points in the file disagrees with the number in the header." << std::endl;
-    std::cout << "PowderPattern::read_mdi(): two_theta_end as calculated     = " << ( (i-1) * two_theta_step ) + two_theta_start << std::endl;
+        std::cout << "PowderPattern::read_mdi(): Warning: the number of data points in the file (" + size_t2string( i ) + ") disagrees with the number in the header (" + size_t2string( ndata_points ) + ")." << std::endl;
+    else
+        std::cout << "PowderPattern::read_mdi(): the number of data points in the file (" + size_t2string( i ) + ") agrees with the number in the header (" + size_t2string( ndata_points ) + ")." << std::endl;
+    std::cout << "PowderPattern::read_mdi(): two_theta_end as calculated     = " << ( i * two_theta_step ) + two_theta_start << std::endl;
     std::cout << "PowderPattern::read_mdi(): two_theta_end as read from file = " << two_theta_end << std::endl;
 }
 

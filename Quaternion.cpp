@@ -56,6 +56,7 @@ Quaternion::Quaternion( const Matrix3D & rotation_matrix )
 
 Matrix3D Quaternion::rotation_matrix() const
 {
+    return Matrix3D();
 }
 
 // ********************************************************************************

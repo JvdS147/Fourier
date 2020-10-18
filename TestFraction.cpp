@@ -1076,7 +1076,7 @@ void test_fraction( TestSuite & test_suite )
 {
     try
     {
-    Fraction fraction = Farey( 0.5, 0 );
+    /* Fraction fraction = */ Farey( 0.5, 0 );
     test_suite.log_error( "Farey() should have thrown 01" );
     }
     catch ( std::exception & e )
