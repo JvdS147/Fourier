@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AnalyseTrajectory.h"
 #include "Angle.h"
 #include "AnisotropicDisplacementParameters.h"
+//#include "BFDH.h"
 #include "BondDetector.h"
 #include "ChebyshevBackground.h"
 #include "CheckFoundItem.h"
@@ -72,6 +73,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SimilarityAnalysis.h"
 #include "SkipBo.h"
 #include "Sort.h"
+#include "Sudoku.h"
+#include "SudokuSolver.h"
 #include "SymmetryOperator.h"
 #include "TextFileReader.h"
 #include "TextFileReader_2.h"
@@ -123,23 +126,25 @@ struct SimulatedPowderPatternCrystalStructure
 {
     SimulatedPowderPatternCrystalStructure( CrystalStructure & crystal_structure ):
     crystal_structure_(crystal_structure),
-    normalisation_(10000.0),
+    total_signal_normalisation_(10000.0),
     include_PO_(false),
     PO_direction_(MillerIndices(0,0,1)),
     PO_extent_(1.0),
     FWHM_(0.1),
     include_background_(true),
-    background_normalisation_(1000.0)
+    background_total_signal_normalisation_(1000.0)
     {}
     
+    
+    // The PO does NOT apply to the amorphous contribution
     CrystalStructure crystal_structure_;
-    double normalisation_; // This should be the integral number of counts (the total signal), not the highest peak
+    double total_signal_normalisation_;
     bool   include_PO_;
     MillerIndices PO_direction_;
     double PO_extent_;
     double FWHM_;
     bool   include_background_;
-    double background_normalisation_; // This should be the integral number of counts (the total signal), not the highest peak
+    double background_total_signal_normalisation_;
 };
 
 #define MACRO_ONE_FILELISTNAME_AS_ARGUMENT \
@@ -203,10 +208,10 @@ void add_all_torsions_in_ring( const std::vector< std::string > & ring_labels, s
     {
         std::vector< std::string > torsion;
         CyclicInteger ci( 0, ring_labels.size() - 1, i );
-        torsion.push_back( ring_labels[ci.value()] );
-        torsion.push_back( ring_labels[ci.value()] );
-        torsion.push_back( ring_labels[ci.value()] );
-        torsion.push_back( ring_labels[ci.value()] );
+        torsion.push_back( ring_labels[ci.next_value()] );
+        torsion.push_back( ring_labels[ci.next_value()] );
+        torsion.push_back( ring_labels[ci.next_value()] );
+        torsion.push_back( ring_labels[ci.next_value()] );
         torsions.push_back( torsion );
     }
 }
@@ -242,6 +247,276 @@ int main( int argc, char** argv )
         std::cout << "An exception was thrown" << std::endl;
         std::cout << e.what() << std::endl;
     }
+
+    // Simulate an experimental powder diffraction pattern
+    try
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        std::vector< SimulatedPowderPatternCrystalStructure > crystal_structures;
+//    total_signal_normalisation_(10000.0),
+//    include_PO_(false),
+//    PO_direction_(MillerIndices(0,0,1)),
+//    PO_extent_(1.0),
+//    FWHM_(0.1),
+//    include_background_(true),
+//    background_total_signal_normalisation_(1000.0)
+        SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
+        sim_XRPD_crystal_structure.background_total_signal_normalisation_ = 50000.0;
+        crystal_structures.push_back( sim_XRPD_crystal_structure );
+        double wavelength( 1.54056 );
+        double zero_point_error = 0.0;
+        Angle two_theta_start( 1.0, Angle::DEGREES );
+        Angle two_theta_end(  35.0, Angle::DEGREES );
+        Angle two_theta_step( 0.015, Angle::DEGREES );
+        PowderPattern result( two_theta_start, two_theta_end, two_theta_step );
+        for ( size_t i( 0 ); i != crystal_structures.size(); ++i )
+        {
+            crystal_structures[i].crystal_structure_.apply_space_group_symmetry();
+            std::cout << "Now calculating powder pattern... " << std::endl;
+            PowderPatternCalculator powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
+            powder_pattern_calculator.set_wavelength( wavelength );
+            powder_pattern_calculator.set_two_theta_start( two_theta_start );
+            powder_pattern_calculator.set_two_theta_end( two_theta_end );
+            powder_pattern_calculator.set_two_theta_step( two_theta_step );
+            powder_pattern_calculator.set_FWHM( crystal_structures[i].FWHM_ );
+            if ( crystal_structures[i].include_PO_ )
+                powder_pattern_calculator.set_preferred_orientation( crystal_structures[i].PO_direction_, crystal_structures[i].PO_extent_ );
+            PowderPattern powder_pattern;
+            powder_pattern_calculator.calculate( powder_pattern );
+            powder_pattern.normalise_total_signal( crystal_structures[i].total_signal_normalisation_ );
+            result += powder_pattern;
+            if ( crystal_structures[i].include_background_ )
+            {
+                PowderPatternCalculator background_powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
+                background_powder_pattern_calculator.set_wavelength( wavelength );
+                background_powder_pattern_calculator.set_two_theta_start( two_theta_start );
+                background_powder_pattern_calculator.set_two_theta_end( two_theta_end );
+                background_powder_pattern_calculator.set_two_theta_step( two_theta_step );
+                background_powder_pattern_calculator.set_FWHM( 5.0 );
+                // We never include PO for the amorphous background
+                PowderPattern powder_pattern;
+                background_powder_pattern_calculator.calculate( powder_pattern );
+                powder_pattern.normalise_total_signal( crystal_structures[i].background_total_signal_normalisation_ );
+                result += powder_pattern;
+            }
+        }
+
+      //  PowderPattern background_1;
+      //  background_1.read_xye( FileName( "W:\\GC\\Form_I_BKGR.xye" ) );
+      //  background_1.normalise( 1000.0 );
+      //  result += background_1;
+
+        result.normalise_highest_peak( 300.0 );
+        result.add_constant_background( 20.0 );
+        result.recalculate_estimated_standard_deviations();
+        result.add_Poisson_noise();
+        result.correct_zero_point_error( Angle::from_degrees( -zero_point_error ) );
+        result.save_xye( replace_extension( input_file_name, "xye" ), true );
+    MACRO_END_GAME
+
+    try // Sudoku.
+    {
+        if ( false ) // Easy
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "900428000" );
+            sudoku_string.push_back( "486000209" );
+            sudoku_string.push_back( "302090854" );
+            sudoku_string.push_back( "108000730" );
+            sudoku_string.push_back( "009374010" );
+            sudoku_string.push_back( "007850090" );
+            sudoku_string.push_back( "820000906" );
+            sudoku_string.push_back( "090006107" );
+            sudoku_string.push_back( "060189000" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            sudoku.show();
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Medium
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "090000713" );
+            sudoku_string.push_back( "000687000" );
+            sudoku_string.push_back( "720039000" );
+            sudoku_string.push_back( "060200537" );
+            sudoku_string.push_back( "952700000" );
+            sudoku_string.push_back( "000510020" );
+            sudoku_string.push_back( "109046000" );
+            sudoku_string.push_back( "000001409" );
+            sudoku_string.push_back( "405000108" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Difficult
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "090000867" );
+            sudoku_string.push_back( "000010302" );
+            sudoku_string.push_back( "603009000" );
+            sudoku_string.push_back( "040700000" );
+            sudoku_string.push_back( "000300081" );
+            sudoku_string.push_back( "020805000" );
+            sudoku_string.push_back( "908040070" );
+            sudoku_string.push_back( "004080500" );
+            sudoku_string.push_back( "006900010" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Meister 1
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "200000008" );
+            sudoku_string.push_back( "053020970" );
+            sudoku_string.push_back( "070090030" );
+            sudoku_string.push_back( "000007010" );
+            sudoku_string.push_back( "700000004" );
+            sudoku_string.push_back( "080600000" );
+            sudoku_string.push_back( "020070050" );
+            sudoku_string.push_back( "031050890" );
+            sudoku_string.push_back( "500000002" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            sudoku.show();
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Meister 2
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "010753040" );
+            sudoku_string.push_back( "070894050" );
+            sudoku_string.push_back( "400612008" );
+            sudoku_string.push_back( "007461920" );
+            sudoku_string.push_back( "094527080" );
+            sudoku_string.push_back( "201938400" );
+            sudoku_string.push_back( "100275004" );
+            sudoku_string.push_back( "020140030" );
+            sudoku_string.push_back( "040380010" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Schwer
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "006000082" );
+            sudoku_string.push_back( "100400300" );
+            sudoku_string.push_back( "003290106" );
+            sudoku_string.push_back( "089000000" );
+            sudoku_string.push_back( "054013000" );
+            sudoku_string.push_back( "000000073" );
+            sudoku_string.push_back( "260030800" );
+            sudoku_string.push_back( "000005200" );
+            sudoku_string.push_back( "000004705" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }  
+        if ( false ) // Toughest
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "800000000" );
+            sudoku_string.push_back( "003600000" );
+            sudoku_string.push_back( "070090200" );
+            sudoku_string.push_back( "050007000" );
+            sudoku_string.push_back( "000045700" );
+            sudoku_string.push_back( "000100030" );
+            sudoku_string.push_back( "001000068" );
+            sudoku_string.push_back( "008500010" );
+            sudoku_string.push_back( "090000400" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+        if ( false ) // NYT
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "080020561" );
+            sudoku_string.push_back( "000100007" );
+            sudoku_string.push_back( "000500000" );
+            sudoku_string.push_back( "050090408" );
+            sudoku_string.push_back( "007850003" );
+            sudoku_string.push_back( "090010050" );
+            sudoku_string.push_back( "204001805" );
+            sudoku_string.push_back( "060085000" );
+            sudoku_string.push_back( "000200100" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+        if ( false ) // Learn something (Empty Rectangle)
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "800006305" );
+            sudoku_string.push_back( "040000070" );
+            sudoku_string.push_back( "000000000" );
+            sudoku_string.push_back( "010038704" );
+            sudoku_string.push_back( "000104000" );
+            sudoku_string.push_back( "300070290" );
+            sudoku_string.push_back( "000003000" );
+            sudoku_string.push_back( "020000040" );
+            sudoku_string.push_back( "506800002" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+        if ( false ) // Learn something (X-Wing)
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "600090007" );
+            sudoku_string.push_back( "040007100" );
+            sudoku_string.push_back( "002800050" );
+            sudoku_string.push_back( "800000090" );
+            sudoku_string.push_back( "000070000" );
+            sudoku_string.push_back( "030000008" );
+            sudoku_string.push_back( "050002300" );
+            sudoku_string.push_back( "004500020" );
+            sudoku_string.push_back( "900030004" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+        if ( true ) // AI Escargot 6313 guesses, stack pointer = 1
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "100007090" );
+            sudoku_string.push_back( "030020008" );
+            sudoku_string.push_back( "009600500" );
+            sudoku_string.push_back( "005300900" );
+            sudoku_string.push_back( "010080002" );
+            sudoku_string.push_back( "600004000" );
+            sudoku_string.push_back( "300000010" );
+            sudoku_string.push_back( "040000007" );
+            sudoku_string.push_back( "007000300" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+    MACRO_END_GAME
+
+    try // Add class.
+    {
+        add_class( "SetOfNumbers" );
+    MACRO_END_GAME
+
+    try // BFDH.
+    {
+        
+        //calculate_BFDH( crystal_structure );
+    MACRO_END_GAME
 
     try // RMSD
     {
@@ -828,7 +1103,7 @@ int main( int argc, char** argv )
             bool Zprime_is_two( false );
             try
             {
-                size_t index = crystal_structure.atom( ring_1[0] + "_1" );
+                /*size_t index =*/ crystal_structure.atom( ring_1[0] + "_1" );
                 Zprime_is_two = true;
             }
             catch ( std::exception & e ) {}
@@ -992,71 +1267,6 @@ int main( int argc, char** argv )
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_group_rotated" ) );
     MACRO_END_GAME
 
-    // Simulate an experimental powder diffraction pattern
-    try
-    {
-        std::vector< SimulatedPowderPatternCrystalStructure > crystal_structures;
-
-
-        if ( argc != 2 )
-            throw std::runtime_error( "Please give the name of a .cif file." );
-        FileName input_file_name( argv[ 1 ] );
-        CrystalStructure crystal_structure;
-        std::cout << "Now reading cif... " + input_file_name.full_name() << std::endl;
-        read_cif( input_file_name, crystal_structure );
-
-        SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
-        crystal_structures.push_back( sim_XRPD_crystal_structure );
-
-        double wavelength( 1.54056 );
-        double zero_point_error = 0.0;
-        Angle two_theta_start( 1.0, Angle::DEGREES );
-        Angle two_theta_end(  50.0, Angle::DEGREES );
-        Angle two_theta_step( 0.015, Angle::DEGREES );
-        PowderPattern result( two_theta_start, two_theta_end, two_theta_step );
-        for ( size_t i( 0 ); i != crystal_structures.size(); ++i )
-        {
-            crystal_structures[i].crystal_structure_.apply_space_group_symmetry();
-            std::cout << "Now calculating powder pattern... " << std::endl;
-            PowderPatternCalculator powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
-            powder_pattern_calculator.set_wavelength( wavelength );
-            powder_pattern_calculator.set_two_theta_start( two_theta_start );
-            powder_pattern_calculator.set_two_theta_end( two_theta_end );
-            powder_pattern_calculator.set_two_theta_step( two_theta_step );
-            powder_pattern_calculator.set_FWHM( crystal_structures[i].FWHM_ );
-            if ( crystal_structures[i].include_PO_ )
-                powder_pattern_calculator.set_preferred_orientation( crystal_structures[i].PO_direction_, crystal_structures[i].PO_extent_ );
-            PowderPattern powder_pattern;
-            powder_pattern_calculator.calculate( powder_pattern );
-            powder_pattern.normalise( crystal_structures[i].normalisation_ );
-            result += powder_pattern;
-            if ( crystal_structures[i].include_background_ )
-            {
-                PowderPatternCalculator powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
-                powder_pattern_calculator.set_wavelength( wavelength );
-                powder_pattern_calculator.set_two_theta_start( two_theta_start );
-                powder_pattern_calculator.set_two_theta_end( two_theta_end );
-                powder_pattern_calculator.set_two_theta_step( two_theta_step );
-                powder_pattern_calculator.set_FWHM( 5.0 );
-                // We never include PO for the amorphous bckground
-                PowderPattern powder_pattern;
-                powder_pattern_calculator.calculate( powder_pattern );
-                powder_pattern.normalise( crystal_structures[i].background_normalisation_ );
-                result += powder_pattern;
-            }
-        }
-
-        PowderPattern background_1;
-        background_1.read_xye( FileName( "W:\\c71\\p0024\\\\Form_I_BKGR.xye" ) );
-        background_1.normalise( 1000.0 );
-        result += background_1;
-
-        result.add_constant_background( 20.0 );
-        result.add_Poisson_noise();
-        result.correct_zero_point_error( Angle::from_degrees( -zero_point_error ) );
-        result.save_xye( FileName( "C:\\Data_Win\\sum.xye" ), true );
-    MACRO_END_GAME
-
     try // Find unit-cell angles close to 90 degrees.
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -1140,12 +1350,12 @@ int main( int argc, char** argv )
         }
         PowderPattern background_1;
         background_1.read_xye( FileName( "W:\\c71\\p0024\\\\Form_I_BKGR.xye" ) );
-        background_1.normalise( 1000.0 );
+        background_1.normalise_highest_peak( 1000.0 );
         PowderPattern background_2;
         if ( add_second_pattern )
         {
             background_2.read_xye( FileName( "\\\\Mac\\Home\\Documents\\Data_mac\\ContractResearch\\AMS\\Loratadine\\GWO30a_BKGR.xye" ) );
-            background_2.normalise( 1000.0 );
+            background_2.normalise_highest_peak( 1000.0 );
         }
         powder_pattern_1.add_constant_background( 20.0 );
 //        powder_pattern_1 += background_1;
@@ -2366,7 +2576,7 @@ int main( int argc, char** argv )
             {
                 try
                 {
-                    size_t index = crystal_structure.atom( inversions[0][0] + "_1" );
+                    /*size_t index =*/ crystal_structure.atom( inversions[0][0] + "_1" );
                     Zprime_is_two = true;
                 }
                 catch ( std::exception & e ) {}
@@ -2375,7 +2585,7 @@ int main( int argc, char** argv )
             {
                 try
                 {
-                    size_t index = crystal_structure.atom( torsions[0][0] + "_1" );
+                    /* size_t index =*/ crystal_structure.atom( torsions[0][0] + "_1" );
                     Zprime_is_two = true;
                 }
                 catch ( std::exception & e ) {}
@@ -2561,8 +2771,6 @@ int main( int argc, char** argv )
             F_squared_m /= nreflections_m;
             if ( F_squared_m < 0.0 )
                 F_squared_m = 0.0;
-            Vector3D H = reciprocal_lattice_point( miller_indices_p, crystal_structure.crystal_lattice() );
-            double d = 1.0 / ( H.length() );
             if ( miller_indices_m < miller_indices_p )
                 text_file_writer.write_line( miller_indices_p.to_string() + " " + double2string( F_squared_p ) + " " + double2string( F_squared_m ) );
             else
@@ -3073,7 +3281,7 @@ int main( int argc, char** argv )
             {
                 try
                 {
-                    size_t index = crystal_structure.atom( rings_6[0][0] + "_1" );
+                    /*size_t index =*/ crystal_structure.atom( rings_6[0][0] + "_1" );
                     Zprime_is_two = true;
                 }
                 catch ( std::exception & e ) {}
@@ -3082,7 +3290,7 @@ int main( int argc, char** argv )
             {
                 try
                 {
-                    size_t index = crystal_structure.atom( rings_5[0][0] + "_1" );
+                    /*size_t index =*/ crystal_structure.atom( rings_5[0][0] + "_1" );
                     Zprime_is_two = true;
                 }
                 catch ( std::exception & e ) {}
@@ -3490,7 +3698,7 @@ int main( int argc, char** argv )
         generate_powder_cif.generate_R_input_file( GeneratePowderCIF::ZOOM_OVER_40 );
     MACRO_END_GAME
 
-    try // Transform unit cell, NOT the atomic coordinates
+    try // Transform unit cell, NOT the atomic coordinates.
     {
         CrystalLattice crystal_lattice( 19.94392,
                                         14.69558,
@@ -3627,7 +3835,7 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
-    try // Calculate ADPs from a set of frames (as cif files)
+    try // Calculate ADPs from a set of frames (as cif files).
     {
         MACRO_ONE_FILELISTNAME_AS_ARGUMENT
         SpaceGroup space_group; // = SpaceGroup::P21c();
@@ -3644,7 +3852,7 @@ int main( int argc, char** argv )
   //      analyse_trajectory.save_centres_of_mass();
     MACRO_END_GAME
 
-    try // Calculate all delta_AB for ADPs for all pairs of atoms to check if rigid-body approximation for TLS is valid
+    try // Calculate all delta_AB for ADPs for all pairs of atoms to check if rigid-body approximation for TLS is valid.
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
         if ( crystal_structure.natoms() == 0 )
@@ -4060,7 +4268,7 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
-    try // Renumber cif files
+    try // Renumber cif files.
     {
         MACRO_ONE_FILELISTNAME_AS_ARGUMENT
         for ( int i( file_list.size() - 1 ); i > 0; --i )
@@ -4134,12 +4342,12 @@ int main( int argc, char** argv )
 //    prm !S22  0.0
 //    prm !S23  0.0
 
-        double T11 = read_keyword( "T11", input_file );
-        double T22 = read_keyword( "T22", input_file );
-        double T33 = read_keyword( "T33", input_file );
-        double T12 = read_keyword( "T12", input_file );
-        double T13 = read_keyword( "T13", input_file );
-        double T23 = read_keyword( "T23", input_file );
+        /*double T11 =*/ read_keyword( "T11", input_file );
+        /*double T22 =*/ read_keyword( "T22", input_file );
+        /*double T33 =*/ read_keyword( "T33", input_file );
+        /*double T12 =*/ read_keyword( "T12", input_file );
+        /*double T13 =*/ read_keyword( "T13", input_file );
+        /*double T23 =*/ read_keyword( "T23", input_file );
         double L11 = read_keyword( "L11", input_file );
         double L22 = read_keyword( "L22", input_file );
         double L33 = read_keyword( "L33", input_file );
@@ -4392,7 +4600,6 @@ int main( int argc, char** argv )
             std::vector< std::string > names;
             std::vector< std::vector< std::string > > values;
             size_t i( 0 );
-            size_t j( 0 );
             std::vector< std::string > value;
 //<?xml version="1.0" encoding="latin1"?>
 //<!DOCTYPE XCD []>
@@ -5272,7 +5479,7 @@ int main( int argc, char** argv )
             powder_pattern_sum += powder_pattern;
             powder_pattern.save_xye( FileName( file_list.base_directory(), "MD_fr" + size_t2string( i, 4, '0' ), "xye" ), true );
         }
-        powder_pattern_sum.normalise();
+        powder_pattern_sum.normalise_highest_peak();
         powder_pattern_sum.recalculate_estimated_standard_deviations();
         powder_pattern_sum.save_xye( FileName( file_list.base_directory(), "MD_sum_" + size_t2string( 0, 4, '0' )+"_"+size_t2string( file_list.size(), 4, '0' ), "xye" ), true );
     MACRO_END_GAME
@@ -5637,10 +5844,10 @@ int main( int argc, char** argv )
         players.push_back( SkipBoPlayer() );
         CyclicInteger player( players.size() );
         --player;
-        while ( ! players[player.value()].finished() )
+        while ( ! players[player.next_value()].finished() )
         {
             ++player;
-            players[player.value()].play( skip_bo_game );
+            players[player.next_value()].play( skip_bo_game );
         }
     MACRO_END_GAME
 

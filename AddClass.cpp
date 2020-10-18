@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void add_class( const std::string & class_name )
 {
-    std::string directory = "C:\\Cpp";
+    std::string directory = "C:\\Users\\jacco\\Documents\\Cpp";
     if ( FileName( directory, class_name, "h" ).exists() )
         throw std::runtime_error( "add_class(): ERROR .h File exists." );
     if ( FileName( directory, class_name, "cpp" ).exists() )

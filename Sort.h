@@ -40,7 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // and the requirement that all elements in the original data structure must now be addressed as:
 // value = values[ sorted_map[i] ]; and values[ sorted_map[i] ] = value;
 
-#include "Sort.h"
 #include "Utilities.h"
 
 #include <algorithm>

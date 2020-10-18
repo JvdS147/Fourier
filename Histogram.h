@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
   There is quite a difference between a histogram for integers and a histogram for doubles.
   Maybe we should either make this class a template class or split this class into two classes.
+  Hmmm... a template class would not solve the problem that the implementation must be *different*
   
   Example:
 

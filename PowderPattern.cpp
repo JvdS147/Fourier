@@ -48,7 +48,9 @@ PowderPattern::PowderPattern() : wavelength_(1.54056)
 
 // ********************************************************************************
 
-PowderPattern::PowderPattern( const Angle two_theta_start, const Angle two_theta_end, const Angle two_theta_step ) : wavelength_(1.54056)
+PowderPattern::PowderPattern( const Angle two_theta_start, const Angle two_theta_end, const Angle two_theta_step ):
+wavelength_(1.54056),
+noise_is_available_(false)
 {
     size_t npoints = round_to_int( ( (two_theta_end-two_theta_start) / two_theta_step ) ) + 1;
     two_theta_values_.reserve( npoints );
@@ -60,7 +62,9 @@ PowderPattern::PowderPattern( const Angle two_theta_start, const Angle two_theta
 
 // ********************************************************************************
 
-PowderPattern::PowderPattern( const FileName & file_name ) : wavelength_(1.54056)
+PowderPattern::PowderPattern( const FileName & file_name ):
+wavelength_(1.54056),
+noise_is_available_(false)
 {
     read_xye( file_name );
 }
@@ -207,6 +211,27 @@ void PowderPattern::set_two_theta_end( const Angle two_theta_end ) const
 double PowderPattern::cumulative_intensity() const
 {
     return add_doubles( intensities_ );
+}
+
+// ********************************************************************************
+
+double PowderPattern::cumulative_noise() const
+{
+    return add_doubles( noise_ );
+}
+
+// ********************************************************************************
+
+double PowderPattern::cumulative_absolute_noise() const
+{
+    return add_absolute_doubles( noise_ );
+}
+
+// ********************************************************************************
+
+double PowderPattern::cumulative_squared_noise() const
+{
+    return add_squared_doubles( noise_ );
 }
 
 // ********************************************************************************
@@ -519,7 +544,7 @@ PowderPattern & PowderPattern::operator-=( const PowderPattern & rhs )
 
 // ********************************************************************************
 
-void PowderPattern::normalise( const double highest_peak )
+void PowderPattern::normalise_highest_peak( const double highest_peak )
 {
     // Find the highest intensity
     double max_intensity( 0.0 );
@@ -528,10 +553,24 @@ void PowderPattern::normalise( const double highest_peak )
         if ( max_intensity < intensities_[i] )
             max_intensity = intensities_[i];
     }
-    if ( max_intensity == 0.0 )
-        throw std::runtime_error( "PowderPattern::normalise(): maximum intensity is 0.0." );
-    // Scale to 10,000 counts
+    if ( nearly_equal( max_intensity, 0.0 ) )
+        throw std::runtime_error( "PowderPattern::normalise_highest_peak(): highest peak is 0.0." );
+    // Scale to highest_peak
     double scale( highest_peak / max_intensity );
+    for ( size_t i( 0 ); i != size(); ++i )
+        intensities_[i] *= scale;
+}
+
+// ********************************************************************************
+
+// Normalises the total signal = area under the pattern = cumulative_intensity() .
+void PowderPattern::normalise_total_signal( const double total_signal )
+{
+    double current_total_signal = cumulative_intensity();
+    if ( nearly_equal( current_total_signal, 0.0 ) )
+        throw std::runtime_error( "PowderPattern::normalise_total_signal(): total signal is 0.0." );
+    // Scale to total_signal
+    double scale( total_signal / current_total_signal );
     for ( size_t i( 0 ); i != size(); ++i )
         intensities_[i] *= scale;
 }
@@ -602,7 +641,12 @@ void PowderPattern::add_constant_background( const double background )
 void PowderPattern::add_Poisson_noise()
 {
     for ( size_t i( 0 ); i != size(); ++i )
-        intensities_[i] = Poisson_distribution( round_to_int( intensities_[i] ) );
+    {
+        double old_intensity = intensities_[i];
+        intensities_[i] = Poisson_distribution( round_to_int( old_intensity ) );
+        noise_.push_back( intensities_[i] - old_intensity );
+    }
+    noise_is_available_ = true;
 }
 
 // ********************************************************************************

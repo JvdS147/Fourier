@@ -457,7 +457,7 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
             powder_pattern.set_intensity( index, intensity );
         }
     }
-    powder_pattern.normalise();
+    powder_pattern.normalise_highest_peak();
     powder_pattern.recalculate_estimated_standard_deviations();
     powder_pattern.set_wavelength( wavelength_ );
 }
@@ -502,7 +502,7 @@ void PowderPatternCalculator::calculate_for_testing( PowderPattern & powder_patt
         powder_pattern.set_intensity( index, intensity );
     }
     }
-    powder_pattern.normalise();
+    powder_pattern.normalise_highest_peak();
     powder_pattern.recalculate_estimated_standard_deviations();
     powder_pattern.set_wavelength( wavelength_ );
 }

@@ -239,7 +239,7 @@ void CrystalStructure::remove_symmetry_related_molecules()
 MoleculeInCrystal CrystalStructure::molecule_in_crystal( const size_t i ) const
 {
     if ( i >= molecules_.size() )
-        throw std::runtime_error( "CrystalStructure::molecule_in_crystal(): i >= molecules_.size()" );
+        throw std::runtime_error( "CrystalStructure::molecule_in_crystal(): i >= molecules_.size()." );
     return molecules_[i];
 }
 
@@ -247,6 +247,7 @@ MoleculeInCrystal CrystalStructure::molecule_in_crystal( const size_t i ) const
 
 bool CrystalStructure::molecule_is_on_special_position( const size_t i ) const
 {
+    throw std::runtime_error( "CrystalStructure::molecule_is_on_special_position(): not yet implemented." );
 }
 
 // ********************************************************************************

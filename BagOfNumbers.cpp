@@ -35,66 +35,53 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 BagOfNumbers::BagOfNumbers( const int idum ):RNG_int_(idum)
 {
 }
+
 // ********************************************************************************
 
-BagOfNumbers::BagOfNumbers( const size_t nnumbers, const int idum ):RNG_int_(idum)
+BagOfNumbers::BagOfNumbers( const size_t nvalues, const int idum ):
+set_of_numbers_(nvalues),
+RNG_int_(idum)
 {
-    values_.reserve( nnumbers );
-    for ( size_t i( 0 ); i != nnumbers; ++i )
-        values_.push_back( i );
 }
 
 // ********************************************************************************
 
-void BagOfNumbers::remove( const int value )
+void BagOfNumbers::set_duplicates_policy( const SetOfNumbers::DuplicatesPolicy duplicates_policy )
 {
-    for ( size_t i(0); i != size(); ++i )
-    {
-        if ( values_[i] == value )
-        {
-            remove_position( i );
-            return;
-        }
-    }
+    set_of_numbers_.set_duplicates_policy( duplicates_policy );
 }
 
 // ********************************************************************************
 
-void BagOfNumbers::add( const int value )
+void BagOfNumbers::remove( const size_t value )
 {
-    values_.push_back( value );
+    set_of_numbers_.remove( value );
+}
+
+// ********************************************************************************
+
+void BagOfNumbers::add( const size_t value )
+{
+    set_of_numbers_.add( value );
 }
 
 // ********************************************************************************
 
 size_t BagOfNumbers::draw()
 {
-    if ( values_.empty() )
-        throw std::runtime_error( "BagOfNumbers::draw(): bag is empty." );
-    size_t iPos = RNG_int_.next_number( 0, values_.size() - 1 );
-    size_t result = values_[iPos];
-    remove_position( iPos );
+    size_t result = draw_with_replace();
+    set_of_numbers_.remove( result );
     return result;
 }
 
 // ********************************************************************************
 
-size_t BagOfNumbers::draw_with_replace()
+size_t BagOfNumbers::draw_with_replace() const
 {
-    if ( values_.empty() )
+    if ( set_of_numbers_.empty() )
         throw std::runtime_error( "BagOfNumbers::draw_with_replace(): bag is empty." );
-    size_t iPos = RNG_int_.next_number( 0, values_.size() - 1 );
-    return values_[iPos];
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::remove_position( const size_t iPos )
-{
-    if ( values_.empty() )
-        return;
-    values_[iPos] = values_[size()-1];
-    values_.pop_back();
+    size_t iPos = RNG_int_.next_number( 0, set_of_numbers_.size() - 1 );
+    return set_of_numbers_.value( iPos );
 }
 
 // ********************************************************************************

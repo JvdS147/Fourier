@@ -37,6 +37,12 @@ class Angle;
 // Adds a list of doubles trying to avoid adding very small to very large numbers
 double add_doubles( const std::vector< double > & values );
 
+// Adds a list of doubles trying to avoid adding very small to very large numbers
+double add_absolute_doubles( const std::vector< double > & values );
+
+// Adds a list of doubles trying to avoid adding very small to very large numbers
+double add_squared_doubles( const std::vector< double > & values );
+
 double calculate_average( const std::vector< double > & values );
 
 int greatest_common_divisor( const int lhs, const int rhs );

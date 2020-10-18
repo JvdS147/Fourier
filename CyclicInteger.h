@@ -52,8 +52,11 @@ public:
     // Constructor
     CyclicInteger( const int start, const int end, const int value );
 
+    // Does NOT increment value by 1.
+    int current_value() const;
+
     // Increments value by 1.
-    int value() const;
+    int next_value() const;
 
     // Returns current value + n, adjusted for cyclicity, leaves current value unchanged
     int plus_n( const int n ) const;
@@ -106,6 +109,7 @@ public:
     bool operator>=( const CyclicInteger rhs ) const { return ! ( *this < rhs ); }
     bool operator<=( const CyclicInteger rhs ) const { return ! ( rhs < *this ); }
 
+
     CyclicInteger & operator++();    // Prefix
     CyclicInteger   operator++(int); // Postfix
     CyclicInteger & operator--();    // Prefix
@@ -129,6 +133,19 @@ private:
     int adjust( const int value ) const;
 
 };
+
+inline bool operator==( const CyclicInteger lhs, const int rhs ) { return ( lhs.current_value() == rhs ); }
+inline bool operator!=( const CyclicInteger lhs, const int rhs ) { return ! ( lhs.current_value() == rhs ); }
+inline bool operator< ( const CyclicInteger lhs, const int rhs ) { return ( lhs.current_value() < rhs ); }
+inline bool operator< ( const int lhs, const CyclicInteger rhs ) { return ( lhs < rhs.current_value() ); }
+inline bool operator> ( const CyclicInteger lhs, const int rhs ) { return ( rhs < lhs ); }
+inline bool operator> ( const int lhs, const CyclicInteger rhs ) { return ( rhs < lhs ); }
+inline bool operator>=( const CyclicInteger lhs, const int rhs ) { return ! ( lhs.current_value() < rhs ); }
+inline bool operator<=( const CyclicInteger lhs, const int rhs ) { return ! ( rhs < lhs.current_value() ); }
+inline bool operator==( const int lhs, const CyclicInteger rhs ) { return ( lhs == rhs.current_value() ); }
+inline bool operator!=( const int lhs, const CyclicInteger rhs ) { return ! ( lhs == rhs ); }
+inline bool operator>=( const int lhs, const CyclicInteger rhs ) { return ! ( lhs < rhs ); }
+inline bool operator<=( const int lhs, const CyclicInteger rhs ) { return ! ( rhs < lhs ); }
 
 //inline CyclicInteger absolute( const CyclicInteger cyclic_integer ) { return CyclicInteger( cyclic_integer.start_, cyclic_integer.end_, std::abs( cyclic_integer.value_ ) ); }
 
