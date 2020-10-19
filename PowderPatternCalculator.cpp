@@ -475,7 +475,7 @@ void PowderPatternCalculator::calculate_for_testing( PowderPattern & powder_patt
     int peak_centre = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
     int index_offset = peak_centre - ((static_cast<int>(peak_points.size())-1)/2);
     double peak_intensity = 100.0;
-    for ( size_t j ( 0 ); j != peak_points.size(); ++j )
+    for ( int j ( 0 ); j != peak_points.size(); ++j )
     {
         // Calculate new index
         int index = index_offset + j;
@@ -491,7 +491,7 @@ void PowderPatternCalculator::calculate_for_testing( PowderPattern & powder_patt
     int peak_centre = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
     int index_offset = peak_centre - ((static_cast<int>(peak_points.size())-1)/2);
     double peak_intensity = 10.0;
-    for ( size_t j ( 0 ); j != peak_points.size(); ++j )
+    for ( int j ( 0 ); j != peak_points.size(); ++j )
     {
         // Calculate new index
         int index = index_offset + j;

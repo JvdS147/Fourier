@@ -486,7 +486,7 @@ void test_fraction( TestSuite & test_suite )
     Fraction rhs( 0 );
     try
     {
-    Fraction result = lhs / rhs;
+    /*Fraction result =*/ lhs / rhs;
     test_suite.log_error( "Fraction::operator/(const Fraction&) should have thrown" );
     }
     catch ( std::exception & e )
@@ -953,7 +953,7 @@ void test_fraction( TestSuite & test_suite )
     int rhs( 0 );
     try
     {
-    Fraction result = lhs / rhs;
+    /*Fraction result =*/ lhs / rhs;
     test_suite.log_error( "operator/(const Fraction&,const int) should have thrown" );
     }
     catch ( std::exception & e )
@@ -972,7 +972,7 @@ void test_fraction( TestSuite & test_suite )
     Fraction rhs( 0, 0, 1 );
     try
     {
-        Fraction result = lhs / rhs;
+        /*Fraction result =*/ lhs / rhs;
         test_suite.log_error( "operator/(const int,const Fraction&) should have thrown" );
     }
     catch ( std::exception & e )

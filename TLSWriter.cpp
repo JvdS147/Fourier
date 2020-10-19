@@ -512,12 +512,12 @@ void TLSWriter_2( const FileName & input_file_name )
     if ( ! found )
         throw std::runtime_error( "TLSWriter_2(): could not find lattice parameter a." );
     // Assume that the following lines are a, b, c, al, be and ga
-    double a;
-    double b;
-    double c;
-    double al;
-    double be;
-    double ga;
+    double a( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double b( 0.0 );
+    double c( 0.0 );
+    double al( 0.0 );
+    double be( 0.0 );
+    double ga( 0.0 );
     words = split_2( input_file.line( iLine ) );
     if ( words.size() == 2 )
     {

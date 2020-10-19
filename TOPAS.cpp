@@ -139,12 +139,12 @@ CrystalLattice read_lattice_parameters( TextFileReader_2 & input_file )
     if ( ! found )
         throw std::runtime_error( "read_lattice_parameters(): could not find lattice parameter a." );
     // Assume that the following lines are a, b, c, al, be and ga
-    double a;
-    double b;
-    double c;
-    double al;
-    double be;
-    double ga;
+    double a( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double b( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double c( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double al( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double be( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double ga( 0.0 ); // Stupid initialisation to silence compiler warnings
     found = false;
     words = split_2( input_file.line( iLine ) );
     if ( words.size() > 1 )
@@ -303,7 +303,7 @@ double TOPASstring2double( std::string input )
     // Check that the string is formatted properly
     if ( iPos != std::string::npos )
     {
-        double dummy = string2double_2( input.substr( iPos+1 ), true );
+        /*double dummy =*/ string2double_2( input.substr( iPos+1 ), true );
         input.erase( iPos );
         if ( input.size() == 0 )
             throw std::runtime_error( "TOPASstring2double(): no number before ESD :  >" + input + "<" );

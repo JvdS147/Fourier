@@ -439,10 +439,9 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
     bool found_alpha( false );
     bool found_beta( false );
     bool found_gamma( false );
-    double a;
-    
-    double b;
-    double c;
+    double a( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double b( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double c( 0.0 ); // Stupid initialisation to silence compiler warnings
     Angle alpha;
     Angle beta;
     Angle gamma;

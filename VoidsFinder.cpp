@@ -173,7 +173,7 @@ double find_voids( const CrystalStructure & crystal_structure, const double prob
 // This gives the wrong answer
 double find_voids_2( const CrystalStructure & crystal_structure )
 {
-    double probe_radius( 1.2 );
+ //   double probe_radius( 1.2 );
     // For each atom, precalculate square( VdW radius + probe_radius )
     std::vector< double > distances2;
 //    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )

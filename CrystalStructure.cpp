@@ -1201,8 +1201,8 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
             continue;
         double smallest_distance( 10000.0 );
         Vector3D best_match;
-        size_t best_symmetry_operator;
-        size_t best_shift;
+        size_t best_symmetry_operator( 0 ); // Stupid initialisation to silence compiler warnings
+        size_t best_shift( 0 ); // Stupid initialisation to silence compiler warnings
         size_t matching_index = natoms + 1;
         // Loop over atoms.
         for ( size_t j( 0 ); j != natoms; ++j )
