@@ -40,7 +40,7 @@ BagOfNumbers::BagOfNumbers( const int idum ):RNG_int_(idum)
 BagOfNumbers::BagOfNumbers( const size_t nnumbers, const int idum ):RNG_int_(idum)
 {
     values_.reserve( nnumbers );
-    for ( size_t i( 0 ); i != nnumbers; ++i )
+    for ( int i( 0 ); i != nnumbers; ++i )
         values_.push_back( i );
 }
 
@@ -48,7 +48,7 @@ BagOfNumbers::BagOfNumbers( const size_t nnumbers, const int idum ):RNG_int_(idu
 
 void BagOfNumbers::remove( const int value )
 {
-    for ( size_t i(0); i != size(); ++i )
+    for ( size_t i( 0 ); i != size(); ++i )
     {
         if ( values_[i] == value )
         {
