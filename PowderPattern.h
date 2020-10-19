@@ -64,6 +64,7 @@ public:
     Angle two_theta( const size_t i ) const { return two_theta_values_[i]; }
     double intensity( const size_t i ) const { return intensities_[i]; }
     double estimated_standard_deviation( const size_t i ) const { return estimated_standard_deviations_[i]; }
+    double noise( const size_t i ) const { return noise_[i]; }
     void set_two_theta( const size_t i, const Angle value ) { two_theta_values_[i] = value; }
     double wavelength() const { return wavelength_; }
     void set_wavelength( const double wavelength ) { wavelength_ = wavelength; }
@@ -89,6 +90,9 @@ public:
 
     // Area under the pattern
     double cumulative_intensity() const;
+    double cumulative_noise() const;
+    double cumulative_absolute_noise() const;
+    double cumulative_squared_noise() const;
 
     void read_xye( const FileName & file_name );
     void read_xrdml( const FileName & file_name );
@@ -105,9 +109,12 @@ public:
     PowderPattern & operator+=( const PowderPattern & rhs );
     PowderPattern & operator-=( const PowderPattern & rhs );
 
-    // Currently normalises the highest peak to 10,000 counts
+    // Normalises the highest peak
     // @@ Does not change the ESDs
-    void normalise( const double highest_peak = 10000 );
+    void normalise_highest_peak( const double highest_peak = 10000 );
+
+    // Normalises the total signal = area under the pattern = cumulative_intensity() .
+    void normalise_total_signal( const double total_signal = 10000 );
 
     // Simply subtracts the value from each 2theta value
     void correct_zero_point_error( const Angle two_theta_value );
@@ -124,6 +131,7 @@ public:
     // It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
     // For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
     // makes all points of the pattern behave as Gaussian.
+    // Returns the noise
     void add_Poisson_noise();
     
     // Should not be necessary. Introduced to manipulate data from a tool that extracted a powder pattern from a bitmap picture.
@@ -137,6 +145,8 @@ private:
     std::vector< Angle > two_theta_values_;
     std::vector< double > intensities_;
     std::vector< double > estimated_standard_deviations_;
+    bool noise_is_available_;
+    std::vector< double > noise_;
 };
 
 // Assumes uniform 2theta step size

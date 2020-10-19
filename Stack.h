@@ -1,5 +1,5 @@
-#ifndef BAGOFNUMBERS_H
-#define BAGOFNUMBERS_H
+#ifndef STACK_H
+#define STACK_H
 
 /* *********************************************
 Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
@@ -28,59 +28,52 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "RandomNumberGenerator.h"
-#include "SetOfNumbers.h"
-
-#include <cstddef> // For definition of size_t
+#include <stdexcept>
 #include <vector>
 
 /*
- * This class represents a bag of numbers.
- *
- * It is essentially a SetOfNumbers (and is implemented in terms of that class) with two draw() functions added.
- *
- * Numbers are not necessarily unique (configurable).
- *
- * Helpful for randomising sequences.
- *
- */
-class BagOfNumbers
+
+*/
+template <class T>
+class Stack
 {
 public:
 
-    // Default constructor, creates an empty bag,
-    explicit BagOfNumbers( const int idum );
-
-    // In keeping with C++ convention: zero-based.
-    // Fills the bag with the numbers 0, 1, ..., nnumbers-1.
-    BagOfNumbers( const size_t nvalues, const int idum  );
-
-    void set_duplicates_policy( const SetOfNumbers::DuplicatesPolicy duplicates_policy );
-
-    SetOfNumbers::DuplicatesPolicy duplicates_policy() const { return set_of_numbers_.duplicates_policy(); }
-
-    // Throws if value currently not in the bag.
-    // If multiple occurrences present, only removes one.
-    void remove( const size_t value );
-
-    // If value currently already in the bag, behaviour depends on duplicates_policy().
-    void add( const size_t value );
-
-    // Returns the number of values in the bag.
-    size_t size() const { return set_of_numbers_.size(); }
+    // Default constructor
+    Stack():sp_(0) {}
     
-    // Returns one of the numbers at random and removes it from the bag.
-    // Throws if the bag is empty.
-    size_t draw();
+    bool empty() const { return ( sp_ == 0 ); }
     
-    // Returns one of the numbers at random, it is NOT removed from the bag
-    // Throws if the bag is empty.
-    size_t draw_with_replace() const;
+    size_t stack_pointer() const { return sp_; }
+    
+    T pop()
+    {
+        if ( empty() )
+            throw std::runtime_error( "Stack::pop(): stack empty." );
+        --sp_;
+        return data_[sp_];
+    }
+    
+    T peek() const
+    {
+        if ( empty() )
+            throw std::runtime_error( "Stack::peek(): stack empty." );
+        return data_[sp_-1];
+    }
+    
+    void push( const T & value )
+    {
+        if ( sp_ < data_.size() )
+            data_[sp_] = value;
+        else
+            data_.push_back( value );
+        ++sp_;
+    }
 
 private:
-    SetOfNumbers set_of_numbers_;
-    mutable RandomNumberGenerator_integer RNG_int_;
+    std::vector< T > data_;
+    size_t sp_;
 };
 
-#endif // BAGOFNUMBERS_H
+#endif // STACK_H
 

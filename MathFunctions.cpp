@@ -51,6 +51,40 @@ double add_doubles( const std::vector< double > & values )
 
 // ********************************************************************************
 
+// @@ Not sophisticated enough, but a start.
+// Should use a better algorithm (adding pairwise, for example)
+double add_absolute_doubles( const std::vector< double > & values )
+{
+    double result( 0.0 );
+    std::vector< double > absolute_values;
+    absolute_values.reserve( values.size() );
+    for ( size_t i( 0 ); i != values.size(); ++i )
+        absolute_values.push_back( std::abs( values[ i ] ) );
+    std::vector< size_t > sorted_map = sort( absolute_values );
+    for ( size_t i( 0 ); i != sorted_map.size(); ++i )
+        result += std::abs( absolute_values[ sorted_map[i] ] );
+    return result;
+}
+
+// ********************************************************************************
+
+// @@ Not sophisticated enough, but a start.
+// Should use a better algorithm (adding pairwise, for example)
+double add_squared_doubles( const std::vector< double > & values )
+{
+    double result( 0.0 );
+    std::vector< double > squared_values;
+    squared_values.reserve( values.size() );
+    for ( size_t i( 0 ); i != values.size(); ++i )
+        squared_values.push_back( std::abs( values[ i ] ) );
+    std::vector< size_t > sorted_map = sort( squared_values );
+    for ( size_t i( 0 ); i != sorted_map.size(); ++i )
+        result += std::abs( squared_values[ sorted_map[i] ] );
+    return result;
+}
+
+// ********************************************************************************
+
 double calculate_average( const std::vector< double > & values )
 {
     if ( values.empty() )
@@ -160,7 +194,7 @@ double normal_distribution( const double mean, const double sigma )
     // Box-Muller method, we discard the second random number
     double x = sqrt( -2.0 * log( u ) ) * cos( 2.0 * CONSTANT_PI * v );
 //    y = sqrt( -2.0 * log( u ) ) * sin( 2.0 * CONSTANT_PI * v );
-    if ( x > 10000 )
+    if ( x > 10000.0 )
         std::cout << "x = " << x << ", u = " << u << ", v = " << v << std::endl;
     return mean + sigma*x;
 }

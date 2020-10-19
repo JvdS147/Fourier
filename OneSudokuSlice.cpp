@@ -25,115 +25,129 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "CyclicInteger.h"
+#include "OneSudokuSlice.h"
+#include "Utilities.h"
+
+#include <stdexcept>
+#include <iostream>
 
 // ********************************************************************************
 
-CyclicInteger::CyclicInteger()
-: value_(0)
+//OneSudokuSlice::OneSudokuSlice():
+//id_(0)
+//{
+//    for ( size_t i( 0 ); i != 9; ++i )
+//        values_.push_back( OneSudokuSquare() );
+//}
+
+// ********************************************************************************
+
+//OneSudokuSlice::OneSudokuSlice( const size_t id, const SudokuSliceType type, const std::string & one_row ):
+//id_(id),
+//type_(type)
+//{
+//    for ( size_t i( 0 ); i != 9; ++i )
+//        values_.push_back( OneSudokuSquare( string2integer( one_row.substr( i , 1 ) ) ) );
+//}
+
+// ********************************************************************************
+
+OneSudokuSlice::OneSudokuSlice( const size_t id, const SudokuSliceType type, const std::vector< OneSudokuSquare > & values ):
+id_(id),
+type_(type)
 {
-    initialise( std::numeric_limits<int>::min(), std::numeric_limits<int>::max() );
-//    adjust();
+    if ( ( values.size() != 6 ) && ( values.size() != 9 ) )
+        throw std::runtime_error( "Sudoku::Sudoku( std::vector< std::string > ): incorrect number of squares." );
+    values_ = values;
 }
 
 // ********************************************************************************
 
-CyclicInteger::CyclicInteger( const int value )
-: value_(value)
+OneSudokuSquare OneSudokuSlice::square( const size_t i ) const
 {
-    initialise( std::numeric_limits<int>::min(), std::numeric_limits<int>::max() );
-//    adjust();
+    return values_[i];
 }
 
 // ********************************************************************************
 
-CyclicInteger::CyclicInteger( const int start, const int end, const int value )
-: value_(value)
+void OneSudokuSlice::set_square( const size_t i, const OneSudokuSquare & value )
 {
-    initialise( start, end );
-    adjust();
+    values_[i] = value;
 }
 
 // ********************************************************************************
 
-int CyclicInteger::current_value() const
+bool OneSudokuSlice::solved() const
 {
-    return value_;
+    if ( size() == 6 )
+        std::cout << "OneSudokuSlice::solved(): we should never be here for size() == 6." << std::endl;
+     for ( size_t i( 0 ); i != size(); ++i )
+     {
+         if ( ! values_[i].solved() )
+            return false;
+     }
+     return true;
 }
 
 // ********************************************************************************
 
-int CyclicInteger::next_value() const
+SetOfNumbers OneSudokuSlice::collect_solved_numbers() const
 {
-    int old(value_);
-    ++value_;
-    adjust();
-    return old;
+    SetOfNumbers result;
+    for ( size_t i( 0 ); i != size(); ++i )
+    {
+        if ( values_[i].solved() )
+            result.add( values_[i].value() );
+    }
+    return result;
 }
 
 // ********************************************************************************
 
-int CyclicInteger::plus_n( const int n ) const
+SetOfNumbers OneSudokuSlice::collect_all_possible_numbers() const
 {
-    return adjust( value_ + n );
+    OneSudokuSquare merged( square( 0 ) );
+    for ( size_t i( 1 ); i != size(); ++i )
+        merged = merge( merged, square( i ) );
+    return merged.values();
 }
 
 // ********************************************************************************
 
-CyclicInteger & CyclicInteger::operator++()    // Prefix
+std::vector< size_t > OneSudokuSlice::indices_of_unsolved_squares() const
 {
-    ++value_;
-    adjust();
-    return *this;
+    std::vector< size_t > result;
+    for ( size_t i( 0 ); i != size(); ++i )
+    {
+        if ( ! values_[i].solved() )
+            result.push_back( i );
+    }
+    return result;
 }
 
 // ********************************************************************************
 
-CyclicInteger  CyclicInteger::operator++(int) // Postfix
+std::vector< size_t > OneSudokuSlice::indices_of_solved_squares() const
 {
-    CyclicInteger old( *this );
-    ++(*this);
-    return old;
+    std::vector< size_t > result;
+    for ( size_t i( 0 ); i != size(); ++i )
+    {
+        if ( values_[i].solved() )
+            result.push_back( i );
+    }
+    return result;
 }
 
 // ********************************************************************************
 
-CyclicInteger & CyclicInteger::operator--()    // Prefix
+void OneSudokuSlice::show() const
 {
-    --value_;
-    adjust();
-    return *this;
-}
-
-// ********************************************************************************
-
-CyclicInteger  CyclicInteger::operator--(int) // Postfix
-{
-    CyclicInteger old( *this );
-    --(*this);
-    return old;
-}
-
-// ********************************************************************************
-
-void CyclicInteger::initialise( const int start, const int end )
-{
-    offset_ = start;
-    range_ = end - start + 1; // @@ Error here if start=0 and end=MAXINT
-}
-
-// ********************************************************************************
-
-void CyclicInteger::adjust() const
-{
-    value_ = adjust( value_ );
-}
-
-// ********************************************************************************
-
-int CyclicInteger::adjust( const int value ) const
-{
-    return ( ( value - offset_ ) % range_ ) + offset_;
+    for ( size_t i( 0 ); i != size(); ++i )
+    {
+        values_[i].show();
+        std::cout << " | ";
+    }
+    std::cout << std::endl;
 }
 
 // ********************************************************************************

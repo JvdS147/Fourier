@@ -1,5 +1,5 @@
-#ifndef BAGOFNUMBERS_H
-#define BAGOFNUMBERS_H
+#ifndef ONESUDOKUSLICE_H
+#define ONESUDOKUSLICE_H
 
 /* *********************************************
 Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
@@ -28,59 +28,57 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "RandomNumberGenerator.h"
-#include "SetOfNumbers.h"
+#include "OneSudokuSquare.h"
 
 #include <cstddef> // For definition of size_t
 #include <vector>
+#include <string>
 
 /*
- * This class represents a bag of numbers.
- *
- * It is essentially a SetOfNumbers (and is implemented in terms of that class) with two draw() functions added.
- *
- * Numbers are not necessarily unique (configurable).
- *
- * Helpful for randomising sequences.
- *
- */
-class BagOfNumbers
+    Each square is initialised to all nine values. In other words, there is no marker for "unknown", neither is there a marker for "value is known",
+    every square simply has between 1 and 9 values.
+*/
+class OneSudokuSlice
 {
 public:
 
-    // Default constructor, creates an empty bag,
-    explicit BagOfNumbers( const int idum );
+    enum SudokuSliceType { OTHER, ROW, COLUMN, SQUARE };
 
-    // In keeping with C++ convention: zero-based.
-    // Fills the bag with the numbers 0, 1, ..., nnumbers-1.
-    BagOfNumbers( const size_t nvalues, const int idum  );
+    // Default constructor
+ //   OneSudokuSlice();
 
-    void set_duplicates_policy( const SetOfNumbers::DuplicatesPolicy duplicates_policy );
+//    OneSudokuSlice( const size_t id, const std::string & one_row );
 
-    SetOfNumbers::DuplicatesPolicy duplicates_policy() const { return set_of_numbers_.duplicates_policy(); }
-
-    // Throws if value currently not in the bag.
-    // If multiple occurrences present, only removes one.
-    void remove( const size_t value );
-
-    // If value currently already in the bag, behaviour depends on duplicates_policy().
-    void add( const size_t value );
-
-    // Returns the number of values in the bag.
-    size_t size() const { return set_of_numbers_.size(); }
+    OneSudokuSlice( const size_t id, const SudokuSliceType type, const std::vector< OneSudokuSquare > & values );
+                    
+    size_t id() const { return id_; }
     
-    // Returns one of the numbers at random and removes it from the bag.
-    // Throws if the bag is empty.
-    size_t draw();
+    SudokuSliceType type() const { return type_; }
+
+    OneSudokuSquare square( const size_t i ) const;
+
+    void set_square( const size_t i, const OneSudokuSquare & value );
+
+    size_t size() const { return values_.size(); }
     
-    // Returns one of the numbers at random, it is NOT removed from the bag
-    // Throws if the bag is empty.
-    size_t draw_with_replace() const;
+    bool solved() const;
+
+    SetOfNumbers collect_solved_numbers() const;
+    
+    // Only makes sense if size() == 6, otherwise it just returns 1 through 9
+    SetOfNumbers collect_all_possible_numbers() const;
+
+    std::vector< size_t > indices_of_unsolved_squares() const;
+
+    std::vector< size_t > indices_of_solved_squares() const;
+
+    void show() const;
 
 private:
-    SetOfNumbers set_of_numbers_;
-    mutable RandomNumberGenerator_integer RNG_int_;
+    size_t id_;
+    SudokuSliceType type_;
+    std::vector< OneSudokuSquare > values_;
 };
 
-#endif // BAGOFNUMBERS_H
+#endif // ONESUDOKUSLICE_H
 

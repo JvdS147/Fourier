@@ -185,6 +185,8 @@ Fraction operator-( const int        lhs, const Fraction & rhs );
 Fraction operator-( const Fraction & lhs, const size_t     rhs );
 Fraction operator-( const size_t     lhs, const Fraction & rhs );
 
+// @@ We need bool operator<( const Fraction & lhs, const double rhs ); etc.
+
 Fraction double2fraction( const double target, const Fraction & smallest_unit );
 
 // Finds the best approximation to a floating point value for which the

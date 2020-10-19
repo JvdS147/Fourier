@@ -25,63 +25,35 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "BagOfNumbers.h"
+#include "GenerateCombinations.h"
 
-#include <cstdlib>
-#include <stdexcept>
+#include <algorithm>
 
 // ********************************************************************************
 
-BagOfNumbers::BagOfNumbers( const int idum ):RNG_int_(idum)
+GenerateCombinations::GenerateCombinations( const std::vector< size_t > & values, const size_t k )
 {
+    another_one_is_available_ = true;
+    values_ = values;
+    k_ = k;
+    bitmask_ = std::vector< size_t >( k_, 1 ); // k leading 1's
+    bitmask_.resize( values_.size(), 0 ); // N-k trailing 0's
 }
 
 // ********************************************************************************
 
-BagOfNumbers::BagOfNumbers( const size_t nvalues, const int idum ):
-set_of_numbers_(nvalues),
-RNG_int_(idum)
+bool GenerateCombinations::next_combination( std::vector< size_t > & result ) const
 {
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::set_duplicates_policy( const SetOfNumbers::DuplicatesPolicy duplicates_policy )
-{
-    set_of_numbers_.set_duplicates_policy( duplicates_policy );
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::remove( const size_t value )
-{
-    set_of_numbers_.remove( value );
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::add( const size_t value )
-{
-    set_of_numbers_.add( value );
-}
-
-// ********************************************************************************
-
-size_t BagOfNumbers::draw()
-{
-    size_t result = draw_with_replace();
-    set_of_numbers_.remove( result );
-    return result;
-}
-
-// ********************************************************************************
-
-size_t BagOfNumbers::draw_with_replace() const
-{
-    if ( set_of_numbers_.empty() )
-        throw std::runtime_error( "BagOfNumbers::draw_with_replace(): bag is empty." );
-    size_t iPos = RNG_int_.next_number( 0, set_of_numbers_.size() - 1 );
-    return set_of_numbers_.value( iPos );
+    if ( ! another_one_is_available_ )
+        return false;
+    result.clear();
+    for ( size_t i( 0 ); i != bitmask_.size(); ++i )
+    {
+        if ( bitmask_[i] )
+            result.push_back( values_[i] );
+    }
+    another_one_is_available_ = std::prev_permutation( bitmask_.begin(), bitmask_.end() );
+    return true;
 }
 
 // ********************************************************************************

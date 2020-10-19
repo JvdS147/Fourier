@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "AnalyseTrajectory.h"
 #include "Angle.h"
 #include "AnisotropicDisplacementParameters.h"
+//#include "BFDH.h"
 #include "BondDetector.h"
 #include "ChebyshevBackground.h"
 #include "CheckFoundItem.h"
@@ -72,6 +73,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SimilarityAnalysis.h"
 #include "SkipBo.h"
 #include "Sort.h"
+#include "Sudoku.h"
+#include "SudokuSolver.h"
 #include "SymmetryOperator.h"
 #include "TextFileReader.h"
 #include "TextFileReader_2.h"
@@ -123,23 +126,25 @@ struct SimulatedPowderPatternCrystalStructure
 {
     SimulatedPowderPatternCrystalStructure( CrystalStructure & crystal_structure ):
     crystal_structure_(crystal_structure),
-    normalisation_(10000.0),
+    total_signal_normalisation_(10000.0),
     include_PO_(false),
     PO_direction_(MillerIndices(0,0,1)),
     PO_extent_(1.0),
     FWHM_(0.1),
     include_background_(true),
-    background_normalisation_(1000.0)
+    background_total_signal_normalisation_(1000.0)
     {}
     
+    
+    // The PO does NOT apply to the amorphous contribution
     CrystalStructure crystal_structure_;
-    double normalisation_; // This should be the integral number of counts (the total signal), not the highest peak
+    double total_signal_normalisation_;
     bool   include_PO_;
     MillerIndices PO_direction_;
     double PO_extent_;
     double FWHM_;
     bool   include_background_;
-    double background_normalisation_; // This should be the integral number of counts (the total signal), not the highest peak
+    double background_total_signal_normalisation_;
 };
 
 #define MACRO_ONE_FILELISTNAME_AS_ARGUMENT \
@@ -202,10 +207,10 @@ void add_all_torsions_in_ring( const std::vector< std::string > & ring_labels, s
     {
         std::vector< std::string > torsion;
         CyclicInteger ci( 0, ring_labels.size() - 1, i );
-        torsion.push_back( ring_labels[ci.value()] );
-        torsion.push_back( ring_labels[ci.value()] );
-        torsion.push_back( ring_labels[ci.value()] );
-        torsion.push_back( ring_labels[ci.value()] );
+        torsion.push_back( ring_labels[ci.next_value()] );
+        torsion.push_back( ring_labels[ci.next_value()] );
+        torsion.push_back( ring_labels[ci.next_value()] );
+        torsion.push_back( ring_labels[ci.next_value()] );
         torsions.push_back( torsion );
     }
 }
@@ -865,7 +870,70 @@ int main( int argc, char** argv )
             text_file_writer.write_line( output_Z1_string );
             if ( Zprime_is_two )
                 text_file_writer.write_line( output_Z2_string );
+
+    // Simulate an experimental powder diffraction pattern
+    try
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        std::vector< SimulatedPowderPatternCrystalStructure > crystal_structures;
+//    total_signal_normalisation_(10000.0),
+//    include_PO_(false),
+//    PO_direction_(MillerIndices(0,0,1)),
+//    PO_extent_(1.0),
+//    FWHM_(0.1),
+//    include_background_(true),
+//    background_total_signal_normalisation_(1000.0)
+        SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
+        sim_XRPD_crystal_structure.background_total_signal_normalisation_ = 50000.0;
+        crystal_structures.push_back( sim_XRPD_crystal_structure );
+        double wavelength( 1.54056 );
+        double zero_point_error = 0.0;
+        Angle two_theta_start( 1.0, Angle::DEGREES );
+        Angle two_theta_end(  35.0, Angle::DEGREES );
+        Angle two_theta_step( 0.015, Angle::DEGREES );
+        PowderPattern result( two_theta_start, two_theta_end, two_theta_step );
+        for ( size_t i( 0 ); i != crystal_structures.size(); ++i )
+        {
+            crystal_structures[i].crystal_structure_.apply_space_group_symmetry();
+            std::cout << "Now calculating powder pattern... " << std::endl;
+            PowderPatternCalculator powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
+            powder_pattern_calculator.set_wavelength( wavelength );
+            powder_pattern_calculator.set_two_theta_start( two_theta_start );
+            powder_pattern_calculator.set_two_theta_end( two_theta_end );
+            powder_pattern_calculator.set_two_theta_step( two_theta_step );
+            powder_pattern_calculator.set_FWHM( crystal_structures[i].FWHM_ );
+            if ( crystal_structures[i].include_PO_ )
+                powder_pattern_calculator.set_preferred_orientation( crystal_structures[i].PO_direction_, crystal_structures[i].PO_extent_ );
+            PowderPattern powder_pattern;
+            powder_pattern_calculator.calculate( powder_pattern );
+            powder_pattern.normalise_total_signal( crystal_structures[i].total_signal_normalisation_ );
+            result += powder_pattern;
+            if ( crystal_structures[i].include_background_ )
+            {
+                PowderPatternCalculator background_powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
+                background_powder_pattern_calculator.set_wavelength( wavelength );
+                background_powder_pattern_calculator.set_two_theta_start( two_theta_start );
+                background_powder_pattern_calculator.set_two_theta_end( two_theta_end );
+                background_powder_pattern_calculator.set_two_theta_step( two_theta_step );
+                background_powder_pattern_calculator.set_FWHM( 5.0 );
+                // We never include PO for the amorphous background
+                PowderPattern powder_pattern;
+                background_powder_pattern_calculator.calculate( powder_pattern );
+                powder_pattern.normalise_total_signal( crystal_structures[i].background_total_signal_normalisation_ );
+                result += powder_pattern;
+            }
         }
+      //  PowderPattern background_1;
+      //  background_1.read_xye( FileName( "W:\\GC\\Form_I_BKGR.xye" ) );
+      //  background_1.normalise( 1000.0 );
+      //  result += background_1;
+
+        result.normalise_highest_peak( 300.0 );
+        result.add_constant_background( 20.0 );
+        result.recalculate_estimated_standard_deviations();
+        result.add_Poisson_noise();
+        result.correct_zero_point_error( Angle::from_degrees( -zero_point_error ) );
+        result.save_xye( replace_extension( input_file_name, "xye" ), true );
     MACRO_END_GAME
 
     try // Calculate angles between two phenyl rings for a list of cifs.
@@ -966,6 +1034,210 @@ int main( int argc, char** argv )
         double RMSD = calculate_sample_RMSD( list_1, list_2 );
         std::cout << "Number of atoms = " << natoms << std::endl;
         std::cout << "RMSD = " << RMSD << ", N = " << list_1.size() << std::endl;
+    MACRO_END_GAME
+
+    try // Sudoku.
+    {
+        if ( false ) // Easy
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "900428000" );
+            sudoku_string.push_back( "486000209" );
+            sudoku_string.push_back( "302090854" );
+            sudoku_string.push_back( "108000730" );
+            sudoku_string.push_back( "009374010" );
+            sudoku_string.push_back( "007850090" );
+            sudoku_string.push_back( "820000906" );
+            sudoku_string.push_back( "090006107" );
+            sudoku_string.push_back( "060189000" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            sudoku.show();
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Medium
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "090000713" );
+            sudoku_string.push_back( "000687000" );
+            sudoku_string.push_back( "720039000" );
+            sudoku_string.push_back( "060200537" );
+            sudoku_string.push_back( "952700000" );
+            sudoku_string.push_back( "000510020" );
+            sudoku_string.push_back( "109046000" );
+            sudoku_string.push_back( "000001409" );
+            sudoku_string.push_back( "405000108" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Difficult
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "090000867" );
+            sudoku_string.push_back( "000010302" );
+            sudoku_string.push_back( "603009000" );
+            sudoku_string.push_back( "040700000" );
+            sudoku_string.push_back( "000300081" );
+            sudoku_string.push_back( "020805000" );
+            sudoku_string.push_back( "908040070" );
+            sudoku_string.push_back( "004080500" );
+            sudoku_string.push_back( "006900010" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Meister 1
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "200000008" );
+            sudoku_string.push_back( "053020970" );
+            sudoku_string.push_back( "070090030" );
+            sudoku_string.push_back( "000007010" );
+            sudoku_string.push_back( "700000004" );
+            sudoku_string.push_back( "080600000" );
+            sudoku_string.push_back( "020070050" );
+            sudoku_string.push_back( "031050890" );
+            sudoku_string.push_back( "500000002" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            sudoku.show();
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Meister 2
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "010753040" );
+            sudoku_string.push_back( "070894050" );
+            sudoku_string.push_back( "400612008" );
+            sudoku_string.push_back( "007461920" );
+            sudoku_string.push_back( "094527080" );
+            sudoku_string.push_back( "201938400" );
+            sudoku_string.push_back( "100275004" );
+            sudoku_string.push_back( "020140030" );
+            sudoku_string.push_back( "040380010" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }
+        if ( false ) // Schwer
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "006000082" );
+            sudoku_string.push_back( "100400300" );
+            sudoku_string.push_back( "003290106" );
+            sudoku_string.push_back( "089000000" );
+            sudoku_string.push_back( "054013000" );
+            sudoku_string.push_back( "000000073" );
+            sudoku_string.push_back( "260030800" );
+            sudoku_string.push_back( "000005200" );
+            sudoku_string.push_back( "000004705" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();
+        }  
+        if ( false ) // Toughest
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "800000000" );
+            sudoku_string.push_back( "003600000" );
+            sudoku_string.push_back( "070090200" );
+            sudoku_string.push_back( "050007000" );
+            sudoku_string.push_back( "000045700" );
+            sudoku_string.push_back( "000100030" );
+            sudoku_string.push_back( "001000068" );
+            sudoku_string.push_back( "008500010" );
+            sudoku_string.push_back( "090000400" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+        if ( false ) // NYT
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "080020561" );
+            sudoku_string.push_back( "000100007" );
+            sudoku_string.push_back( "000500000" );
+            sudoku_string.push_back( "050090408" );
+            sudoku_string.push_back( "007850003" );
+            sudoku_string.push_back( "090010050" );
+            sudoku_string.push_back( "204001805" );
+            sudoku_string.push_back( "060085000" );
+            sudoku_string.push_back( "000200100" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+        if ( false ) // Learn something (Empty Rectangle)
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "800006305" );
+            sudoku_string.push_back( "040000070" );
+            sudoku_string.push_back( "000000000" );
+            sudoku_string.push_back( "010038704" );
+            sudoku_string.push_back( "000104000" );
+            sudoku_string.push_back( "300070290" );
+            sudoku_string.push_back( "000003000" );
+            sudoku_string.push_back( "020000040" );
+            sudoku_string.push_back( "506800002" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+        if ( false ) // Learn something (X-Wing)
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "600090007" );
+            sudoku_string.push_back( "040007100" );
+            sudoku_string.push_back( "002800050" );
+            sudoku_string.push_back( "800000090" );
+            sudoku_string.push_back( "000070000" );
+            sudoku_string.push_back( "030000008" );
+            sudoku_string.push_back( "050002300" );
+            sudoku_string.push_back( "004500020" );
+            sudoku_string.push_back( "900030004" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+        if ( true ) // AI Escargot 6313 guesses, stack pointer = 1
+        {
+            std::vector< std::string > sudoku_string;
+            sudoku_string.push_back( "100007090" );
+            sudoku_string.push_back( "030020008" );
+            sudoku_string.push_back( "009600500" );
+            sudoku_string.push_back( "005300900" );
+            sudoku_string.push_back( "010080002" );
+            sudoku_string.push_back( "600004000" );
+            sudoku_string.push_back( "300000010" );
+            sudoku_string.push_back( "040000007" );
+            sudoku_string.push_back( "007000300" );
+            Sudoku sudoku( sudoku_string );
+            std::cout << "###############################################" << std::endl;
+            Sudoku solved_sudoku = solve( sudoku );
+            solved_sudoku.show();            
+        }
+    MACRO_END_GAME
+
+    try // Add class.
+    {
+        add_class( "SetOfNumbers" );
+    MACRO_END_GAME
+
+    try // BFDH.
+    {
+        
+        //calculate_BFDH( crystal_structure );
     MACRO_END_GAME
 
     try // RMSD
@@ -1272,6 +1544,144 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
+    // Transformation of the crystal structure (unit cell + atomic coordinates including ADPs + space group)
+    // followed by a transformation of the atomic coordinates including ADPs.
+    try
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        Vector3D com = crystal_structure.centre_of_mass();
+        std::cout << "Centre of mass = " << std::endl;
+        com.show();
+        crystal_structure.transform( Matrix3D(  1.0,  0.0,  0.0,
+                                                0.0,  1.0,  0.0,
+                                                0.0,  0.0,  1.0 ) );
+        // R-centred to primitive
+//        crystal_structure.transform( Matrix3D(  2.0/3.0,  1.0/3.0,  1.0/3.0,
+//                                                1.0/3.0,  2.0/3.0,  2.0/3.0,
+//                                                0.0,  0.0,  1.0 ) );
+        if ( (false) )
+        {
+            SymmetryOperator symmetry_operator( "x-1/4,y,z-3/4" );
+            SpaceGroup space_group = crystal_structure.space_group();
+            space_group.set_name( "" );
+            space_group.apply_similarity_transformation( symmetry_operator );
+         //   space_group.add_inversion_at_origin();
+            crystal_structure.set_space_group( space_group );
+        }
+        Matrix3D rotation(  1.0,  0.0,  0.0,
+                            0.0,  1.0,  0.0,
+                            0.0,  0.0,  1.0 );
+        Vector3D shift( 0.0, 0.0, 0.0 );
+//        shift -= com;
+//        shift += com_2;
+        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+        {
+            Atom new_atom( crystal_structure.atom( i ) );
+//            new_atom.set_position( new_atom.position() - shift );
+//            new_atom.set_position( rotation * new_atom.position() );
+//            new_atom.set_position( new_atom.position() + shift );
+            new_atom.set_position( ( rotation * crystal_structure.atom( i ).position() ) + shift );
+            if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+                new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_structure.crystal_lattice() ) );
+            crystal_structure.set_atom( i, new_atom );
+        }
+        // In Mercury, if the space-group name and the set of symmetry operators do not match up,
+        // the space-group name takes precedence, so we have to erase it to ensure that the
+        // symmetry operators are used instead.
+        if ( (true) )
+        {
+            SpaceGroup space_group = crystal_structure.space_group();
+            space_group.set_name( "" );
+            space_group.remove_duplicate_symmetry_operators();
+            crystal_structure.set_space_group( space_group );
+        }
+        crystal_structure.save_cif( append_to_file_name( input_file_name, "_transformed" ) );
+    MACRO_END_GAME
+
+    try // Calculate angles between two phenyl rings for a list of cifs.
+    {
+        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
+        TextFileWriter text_file_writer( FileName( file_list_file_name.directory(), "phenyl_angles", "txt" ) );
+        std::vector< std::string > ring_1;
+        std::vector< std::string > ring_2;
+        ring_1.push_back( "C0" );
+        ring_1.push_back( "C1" );
+        ring_1.push_back( "C2" );
+        ring_1.push_back( "C3" );
+        ring_1.push_back( "C4" );
+        ring_1.push_back( "C5" );
+        ring_2.push_back( "C6" );
+        ring_2.push_back( "C7" );
+        ring_2.push_back( "C8" );
+        ring_2.push_back( "C9" );
+        ring_2.push_back( "C10" );
+        ring_2.push_back( "C11" );
+        // Note that for Z'=1 structures, we have e.g. "C1_0", for Z'=2 structures, we have e.g. "C1_0" and "C1_1".
+        std::string header_str( "Rank " );
+        // Write header
+        text_file_writer.write_line( header_str );
+        for ( size_t i( 0 ); i != file_list.size(); ++i )
+//        for ( size_t i( 0 ); i != 10; ++i )
+        {
+            CrystalStructure crystal_structure;
+            std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
+            read_cif( file_list.value( i ), crystal_structure );
+            CrystalLattice crystal_lattice = crystal_structure.crystal_lattice();
+            bool Zprime_is_two( false );
+            try
+            {
+                /*size_t index =*/ crystal_structure.atom( ring_1[0] + "_1" );
+                Zprime_is_two = true;
+            }
+            catch ( std::exception & e ) {}
+            std::string output_Z1_string( size_t2string( i+1 ) + " " );
+            std::string output_Z2_string( size_t2string( i+1 ) + " " );
+            { // Z' = 1
+                std::vector< Vector3D > points_1;
+                for ( size_t i( 0 ); i != ring_1.size(); ++i )
+                {
+                    size_t i1 = crystal_structure.atom( ring_1[i] + "_0" );
+                    Atom atom = crystal_structure.atom( i1 );
+                    points_1.push_back( crystal_lattice.fractional_to_orthogonal( atom.position() ) );
+                }
+                Plane plane_1( points_1 );
+                std::vector< Vector3D > points_2;
+                for ( size_t i( 0 ); i != ring_2.size(); ++i )
+                {
+                    size_t i1 = crystal_structure.atom( ring_2[i] + "_0" );
+                    Atom atom = crystal_structure.atom( i1 );
+                    points_2.push_back( crystal_lattice.fractional_to_orthogonal( atom.position() ) );
+                }
+                Plane plane_2( points_2 );
+                Angle phi = angle( plane_1, plane_2 );
+                output_Z1_string += double2string( phi.value_in_degrees() ) + " ";
+                text_file_writer.write_line( output_Z1_string );
+            }
+            if ( Zprime_is_two )
+            {
+                std::vector< Vector3D > points_1;
+                for ( size_t i( 0 ); i != ring_1.size(); ++i )
+                {
+                    size_t i1 = crystal_structure.atom( ring_1[i] + "_1" );
+                    Atom atom = crystal_structure.atom( i1 );
+                    points_1.push_back( crystal_lattice.fractional_to_orthogonal( atom.position() ) );
+                }
+                Plane plane_1( points_1 );
+                std::vector< Vector3D > points_2;
+                for ( size_t i( 0 ); i != ring_2.size(); ++i )
+                {
+                    size_t i1 = crystal_structure.atom( ring_2[i] + "_1" );
+                    Atom atom = crystal_structure.atom( i1 );
+                    points_2.push_back( crystal_lattice.fractional_to_orthogonal( atom.position() ) );
+                }
+                Plane plane_2( points_2 );
+                Angle phi = angle( plane_1, plane_2 );
+                output_Z2_string += double2string( phi.value_in_degrees() ) + " ";
+                text_file_writer.write_line( output_Z2_string );
+            }
+        }
+    MACRO_END_GAME
+
     try // Write out line number, R(, F( of TMFF file.
     {
         if ( argc != 2 )
@@ -1377,71 +1787,6 @@ int main( int argc, char** argv )
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_group_rotated" ) );
     MACRO_END_GAME
 
-    // Simulate an experimental powder diffraction pattern.
-    try
-    {
-        std::vector< SimulatedPowderPatternCrystalStructure > crystal_structures;
-
-
-        if ( argc != 2 )
-            throw std::runtime_error( "Please give the name of a .cif file." );
-        FileName input_file_name( argv[ 1 ] );
-        CrystalStructure crystal_structure;
-        std::cout << "Now reading cif... " + input_file_name.full_name() << std::endl;
-        read_cif( input_file_name, crystal_structure );
-
-        SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
-        crystal_structures.push_back( sim_XRPD_crystal_structure );
-
-        double wavelength( 1.54056 );
-        double zero_point_error = 0.0;
-        Angle two_theta_start( 1.0, Angle::DEGREES );
-        Angle two_theta_end(  50.0, Angle::DEGREES );
-        Angle two_theta_step( 0.015, Angle::DEGREES );
-        PowderPattern result( two_theta_start, two_theta_end, two_theta_step );
-        for ( size_t i( 0 ); i != crystal_structures.size(); ++i )
-        {
-            crystal_structures[i].crystal_structure_.apply_space_group_symmetry();
-            std::cout << "Now calculating powder pattern... " << std::endl;
-            PowderPatternCalculator powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
-            powder_pattern_calculator.set_wavelength( wavelength );
-            powder_pattern_calculator.set_two_theta_start( two_theta_start );
-            powder_pattern_calculator.set_two_theta_end( two_theta_end );
-            powder_pattern_calculator.set_two_theta_step( two_theta_step );
-            powder_pattern_calculator.set_FWHM( crystal_structures[i].FWHM_ );
-            if ( crystal_structures[i].include_PO_ )
-                powder_pattern_calculator.set_preferred_orientation( crystal_structures[i].PO_direction_, crystal_structures[i].PO_extent_ );
-            PowderPattern powder_pattern;
-            powder_pattern_calculator.calculate( powder_pattern );
-            powder_pattern.normalise( crystal_structures[i].normalisation_ );
-            result += powder_pattern;
-            if ( crystal_structures[i].include_background_ )
-            {
-                PowderPatternCalculator powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
-                powder_pattern_calculator.set_wavelength( wavelength );
-                powder_pattern_calculator.set_two_theta_start( two_theta_start );
-                powder_pattern_calculator.set_two_theta_end( two_theta_end );
-                powder_pattern_calculator.set_two_theta_step( two_theta_step );
-                powder_pattern_calculator.set_FWHM( 5.0 );
-                // We never include PO for the amorphous bckground
-                PowderPattern powder_pattern;
-                powder_pattern_calculator.calculate( powder_pattern );
-                powder_pattern.normalise( crystal_structures[i].background_normalisation_ );
-                result += powder_pattern;
-            }
-        }
-
-        PowderPattern background_1;
-        background_1.read_xye( FileName( "W:\\c71\\p0024\\\\Form_I_BKGR.xye" ) );
-        background_1.normalise( 1000.0 );
-        result += background_1;
-
-        result.add_constant_background( 20.0 );
-        result.add_Poisson_noise();
-        result.correct_zero_point_error( Angle::from_degrees( -zero_point_error ) );
-        result.save_xye( FileName( "C:\\Data_Win\\sum.xye" ), true );
-    MACRO_END_GAME
-
     try // Find unit-cell angles close to 90 degrees.
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -1525,12 +1870,12 @@ int main( int argc, char** argv )
         }
         PowderPattern background_1;
         background_1.read_xye( FileName( "W:\\c71\\p0024\\\\Form_I_BKGR.xye" ) );
-        background_1.normalise( 1000.0 );
+        background_1.normalise_highest_peak( 1000.0 );
         PowderPattern background_2;
         if ( add_second_pattern )
         {
             background_2.read_xye( FileName( "\\\\Mac\\Home\\Documents\\Data_mac\\ContractResearch\\AMS\\Loratadine\\GWO30a_BKGR.xye" ) );
-            background_2.normalise( 1000.0 );
+            background_2.normalise_highest_peak( 1000.0 );
         }
         powder_pattern_1.add_constant_background( 20.0 );
 //        powder_pattern_1 += background_1;
@@ -2635,6 +2980,198 @@ int main( int argc, char** argv )
         inp_writer( FileName( argv[ 1 ] ), FileName( argv[ 2 ] ) );
      MACRO_END_GAME
 
+    try // Calculate all torsion angles and inversions for a list of cifs.
+    {
+        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
+        TextFileWriter text_file_writer( FileName( file_list_file_name.directory(), "torsions_and_inversions", "txt" ) );
+        std::vector< std::vector< std::string > > torsions;
+
+        std::vector< std::string > ring_labels;
+        ring_labels.push_back( "C6" );
+        ring_labels.push_back( "C15" );
+        ring_labels.push_back( "C13" );
+        ring_labels.push_back( "C12" );
+        ring_labels.push_back( "C11" );
+        ring_labels.push_back( "C10" );
+        ring_labels.push_back( "N3" );
+        ring_labels.push_back( "C7" );
+        ring_labels.push_back( "C5" );
+        ring_labels.push_back( "C2" );
+        ring_labels.push_back( "C1" );
+        ring_labels.push_back( "C0" );
+
+        add_all_torsions_in_ring( ring_labels, torsions );
+
+        // Note that for Z'=1 structures, we have e.g. "C1_0", for Z'=2 structures, we have e.g. "C1_0" and "C1_1".
+//        std::vector< std::string > torsion;
+//        torsion.push_back( "C5" );
+//        torsion.push_back( "C6" );
+//        torsion.push_back( "C7" );
+//        torsion.push_back( "N3" );
+//        torsions.push_back( torsion );
+//        torsion.clear();
+//        torsion.push_back( "C3" );
+//        torsion.push_back( "S0" );
+//        torsion.push_back( "N4" );
+//        torsion.push_back( "C14" );
+//        torsions.push_back( torsion );
+//        torsion.clear();
+//        torsion.push_back( "C0" );
+//        torsion.push_back( "C1" );
+//        torsion.push_back( "N4" );
+//        torsion.push_back( "C13" );
+//        torsions.push_back( torsion );
+//
+//        std::vector< std::string > ring_labels;
+//        ring_labels.push_back( "N3" );
+//        ring_labels.push_back( "C12" );
+//        ring_labels.push_back( "C16" );
+//        ring_labels.push_back( "N4" );
+//        ring_labels.push_back( "C15" );
+//        ring_labels.push_back( "C14" );
+//        ring_labels.push_back( "C13" );
+//        add_all_torsions_in_ring( ring_labels, torsions );
+
+        std::vector< std::vector< std::string > > inversions;
+        std::vector< std::string > inversion;
+//        inversion.push_back( "N4" );
+//        inversion.push_back( "S0" );
+//        inversion.push_back( "C14" );
+//        inversion.push_back( "C13" );
+//        inversions.push_back( inversion );
+//        inversion.clear();
+//        inversion.push_back( "N3" );
+//        inversion.push_back( "C11" );
+//        inversion.push_back( "C12" );
+//        inversion.push_back( "C14" );
+//        inversions.push_back( inversion );
+        std::string header_str( "Rank " );
+        // Write header
+        for ( size_t i( 0 ); i != torsions.size(); ++i )
+        {
+            header_str += "t_" + torsions[i][0] + "_";
+            header_str += torsions[i][1] + "_";
+            header_str += torsions[i][2] + "_";
+            header_str += torsions[i][3] + " ";
+        }
+        for ( size_t i( 0 ); i != inversions.size(); ++i )
+        {
+            header_str += "i_" + inversions[i][0] + "_";
+            header_str += inversions[i][1] + "_";
+            header_str += inversions[i][2] + "_";
+            header_str += inversions[i][3] + " ";
+        }
+        text_file_writer.write_line( header_str );
+        for ( size_t i( 0 ); i != file_list.size(); ++i )
+        {
+            CrystalStructure crystal_structure;
+            std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
+            read_cif( file_list.value( i ), crystal_structure );
+            CrystalLattice crystal_lattice = crystal_structure.crystal_lattice();
+            bool Zprime_is_two( false );
+            if ( torsions.empty() )
+            {
+                try
+                {
+                    /*size_t index =*/ crystal_structure.atom( inversions[0][0] + "_1" );
+                    Zprime_is_two = true;
+                }
+                catch ( std::exception & e ) {}
+            }
+            else
+            {
+                try
+                {
+                    /* size_t index =*/ crystal_structure.atom( torsions[0][0] + "_1" );
+                    Zprime_is_two = true;
+                }
+                catch ( std::exception & e ) {}
+            }
+            std::string output_Z1_string( size_t2string( i+1 ) + " " );
+            std::string output_Z2_string( size_t2string( i+1 ) + " " );
+            // Torsions
+            for ( size_t i( 0 ); i != torsions.size(); ++i )
+            {
+                size_t i1 = crystal_structure.atom( torsions[i][0] + "_0" );
+                Atom atom1 = crystal_structure.atom( i1 );
+                Vector3D r1 = crystal_lattice.fractional_to_orthogonal( atom1.position() );
+                size_t i2 = crystal_structure.atom( torsions[i][1] + "_0" );
+                Atom atom2 = crystal_structure.atom( i2 );
+                Vector3D r2 = crystal_lattice.fractional_to_orthogonal( atom2.position() );
+                size_t i3 = crystal_structure.atom( torsions[i][2] + "_0" );
+                Atom atom3 = crystal_structure.atom( i3 );
+                Vector3D r3 = crystal_lattice.fractional_to_orthogonal( atom3.position() );
+                size_t i4 = crystal_structure.atom( torsions[i][3] + "_0" );
+                Atom atom4 = crystal_structure.atom( i4 );
+                Vector3D r4 = crystal_lattice.fractional_to_orthogonal( atom4.position() );
+                Angle st = signed_torsion( r1, r2, r3, r4 );
+                output_Z1_string += double2string( st.value_in_degrees() ) + " ";
+            }
+            if ( Zprime_is_two )
+            {
+                for ( size_t i( 0 ); i != torsions.size(); ++i )
+                {
+                    size_t i1 = crystal_structure.atom( torsions[i][0] + "_1" );
+                    Atom atom1 = crystal_structure.atom( i1 );
+                    Vector3D r1 = crystal_lattice.fractional_to_orthogonal( atom1.position() );
+                    size_t i2 = crystal_structure.atom( torsions[i][1] + "_1" );
+                    Atom atom2 = crystal_structure.atom( i2 );
+                    Vector3D r2 = crystal_lattice.fractional_to_orthogonal( atom2.position() );
+                    size_t i3 = crystal_structure.atom( torsions[i][2] + "_1" );
+                    Atom atom3 = crystal_structure.atom( i3 );
+                    Vector3D r3 = crystal_lattice.fractional_to_orthogonal( atom3.position() );
+                    size_t i4 = crystal_structure.atom( torsions[i][3] + "_1" );
+                    Atom atom4 = crystal_structure.atom( i4 );
+                    Vector3D r4 = crystal_lattice.fractional_to_orthogonal( atom4.position() );
+                    Angle st = signed_torsion( r1, r2, r3, r4 );
+                    output_Z2_string += double2string( st.value_in_degrees() ) + " ";
+                }
+            }
+            for ( size_t i( 0 ); i != inversions.size(); ++i )
+            {
+                size_t i1 = crystal_structure.atom( inversions[i][0] + "_0" );
+                Atom atom1 = crystal_structure.atom( i1 );
+                Vector3D r1 = crystal_lattice.fractional_to_orthogonal( atom1.position() );
+                size_t i2 = crystal_structure.atom( inversions[i][1] + "_0" );
+                Atom atom2 = crystal_structure.atom( i2 );
+                Vector3D r2 = crystal_lattice.fractional_to_orthogonal( atom2.position() );
+                size_t i3 = crystal_structure.atom( inversions[i][2] + "_0" );
+                Atom atom3 = crystal_structure.atom( i3 );
+                Vector3D r3 = crystal_lattice.fractional_to_orthogonal( atom3.position() );
+                size_t i4 = crystal_structure.atom( inversions[i][3] + "_0" );
+                Atom atom4 = crystal_structure.atom( i4 );
+                Vector3D r4 = crystal_lattice.fractional_to_orthogonal( atom4.position() );
+                Plane plane( r2, r3, r4 );
+                double sd = plane.signed_distance( r1 );
+                output_Z1_string += double2string( sd ) + " ";
+            }
+            if ( Zprime_is_two )
+            {
+                for ( size_t i( 0 ); i != inversions.size(); ++i )
+                {
+                    size_t i1 = crystal_structure.atom( inversions[i][0] + "_1" );
+                    Atom atom1 = crystal_structure.atom( i1 );
+                    Vector3D r1 = crystal_lattice.fractional_to_orthogonal( atom1.position() );
+                    size_t i2 = crystal_structure.atom( inversions[i][1] + "_1" );
+                    Atom atom2 = crystal_structure.atom( i2 );
+                    Vector3D r2 = crystal_lattice.fractional_to_orthogonal( atom2.position() );
+                    size_t i3 = crystal_structure.atom( inversions[i][2] + "_1" );
+                    Atom atom3 = crystal_structure.atom( i3 );
+                    Vector3D r3 = crystal_lattice.fractional_to_orthogonal( atom3.position() );
+                    size_t i4 = crystal_structure.atom( inversions[i][3] + "_1" );
+                    Atom atom4 = crystal_structure.atom( i4 );
+                    Vector3D r4 = crystal_lattice.fractional_to_orthogonal( atom4.position() );
+                    Plane plane( r2, r3, r4 );
+                    double sd = plane.signed_distance( r1 );
+                    output_Z2_string += double2string( sd ) + " ";
+                }
+            }
+            text_file_writer.write_line( output_Z1_string );
+            if ( Zprime_is_two )
+                text_file_writer.write_line( output_Z2_string );
+        }
+    MACRO_END_GAME
+
     try // CrystalStructure::supercell().
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -3616,7 +4153,7 @@ int main( int argc, char** argv )
         generate_powder_cif.generate_R_input_file( GeneratePowderCIF::ZOOM_OVER_40 );
     MACRO_END_GAME
 
-    try // Transform unit cell, NOT the atomic coordinates
+    try // Transform unit cell, NOT the atomic coordinates.
     {
         CrystalLattice crystal_lattice( 19.94392,
                                         14.69558,
@@ -3737,7 +4274,16 @@ int main( int argc, char** argv )
         sum.save_xye( FileName( "C:\\Data_Win\\KOFHOC\\VCT\\NewSample\\VCT_sum.xye" ), true );
     MACRO_END_GAME
 
-    try // Calculate ADPs from a set of frames (as cif files)
+    try // Write FileList.txt file.
+    {
+        TextFileWriter text_file_writer( FileName( "C:\\Data_Win\\\\FileList.txt" ) );
+        for ( size_t i( 0 ); i != 7252; ++i )
+        {
+            text_file_writer.write_line( "structure_" + size_t2string( i+1, 6, '0' ) + ".cif" );
+        }
+    MACRO_END_GAME
+
+    try // Calculate ADPs from a set of frames (as cif files).
     {
         MACRO_ONE_FILELISTNAME_AS_ARGUMENT
         SpaceGroup space_group; // = SpaceGroup::P21c();
@@ -3754,7 +4300,7 @@ int main( int argc, char** argv )
   //      analyse_trajectory.save_centres_of_mass();
     MACRO_END_GAME
 
-    try // Calculate all delta_AB for ADPs for all pairs of atoms to check if rigid-body approximation for TLS is valid
+    try // Calculate all delta_AB for ADPs for all pairs of atoms to check if rigid-body approximation for TLS is valid.
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
         if ( crystal_structure.natoms() == 0 )
@@ -4170,7 +4716,7 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
-    try // Renumber cif files
+    try // Renumber cif files.
     {
         MACRO_ONE_FILELISTNAME_AS_ARGUMENT
         for ( int i( file_list.size() - 1 ); i > 0; --i )
@@ -4244,12 +4790,14 @@ int main( int argc, char** argv )
 //    prm !S22  0.0
 //    prm !S23  0.0
 
-  //      double T11 = read_keyword( "T11", input_file );
-  //      double T22 = read_keyword( "T22", input_file );
-  //      double T33 = read_keyword( "T33", input_file );
-  //      double T12 = read_keyword( "T12", input_file );
-  //      double T13 = read_keyword( "T13", input_file );
-  //      double T23 = read_keyword( "T23", input_file );
+
+        /*double T11 =*/ read_keyword( "T11", input_file );
+        /*double T22 =*/ read_keyword( "T22", input_file );
+        /*double T33 =*/ read_keyword( "T33", input_file );
+        /*double T12 =*/ read_keyword( "T12", input_file );
+        /*double T13 =*/ read_keyword( "T13", input_file );
+        /*double T23 =*/ read_keyword( "T23", input_file );
+
         double L11 = read_keyword( "L11", input_file );
         double L22 = read_keyword( "L22", input_file );
         double L33 = read_keyword( "L33", input_file );
@@ -5381,7 +5929,7 @@ int main( int argc, char** argv )
             powder_pattern_sum += powder_pattern;
             powder_pattern.save_xye( FileName( file_list.base_directory(), "MD_fr" + size_t2string( i, 4, '0' ), "xye" ), true );
         }
-        powder_pattern_sum.normalise();
+        powder_pattern_sum.normalise_highest_peak();
         powder_pattern_sum.recalculate_estimated_standard_deviations();
         powder_pattern_sum.save_xye( FileName( file_list.base_directory(), "MD_sum_" + size_t2string( 0, 4, '0' )+"_"+size_t2string( file_list.size(), 4, '0' ), "xye" ), true );
     MACRO_END_GAME
@@ -5746,10 +6294,10 @@ int main( int argc, char** argv )
         players.push_back( SkipBoPlayer() );
         CyclicInteger player( players.size() );
         --player;
-        while ( ! players[player.value()].finished() )
+        while ( ! players[player.next_value()].finished() )
         {
             ++player;
-            players[player.value()].play( skip_bo_game );
+            players[player.next_value()].play( skip_bo_game );
         }
     MACRO_END_GAME
 

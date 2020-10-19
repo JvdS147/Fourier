@@ -25,64 +25,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "BagOfNumbers.h"
-
-#include <cstdlib>
-#include <stdexcept>
+#include "CalculateBFDH.h"
 
 // ********************************************************************************
-
-BagOfNumbers::BagOfNumbers( const int idum ):RNG_int_(idum)
-{
-}
-
-// ********************************************************************************
-
-BagOfNumbers::BagOfNumbers( const size_t nvalues, const int idum ):
-set_of_numbers_(nvalues),
-RNG_int_(idum)
-{
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::set_duplicates_policy( const SetOfNumbers::DuplicatesPolicy duplicates_policy )
-{
-    set_of_numbers_.set_duplicates_policy( duplicates_policy );
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::remove( const size_t value )
-{
-    set_of_numbers_.remove( value );
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::add( const size_t value )
-{
-    set_of_numbers_.add( value );
-}
-
-// ********************************************************************************
-
-size_t BagOfNumbers::draw()
-{
-    size_t result = draw_with_replace();
-    set_of_numbers_.remove( result );
-    return result;
-}
-
-// ********************************************************************************
-
-size_t BagOfNumbers::draw_with_replace() const
-{
-    if ( set_of_numbers_.empty() )
-        throw std::runtime_error( "BagOfNumbers::draw_with_replace(): bag is empty." );
-    size_t iPos = RNG_int_.next_number( 0, set_of_numbers_.size() - 1 );
-    return set_of_numbers_.value( iPos );
-}
 
 // ********************************************************************************
 

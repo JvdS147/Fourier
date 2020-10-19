@@ -1,5 +1,5 @@
-#ifndef BAGOFNUMBERS_H
-#define BAGOFNUMBERS_H
+#ifndef GENERATECOMBINATIONS_H
+#define GENERATECOMBINATIONS_H
 
 /* *********************************************
 Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
@@ -28,59 +28,31 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "RandomNumberGenerator.h"
-#include "SetOfNumbers.h"
-
-#include <cstddef> // For definition of size_t
 #include <vector>
+#include <cstddef> // For definition of size_t
 
 /*
- * This class represents a bag of numbers.
- *
- * It is essentially a SetOfNumbers (and is implemented in terms of that class) with two draw() functions added.
- *
- * Numbers are not necessarily unique (configurable).
- *
- * Helpful for randomising sequences.
- *
- */
-class BagOfNumbers
+    Given N numbers, generates k-in-N combinations.
+*/
+class GenerateCombinations
 {
 public:
 
-    // Default constructor, creates an empty bag,
-    explicit BagOfNumbers( const int idum );
-
-    // In keeping with C++ convention: zero-based.
-    // Fills the bag with the numbers 0, 1, ..., nnumbers-1.
-    BagOfNumbers( const size_t nvalues, const int idum  );
-
-    void set_duplicates_policy( const SetOfNumbers::DuplicatesPolicy duplicates_policy );
-
-    SetOfNumbers::DuplicatesPolicy duplicates_policy() const { return set_of_numbers_.duplicates_policy(); }
-
-    // Throws if value currently not in the bag.
-    // If multiple occurrences present, only removes one.
-    void remove( const size_t value );
-
-    // If value currently already in the bag, behaviour depends on duplicates_policy().
-    void add( const size_t value );
-
-    // Returns the number of values in the bag.
-    size_t size() const { return set_of_numbers_.size(); }
+    // Default constructor
+ //   GenerateCombinations();
     
-    // Returns one of the numbers at random and removes it from the bag.
-    // Throws if the bag is empty.
-    size_t draw();
+    GenerateCombinations( const std::vector< size_t > & values, const size_t k );
     
-    // Returns one of the numbers at random, it is NOT removed from the bag
-    // Throws if the bag is empty.
-    size_t draw_with_replace() const;
-
+    // Returns true if another combination is available.
+    // result returns the actual values, not indices into the vector of values.
+    bool next_combination( std::vector< size_t > & result ) const;
+    
 private:
-    SetOfNumbers set_of_numbers_;
-    mutable RandomNumberGenerator_integer RNG_int_;
+    std::vector< size_t > values_;
+    size_t k_;
+    mutable std::vector< size_t > bitmask_;
+    mutable bool another_one_is_available_;
 };
 
-#endif // BAGOFNUMBERS_H
+#endif // GENERATECOMBINATIONS_H
 

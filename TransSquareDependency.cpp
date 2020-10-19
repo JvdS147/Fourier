@@ -25,64 +25,38 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "BagOfNumbers.h"
+#include "TransSquareDependency.h"
 
-#include <cstdlib>
-#include <stdexcept>
+#include <iostream>
 
 // ********************************************************************************
 
-BagOfNumbers::BagOfNumbers( const int idum ):RNG_int_(idum)
+TransSquareDependency::TransSquareDependency( const size_t id, const std::vector< OneSudokuSquare > & determining_values, const std::vector< OneSudokuSquare > & values_to_be_changed ):
+id_(id),
+determining_values_( 27, OneSudokuSlice::OTHER, determining_values ),
+values_to_be_changed_( 27, OneSudokuSlice::OTHER, values_to_be_changed )
 {
+  //  determining_values_ = OneSudokuSlice( Sudoku::number_of_slices(), OneSudokuSlice::OTHER, determining_values );
+  //  values_to_be_changed_ = OneSudokuSlice( Sudoku::number_of_slices(), OneSudokuSlice::OTHER, values_to_be_changed );
 }
 
 // ********************************************************************************
 
-BagOfNumbers::BagOfNumbers( const size_t nvalues, const int idum ):
-set_of_numbers_(nvalues),
-RNG_int_(idum)
+void TransSquareDependency::update_values_to_be_changed( const OneSudokuSlice & values_to_be_changed )
 {
+    values_to_be_changed_ = values_to_be_changed;
 }
 
 // ********************************************************************************
 
-void BagOfNumbers::set_duplicates_policy( const SetOfNumbers::DuplicatesPolicy duplicates_policy )
+void TransSquareDependency::show() const
 {
-    set_of_numbers_.set_duplicates_policy( duplicates_policy );
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::remove( const size_t value )
-{
-    set_of_numbers_.remove( value );
-}
-
-// ********************************************************************************
-
-void BagOfNumbers::add( const size_t value )
-{
-    set_of_numbers_.add( value );
-}
-
-// ********************************************************************************
-
-size_t BagOfNumbers::draw()
-{
-    size_t result = draw_with_replace();
-    set_of_numbers_.remove( result );
-    return result;
-}
-
-// ********************************************************************************
-
-size_t BagOfNumbers::draw_with_replace() const
-{
-    if ( set_of_numbers_.empty() )
-        throw std::runtime_error( "BagOfNumbers::draw_with_replace(): bag is empty." );
-    size_t iPos = RNG_int_.next_number( 0, set_of_numbers_.size() - 1 );
-    return set_of_numbers_.value( iPos );
-}
+    std::cout << "ID = " << id_ << std::endl;
+    std::cout << "determining_values_" << std::endl;
+    determining_values_.show();
+    std::cout << "values_to_be_changed_" << std::endl;
+    values_to_be_changed_.show();
+}   
 
 // ********************************************************************************
 

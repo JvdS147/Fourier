@@ -83,10 +83,10 @@ void FiveMemberedRingAnalyser::analyse( const std::vector< Vector3D > & points )
     {
         std::vector< Vector3D > points2;
         CyclicInteger ci( 0, 4, i+1 );
-        points2.push_back( points[ci.value()] );
-        points2.push_back( points[ci.value()] );
-        points2.push_back( points[ci.value()] );
-        points2.push_back( points[ci.value()] );
+        points2.push_back( points[ci.next_value()] );
+        points2.push_back( points[ci.next_value()] );
+        points2.push_back( points[ci.next_value()] );
+        points2.push_back( points[ci.next_value()] );
         Plane plane_1234( points2 );
         rmsds_from_mean_plane_.push_back( root_mean_square_devation_from_mean_plane( points2, plane_1234 ) );
         distances_from_plane_.push_back( plane_1234.distance( points[i] ) );
@@ -136,10 +136,10 @@ void FiveMemberedRingAnalyser::analyse( const std::vector< Vector3D > & points )
     {
         std::vector< Vector3D > points2;
         CyclicInteger ci( 0, 4, i+1 );
-        points2.push_back( points[ci.value()] );
-        points2.push_back( points[ci.value()] );
-        points2.push_back( points[ci.value()] );
-        points2.push_back( points[ci.value()] );
+        points2.push_back( points[ci.next_value()] );
+        points2.push_back( points[ci.next_value()] );
+        points2.push_back( points[ci.next_value()] );
+        points2.push_back( points[ci.next_value()] );
         Plane plane_1234( points2 );
         double root_mean_square_devation_from_mean_plane = ::root_mean_square_devation_from_mean_plane( points2, plane_1234 );
         double distance = plane_1234.distance( points[i] );
@@ -205,11 +205,11 @@ FiveMemberedRingAnalyser::GeometryType FiveMemberedRingAnalyser::axial_or_equato
     NormalisedVector3D r = normalised_vector( point - points_[smallest_distance_index] );
     std::vector< Vector3D > points2;
     CyclicInteger ci( 0, 4, smallest_distance_index+1 );
-    points2.push_back( points_[ci.value()] );
-    points2.push_back( points_[ci.value()] );
+    points2.push_back( points_[ci.next_value()] );
+    points2.push_back( points_[ci.next_value()] );
     ++ci;
-    points2.push_back( points_[ci.value()] );
-    points2.push_back( points_[ci.value()] );
+    points2.push_back( points_[ci.next_value()] );
+    points2.push_back( points_[ci.next_value()] );
     Plane plane_1245( points2 );
     if ( ( plane_1245.normal()*r ) < 0.0 )
         r = -r;
@@ -293,11 +293,11 @@ void SixMemberedRingAnalyser::analyse( const std::vector< Vector3D > & points )
     {
         std::vector< Vector3D > points2;
         CyclicInteger ci( 0, 5, i+1 );
-        points2.push_back( points[ci.value()] );
-        points2.push_back( points[ci.value()] );
+        points2.push_back( points[ci.next_value()] );
+        points2.push_back( points[ci.next_value()] );
         ++ci;
-        points2.push_back( points[ci.value()] );
-        points2.push_back( points[ci.value()] );
+        points2.push_back( points[ci.next_value()] );
+        points2.push_back( points[ci.next_value()] );
         Plane plane_1245( points2 );
         if ( root_mean_square_devation_from_mean_plane( points2, plane_1245 ) > 0.075 )
             continue;
@@ -352,11 +352,11 @@ SixMemberedRingAnalyser::GeometryType SixMemberedRingAnalyser::axial_or_equatori
     NormalisedVector3D r = normalised_vector( point - points_[smallest_distance_index] );
     std::vector< Vector3D > points2;
     CyclicInteger ci( 0, 5, smallest_distance_index+1 );
-    points2.push_back( points_[ci.value()] );
-    points2.push_back( points_[ci.value()] );
+    points2.push_back( points_[ci.next_value()] );
+    points2.push_back( points_[ci.next_value()] );
     ++ci;
-    points2.push_back( points_[ci.value()] );
-    points2.push_back( points_[ci.value()] );
+    points2.push_back( points_[ci.next_value()] );
+    points2.push_back( points_[ci.next_value()] );
     Plane plane_1245( points2 );
     if ( ( plane_1245.normal()*r ) < 0.0 )
         r = -r;
