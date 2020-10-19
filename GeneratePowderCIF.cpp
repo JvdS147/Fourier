@@ -611,11 +611,9 @@ void GeneratePowderCIF::generate_R_input_file( const ZoomPolicy zoom_policy )
     output_file_R_.write_line();
     output_file_R_.write_line( "title( ylab = expression( italic(I) / counts ), line = 3 )" );
     output_file_R_.write_line();
-    bool include_zoom_at_end;
+    bool include_zoom_at_end( false );
     if ( zoom_policy == ALWAYS_ZOOM )
         include_zoom_at_end = true;
-    if ( zoom_policy == NEVER_ZOOM )
-        include_zoom_at_end = false;
     if ( zoom_policy == ZOOM_OVER_40 )
         include_zoom_at_end = powder_pattern_.two_theta_end().value_in_degrees() >= 40.0;
     if ( include_zoom_at_end )
@@ -781,9 +779,9 @@ void GeneratePowderCIF::write_bond_part()
     std::vector< std::string > words = split( headers );
 //Number	Atom1	Atom2	Type	Polymeric	Cyclicity	Length	SybylType
 //1	C1	C2	Unknown	no	cyclic	1.400(3)	un
-    size_t atom1_index;
-    size_t atom2_index;
-    size_t length_index;
+    size_t atom1_index( 0 ); // Stupid initialisation to silence compiler warnings
+    size_t atom2_index( 0 ); // Stupid initialisation to silence compiler warnings
+    size_t length_index( 0 ); // Stupid initialisation to silence compiler warnings
     // Very simple algorithm, not robust, find first occurence and that's it.
     for ( size_t i( 0 ); i != words.size(); ++i )
     {
@@ -856,10 +854,10 @@ void GeneratePowderCIF::write_angle_part()
     std::vector< std::string > words = split( headers );
 //Number	Atom1	Atom2	Atom3	Angle
 //1	C2	C1	C3	108.1(2)
-    size_t atom1_index;
-    size_t atom2_index;
-    size_t atom3_index;
-    size_t angle_index;
+    size_t atom1_index( 0 ); // Stupid initialisation to silence compiler warnings
+    size_t atom2_index( 0 ); // Stupid initialisation to silence compiler warnings
+    size_t atom3_index( 0 ); // Stupid initialisation to silence compiler warnings
+    size_t angle_index( 0 ); // Stupid initialisation to silence compiler warnings
     // Very simple algorithm, not robust, find first occurence and that's it.
     for ( size_t i( 0 ); i != words.size(); ++i )
     {
