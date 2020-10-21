@@ -36,8 +36,8 @@ void test_CalculateBFDH( TestSuite & test_suite )
     std::cout << "Now running tests for CalculateBFDH." << std::endl;
 
     {
-    CalculateBFDH dummy();
-    test_suite.test_equality( dummy, , "CalculateBFDH()" );
+ //   CalculateBFDH dummy();
+ //   test_suite.test_equality( dummy, , "CalculateBFDH()" );
     }
 
 }

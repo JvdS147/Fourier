@@ -528,6 +528,10 @@ Vector3D adjust_for_translations( const Vector3D & input )
 // Throws if at least one of the vectors is the zero vector.
 Angle angle( const Vector3D & lhs, const Vector3D & rhs )
 {
+    if ( nearly_equal( ( lhs * rhs ) / ( lhs.length() * rhs.length() ), 1.0 ) )
+        return Angle::from_degrees( 0.0 );
+    if ( nearly_equal( ( lhs * rhs ) / ( lhs.length() * rhs.length() ), -1.0 ) )
+        return Angle::from_degrees( 180.0 );
     return arccosine( ( lhs * rhs ) / ( lhs.length() * rhs.length() ) );
 }
 
@@ -536,6 +540,10 @@ Angle angle( const Vector3D & lhs, const Vector3D & rhs )
 // Returns the (smaller) angle between two vectors.
 Angle angle( const NormalisedVector3D & lhs, const Vector3D & rhs )
 {
+    if ( nearly_equal( ( lhs * rhs ) / rhs.length(), 1.0 ) )
+        return Angle::from_degrees( 0.0 );
+    if ( nearly_equal( ( lhs * rhs ) / rhs.length(), -1.0 ) )
+        return Angle::from_degrees( 180.0 );
     return arccosine( ( lhs * rhs ) / rhs.length() );
 }
 
@@ -543,6 +551,10 @@ Angle angle( const NormalisedVector3D & lhs, const Vector3D & rhs )
 
 Angle angle( const NormalisedVector3D & lhs, const Vector3D & rhs, const double length )
 {
+    if ( nearly_equal( ( lhs * rhs ) / length, 1.0 ) )
+        return Angle::from_degrees( 0.0 );
+    if ( nearly_equal( ( lhs * rhs ) / length, -1.0 ) )
+        return Angle::from_degrees( 180.0 );
     return arccosine( ( lhs * rhs ) / length );
 }
 
@@ -551,6 +563,10 @@ Angle angle( const NormalisedVector3D & lhs, const Vector3D & rhs, const double 
 // Returns the (smaller) angle between two vectors.
 Angle angle( const NormalisedVector3D & lhs, const NormalisedVector3D & rhs )
 {
+    if ( nearly_equal( lhs * rhs, 1.0 ) )
+        return Angle::from_degrees( 0.0 );
+    if ( nearly_equal( lhs * rhs, -1.0 ) )
+        return Angle::from_degrees( 180.0 );
     return arccosine( lhs * rhs );
 }
 

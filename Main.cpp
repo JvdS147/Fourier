@@ -132,10 +132,10 @@ struct SimulatedPowderPatternCrystalStructure
     PO_extent_(1.0),
     FWHM_(0.1),
     include_background_(true),
-    background_total_signal_normalisation_(1000.0)
+    background_total_signal_normalisation_(10000.0)
     {}
-    
-    
+
+
     // The PO does NOT apply to the amorphous contribution
     CrystalStructure crystal_structure_;
     double total_signal_normalisation_;
@@ -247,793 +247,125 @@ int main( int argc, char** argv )
         std::cout << e.what() << std::endl;
     }
 
-    try // Write .inp from .cif + two _restraints.txt files + .xye file.
-    {
-        if ( argc != 3 )
-            throw std::runtime_error( "Please give the name of a .cif file and a .xye file that need to be converted to a .inp file." );
-        inp_writer( FileName( argv[ 1 ] ), FileName( argv[ 2 ] ) );
-    MACRO_END_GAME
-
-    // Detect pseudo-inversion symmetry
-    // Crude algorithm, only works if there are only two fragments in the asymmetric unit
-    // Assumes that the first half of the atoms is one molecule in the asymmetric unit,
-    // the second half of the atoms the second molecule
-    // The algorithm to detect floating axes works for up to and including orthorhombic, I do not know about the other space groups.
-    try
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        if ( is_odd( crystal_structure.natoms() ) )
-            throw std::runtime_error( "Z' must be 2 and number of atoms must therefore be even." );
-        CrystalStructure original_crystal_structure( crystal_structure );
-        SpaceGroup original_space_group = crystal_structure.space_group();
-        Matrix3D sum( 0.0 );
-        for ( size_t k( 0 ); k != original_space_group.nsymmetry_operators(); ++k )
-            sum += original_space_group.symmetry_operator( k ).rotation();
-        for ( size_t iSymmOp( 0 ); iSymmOp != original_space_group.nsymmetry_operators(); ++iSymmOp )
-        {
-            crystal_structure = original_crystal_structure;
-            // Split the atoms into two. Assume first half is one molecule, second half is the other.
-            // Apply each symmetry operator (including the identity) in turn to the second molecule.
-            for ( size_t i( crystal_structure.natoms() / 2 ); i != crystal_structure.natoms(); ++i )
-            {
-                Atom new_atom( crystal_structure.atom( i ) );
-                new_atom.set_position( original_space_group.symmetry_operator( iSymmOp ) * crystal_structure.atom( i ).position() );
-                if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
-                    new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), original_space_group.symmetry_operator( iSymmOp ).rotation(), crystal_structure.crystal_lattice() ) );
-                crystal_structure.set_atom( i, new_atom );
-            }
-            SpaceGroup space_group = crystal_structure.space_group();
-            Vector3D com = crystal_structure.centre_of_mass();
-            std::cout << "Centre of mass = " << std::endl;
-            com.show();
-            Vector3D shift; // Floating axes are set to -(c.o.m.)
-            Vector3D translation_for_symmetry_operators; // Floating axes are set to 0.0
-            for ( size_t i( 0 ); i != 3; ++i )
-            {
-                if ( nearly_equal( sum.value( i, i ), 0.0 ) )
-                {
-                    // Not a floating axis
-                    // Round to nearest 1/24
-                    Fraction fraction = double2fraction( -com.value(i), Fraction( 1, 24 ) );
-                    shift.set_value( i, fraction.to_double() );
-                    translation_for_symmetry_operators.set_value( i, shift.value( i ) );
-                }
-                else
-                {
-                    std::cout << "Floating axis found " << Vector3D::index2string( i ) << std::endl;
-                    shift.set_value( i, -com.value(i) );
-                }
-            }
-            Matrix3D rotation( 1.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0,
-                               0.0, 0.0, 1.0 );
-            SymmetryOperator symmetry_operator( rotation, translation_for_symmetry_operators ); // "x-1/4,y,z-3/4"
-            // In Mercury, if the space-group name and the set of symmetry operators do not match up,
-            // the space-group name takes precedence, so we have to erase it to ensure that the
-            // symmetry operators are used instead.
-            space_group.set_name( "" );
-            space_group.apply_similarity_transformation( symmetry_operator );
-            space_group.add_inversion_at_origin();
-            crystal_structure.set_space_group( space_group );
-            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-            {
-                Atom new_atom( crystal_structure.atom( i ) );
-                new_atom.set_position( ( rotation * crystal_structure.atom( i ).position() ) + shift );
-                if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
-                    new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_structure.crystal_lattice() ) );
-                crystal_structure.set_atom( i, new_atom );
-            }
-            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse" ) );
-            for ( size_t i( crystal_structure.natoms() / 2 ); i != crystal_structure.natoms(); ++i )
-                crystal_structure.set_suppressed( i, true );
-            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse_1" ) );
-            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-                crystal_structure.set_suppressed( i, !crystal_structure.suppressed( i ) );
-            crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( iSymmOp ) + "_inverse_2" ) );
-        }
-    MACRO_END_GAME
-
-    // Transformation of the crystal structure (unit cell + atomic coordinates including ADPs + space group)
-    // followed by a transformation of the atomic coordinates including ADPs.
-    try
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        Vector3D com = crystal_structure.centre_of_mass();
-        std::cout << "Centre of mass = " << std::endl;
-        com.show();
-        crystal_structure.transform( Matrix3D(  0.0,  0.0, -1.0,
-                                                0.0,  1.0,  0.0,
-                                                1.0,  0.0,  0.0 ) );
-        // R-centred to primitive
-//        crystal_structure.transform( Matrix3D(  2.0/3.0,  1.0/3.0,  1.0/3.0,
-//                                                1.0/3.0,  2.0/3.0,  2.0/3.0,
-//                                                0.0,  0.0,  1.0 ) );
-        if ( (false) )
-        {
-            SymmetryOperator symmetry_operator( "x-1/4,y,z-3/4" );
-            SpaceGroup space_group = crystal_structure.space_group();
-            space_group.set_name( "" );
-            space_group.apply_similarity_transformation( symmetry_operator );
-         //   space_group.add_inversion_at_origin();
-            crystal_structure.set_space_group( space_group );
-        }
-        Matrix3D rotation(  1.0,  0.0,  0.0,
-                            0.0,  1.0,  0.0,
-                            0.0,  0.0,  1.0 );
-        Vector3D shift( 0.0, 0.0, 0.0 );
-//        shift -= com;
-//        shift += com_2;
-        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        {
-            Atom new_atom( crystal_structure.atom( i ) );
-//            new_atom.set_position( new_atom.position() - shift );
-//            new_atom.set_position( rotation * new_atom.position() );
-//            new_atom.set_position( new_atom.position() + shift );
-            new_atom.set_position( ( rotation * crystal_structure.atom( i ).position() ) + shift );
-            if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
-                new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_structure.crystal_lattice() ) );
-            crystal_structure.set_atom( i, new_atom );
-        }
-        // In Mercury, if the space-group name and the set of symmetry operators do not match up,
-        // the space-group name takes precedence, so we have to erase it to ensure that the
-        // symmetry operators are used instead.
-        if ( (true) )
-        {
-            SpaceGroup space_group = crystal_structure.space_group();
-            space_group.set_name( "" );
-            space_group.remove_duplicate_symmetry_operators();
-            crystal_structure.set_space_group( space_group );
-        }
-        crystal_structure.save_cif( append_to_file_name( input_file_name, "_transformed" ) );
-    MACRO_END_GAME
-
-    // Insert one hydrogen atom between two atoms.
-    try
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-
-        if ( (true) )
-        {
-        std::string origin_atom_label( "N55" );
-        std::string neighbour_atom_label( "N8" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-        
-        if ( (true) )
-        {
-        std::string origin_atom_label( "N32" );
-        std::string neighbour_atom_label( "O2" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-
-        {
-        std::string origin_atom_label( "N55" );
-        std::string neighbour_atom_label( "O57" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-
-        if ( (false) )
-        {
-        std::string origin_atom_label( "Ow" );
-        std::string neighbour_atom_label( "O7" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.second_shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-
-        if ( (false) )
-        {
-        std::string origin_atom_label( "O2" );
-        std::string neighbour_atom_label( "N2" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-
-        crystal_structure.save_cif( append_to_file_name( input_file_name, "_H_inserted" ) );
-    MACRO_END_GAME
-
-    // Normalise hydrogen atoms.
-    try
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        normalise_X_H_bonds( crystal_structure );
-        crystal_structure.save_cif( append_to_file_name( input_file_name, "_H_norm" ) );
-    MACRO_END_GAME
-
-    try // Background subtraction by Brueckner.
-    {
-        MACRO_ONE_XYEFILENAME_AS_ARGUMENT
-        std::cout << powder_pattern.average_two_theta_step() << std::endl;
-        powder_pattern.recalculate_estimated_standard_deviations();
-        PowderPattern background = calculate_Brueckner_background( powder_pattern,
-                                                                   50, // niterations
-                                                                   round_to_int( 50.0 * ( Angle::from_degrees( 0.015 ) / powder_pattern.average_two_theta_step() ) ), // window
-                                                                   true, // apply_smoothing
-                                                                   5 ); // smoothing_window
-//        background.save_xye( append_to_file_name( input_file_name, "_BKGR" ), true );
-        powder_pattern -= background;
-        powder_pattern.save_xye( append_to_file_name( input_file_name, "_NOBKGR" ), true );
-    MACRO_END_GAME
-
-    try // Calculate similarity matrix.
-    {
-        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
-        CorrelationMatrix similarity_matrix = calculate_correlation_matrix( file_list );
-        similarity_matrix.save( FileName( file_list_file_name.directory(), "SimilarityMatrix", "txt" ) );
-    MACRO_END_GAME
-
-    try // Find voids for FileList.txt.
-    {
-        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
-        std::cout << "WARNING: the molecular volume is estimated assuming that the smallest molecular volume corresponds to Z'=1." << std::endl;
-        std::cout << "WARNING: if the smallest molecular volume corresponds to Z'>1 or Z'<1 then the results will be wrong." << std::endl;
-        TextFileWriter text_file_writer( FileName( file_list_file_name.directory(), "Voids", "txt" ) );
-        std::vector< double > total_voids_volumes_per_symmetry_operator;
-        std::vector< std::string > identifiers;
-        std::vector< double > total_void_volumes;
-        std::vector< double > molecular_volumes;
-        std::vector< double > unit_cell_volumes;
-        text_file_writer.write_line( "Identifier | total void volume | ( unit-cell volume - total void volume) / number of symmetry operators" );
-        if ( file_list.empty() )
-            return 0;
-        size_t nfiles = file_list.size();
-        total_voids_volumes_per_symmetry_operator.reserve( nfiles );
-        identifiers.reserve( nfiles );
-        total_void_volumes.reserve( nfiles );
-        molecular_volumes.reserve( nfiles );
-        unit_cell_volumes.reserve( nfiles );
-        double smallest_molecular_volume( 0.0 );
-        for ( size_t i( 0 ); i != nfiles; ++i )
-        {
-            identifiers.push_back( FileName( "", file_list.value( i ).file_name(), file_list.value( i ).extension() ).full_name() );
-            CrystalStructure crystal_structure;
-            std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
-            read_cif( file_list.value( i ), crystal_structure );
-            unit_cell_volumes.push_back( crystal_structure.crystal_lattice().volume() );
-            crystal_structure.apply_space_group_symmetry();
-            double total_void_volume = find_voids( crystal_structure );
-            total_void_volumes.push_back( total_void_volume );
-            total_voids_volumes_per_symmetry_operator.push_back( total_void_volume / crystal_structure.space_group().nsymmetry_operators() );
-            double molecular_volume = ( crystal_structure.crystal_lattice().volume() - total_void_volume ) / crystal_structure.space_group().nsymmetry_operators();
-            molecular_volumes.push_back( molecular_volume );
-            if ( ( i == 0 ) || ( molecular_volume < smallest_molecular_volume ) )
-                smallest_molecular_volume = molecular_volume;
-            text_file_writer.write_line( FileName( "", file_list.value( i ).file_name(), file_list.value( i ).extension() ).full_name() + " " +
-                                         double2string( total_void_volume ) + " " +
-                                         double2string( molecular_volume ) );
-        }
-        std::vector< double > voids_volumes_per_Z;
-        for ( size_t i( 0 ); i != nfiles; ++i )
-        {
-            // round_to_int( molecular_volumes[i] / smallest_molecular_volume ) = Z'
-            voids_volumes_per_Z.push_back( total_voids_volumes_per_symmetry_operator[i] / round_to_int( molecular_volumes[i] / smallest_molecular_volume ) );
-        }
-        text_file_writer.write_line( "##### customer specific #####" );
-        text_file_writer.write_line( "Rank/Form Void volume Void fraction" );
-        text_file_writer.write_line( "              [A3/Z]              " );
-        for ( size_t i( 0 ); i != nfiles; ++i )
-        {
-            if ( voids_volumes_per_Z[i] < 0.000001 )
-                continue;
-            text_file_writer.write_line( FileName( "", file_list.value( i ).file_name(), "" ).full_name() + " " +
-                                         double2string_2( voids_volumes_per_Z[i], 0 ) + " " +
-                                         double2string_2( 100.0 * ( total_void_volumes[i]/unit_cell_volumes[i] ), 2 ) + "%" );
-        }
-        std::vector< size_t > sorted_map = sort( voids_volumes_per_Z );
-        size_t iStart;
-        for ( iStart = 0; iStart != nfiles; ++iStart )
-        {
-            if ( voids_volumes_per_Z[ sorted_map[iStart] ] > 20.0 )
-                break;
-        }
-
-        if ( iStart == nfiles )
-        {
-            text_file_writer.write_line( "There are no voids greater than 20 A3/Z." );
-        }
-        else
-        {
-            text_file_writer.write_line( "##### sorted #####" );
-            for ( size_t i( iStart ); i != nfiles; ++i )
-                text_file_writer.write_line( identifiers[ sorted_map[i] ] + " " + double2string( voids_volumes_per_Z[ sorted_map[i] ] ) );
-            text_file_writer.write_line();
-            if ( (nfiles - iStart) == 1 )
-            {
-                text_file_writer.write( "Rank " );
-                text_file_writer.write( size_t2string( sorted_map[iStart] + 1 ) );
-                text_file_writer.write( " contains voids amounting to " );
-                text_file_writer.write( double2string_2( voids_volumes_per_Z[sorted_map[iStart]], 0 ) );
-                text_file_writer.write( " A3/Z." );
-            }
-            else
-            {
-//        Ranks 12, 22 5, 17, 1, 9 and 10 contain voids amounting to 20, 21, 21, 24, 28, 40 and 45 Å3/Z, respectively.
-                text_file_writer.write( "Ranks " );
-                for ( size_t i( iStart ); i != nfiles; ++i )
-                {
-                    if ( i == nfiles - 1 )
-                        text_file_writer.write( " and "  );
-                    else if ( i != iStart )
-                        text_file_writer.write( ", "  );
-                    text_file_writer.write( size_t2string( sorted_map[i] + 1 ) );
-                }
-                text_file_writer.write( " contain voids amounting to " );
-                for ( size_t i( iStart ); i != nfiles; ++i )
-                {
-                    if ( i == nfiles - 1 )
-                        text_file_writer.write( " and "  );
-                    else if ( i != iStart )
-                        text_file_writer.write( ", "  );
-                    text_file_writer.write( double2string_2( voids_volumes_per_Z[ sorted_map[i] ], 0 ) );
-                }
-                text_file_writer.write( " A3/Z, respectively." );
-            }
-            text_file_writer.write( " Of interest are voids that are greater than about 20 A3/Z: 21.5 A3/Z suffices to store a water molecule (at least in terms of volume), a chloride ion is about 25 A3/Z." );
-            text_file_writer.write_line( " Voids between 15 and 20 A3/Z are quite common, but voids over 25 A3/Z are rare." );
-        }
-    MACRO_END_GAME
-
-    try // Write FileList.txt file.
-    {
-        TextFileWriter text_file_writer( FileName( "/Volumes/customer-projects/c71/p0035/PBE0_MBD/structures_reordered/FileList.txt" ) );
-        for ( size_t i( 0 ); i != 61; ++i )
-        {
-            text_file_writer.write_line( "structure_" + size_t2string( i+1, 3, '0' ) + ".cif" );
-        }
-    MACRO_END_GAME
-
-    try // Print chemical formula for molecule from .cif or .xyz file.
-    {
-        if ( argc == 1 )
-        {
-            char a;
-            std::cout << "Usage:" << std::endl;
-            std::cout << std::endl;
-            std::cout << "ChemicalFormula.exe <CrystalStructure.cif>" << std::endl;
-            std::cout << "ChemicalFormula.exe <Molecule.xyz>" << std::endl;
-            std::cout << std::endl;
-            std::cout << "Output: a chemical formula." << std::endl;
-            std::cin >> a;
-            return 0;
-        }
-        FileName file_name( argv[ 1 ] );
-        std::string extension = to_lower( file_name.extension() );
-        ChemicalFormula chemical_formula;
-        size_t tot_atoms( 0 );
-        if ( extension == "cif" )
-        {
-            std::cout << "Now reading cif... " + file_name.full_name() << std::endl;
-            CrystalStructure crystal_structure;
-            read_cif( file_name, crystal_structure );
-            tot_atoms = crystal_structure.natoms();
-            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-                chemical_formula.add_element( crystal_structure.atom( i ).element() );
-        }
-        else if ( extension == "xyz" )
-        {
-            std::cout << "Now reading xyz... " + file_name.full_name() << std::endl;
-            std::vector< Atom > atoms;
-            read_xyz( file_name, atoms );
-            tot_atoms = atoms.size();
-            for ( size_t i( 0 ); i != atoms.size(); ++i )
-                chemical_formula.add_element( atoms[ i ].element() );
-		}
-        std::cout << chemical_formula.to_string( true, true ) << std::endl;
-        std::cout << chemical_formula.to_string( false, false ) << std::endl;
-        std::cout << "Total number of atoms = " << tot_atoms << std::endl;
-        std::cout << double2string( chemical_formula.solid_state_volume() ) << " A3" << std::endl;
-        std::cout << double2string( chemical_formula.molecular_weight() ) << " g/mol" << std::endl;
-    MACRO_END_GAME
-
-    try // Print molecular weight for chemical formula.
-    {
-        ChemicalFormula chemical_formula( "C29H28N2O5S" );
-        std::cout << chemical_formula.to_string( true, true ) << std::endl;
-        std::cout << chemical_formula.to_string( false, false ) << std::endl;
-     //   std::cout << "Total number of atoms = " << tot_atoms << std::endl;
-        std::cout << double2string( chemical_formula.solid_state_volume() ) << " A3" << std::endl;
-        std::cout << double2string( chemical_formula.molecular_weight() ) << " g/mol" << std::endl;
-    MACRO_END_GAME
-
-    try // Calculate all torsion angles and inversions for a list of cifs.
-    {
-        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
-        TextFileWriter text_file_writer( FileName( file_list_file_name.directory(), "torsions_and_inversions", "txt" ) );
-        std::vector< std::vector< std::string > > torsions;
-
-        // Note that for Z'=1 structures, we have e.g. "C1_0", for Z'=2 structures, we have e.g. "C1_0" and "C1_1".
-        std::vector< std::string > torsion;
-        torsion.push_back( "O2" );
-        torsion.push_back( "C7" );
-        torsion.push_back( "C8" );
-        torsion.push_back( "O3" );
-        torsions.push_back( torsion );
-//        torsion.clear();
-//        torsion.push_back( "C3" );
-//        torsion.push_back( "S0" );
-//        torsion.push_back( "N4" );
-//        torsion.push_back( "C14" );
-//        torsions.push_back( torsion );
-//        torsion.clear();
-//        torsion.push_back( "C0" );
-//        torsion.push_back( "C1" );
-//        torsion.push_back( "N4" );
-//        torsion.push_back( "C13" );
-//        torsions.push_back( torsion );
-//
-//        std::vector< std::string > ring_labels;
-//        ring_labels.push_back( "N3" );
-//        ring_labels.push_back( "C12" );
-//        ring_labels.push_back( "C16" );
-//        ring_labels.push_back( "N4" );
-//        ring_labels.push_back( "C15" );
-//        ring_labels.push_back( "C14" );
-//        ring_labels.push_back( "C13" );
-//        add_all_torsions_in_ring( ring_labels, torsions );
-
-        std::vector< std::vector< std::string > > inversions;
-        std::vector< std::string > inversion;
-//        inversion.push_back( "N4" );
-//        inversion.push_back( "S0" );
-//        inversion.push_back( "C14" );
-//        inversion.push_back( "C13" );
-//        inversions.push_back( inversion );
-//        inversion.clear();
-//        inversion.push_back( "N3" );
-//        inversion.push_back( "C11" );
-//        inversion.push_back( "C12" );
-//        inversion.push_back( "C14" );
-//        inversions.push_back( inversion );
-        std::string header_str( "Rank " );
-        // Write header
-        for ( size_t i( 0 ); i != torsions.size(); ++i )
-        {
-            header_str += "t_" + torsions[i][0] + "_";
-            header_str += torsions[i][1] + "_";
-            header_str += torsions[i][2] + "_";
-            header_str += torsions[i][3] + " ";
-        }
-        for ( size_t i( 0 ); i != inversions.size(); ++i )
-        {
-            header_str += "i_" + inversions[i][0] + "_";
-            header_str += inversions[i][1] + "_";
-            header_str += inversions[i][2] + "_";
-            header_str += inversions[i][3] + " ";
-        }
-        text_file_writer.write_line( header_str );
-        for ( size_t i( 0 ); i != file_list.size(); ++i )
-        {
-            CrystalStructure crystal_structure;
-            std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
-            read_cif( file_list.value( i ), crystal_structure );
-            CrystalLattice crystal_lattice = crystal_structure.crystal_lattice();
-            bool Zprime_is_two( false );
-            std::string label = ( torsions.empty() ) ? inversions[0][0] : torsions[0][0];
-            try
-            {
-                /*size_t index =*/ crystal_structure.atom( label + "_1" );
-                Zprime_is_two = true;
-            }
-            catch ( std::exception & e ) {}
-            std::string output_Z1_string( size_t2string( i+1 ) + " " );
-            std::string output_Z2_string( size_t2string( i+1 ) + " " );
-            // Torsions
-            for ( size_t i( 0 ); i != torsions.size(); ++i )
-            {
-                std::vector< Vector3D > positions;
-                for ( size_t j( 0 ); j != 4; ++j )
-                {
-                    Atom atom1 = crystal_structure.atom( crystal_structure.atom( torsions[i][j] + "_0" ) );
-                    positions.push_back( crystal_lattice.fractional_to_orthogonal( atom1.position() ) );
-                }
-                Angle st = signed_torsion( positions[0], positions[1], positions[2], positions[3] );
-                output_Z1_string += double2string( st.value_in_degrees() ) + " ";
-            }
-            if ( Zprime_is_two )
-            {
-                for ( size_t i( 0 ); i != torsions.size(); ++i )
-                {
-                    std::vector< Vector3D > positions;
-                    for ( size_t j( 0 ); j != 4; ++j )
-                    {
-                        Atom atom1 = crystal_structure.atom( crystal_structure.atom( torsions[i][j] + "_1" ) );
-                        positions.push_back( crystal_lattice.fractional_to_orthogonal( atom1.position() ) );
-                    }
-                    Angle st = signed_torsion( positions[0], positions[1], positions[2], positions[3] );
-                    output_Z2_string += double2string( st.value_in_degrees() ) + " ";
-                }
-            }
-            for ( size_t i( 0 ); i != inversions.size(); ++i )
-            {
-                std::vector< Vector3D > positions;
-                for ( size_t j( 0 ); j != 4; ++j )
-                {
-                    Atom atom1 = crystal_structure.atom( crystal_structure.atom( inversions[i][j] + "_0" ) );
-                    positions.push_back( crystal_lattice.fractional_to_orthogonal( atom1.position() ) );
-                }
-                Plane plane( positions[1], positions[2], positions[3] );
-                double sd = plane.signed_distance( positions[0] );
-                output_Z1_string += double2string( sd ) + " ";
-            }
-            if ( Zprime_is_two )
-            {
-                for ( size_t i( 0 ); i != inversions.size(); ++i )
-                {
-                    std::vector< Vector3D > positions;
-                    for ( size_t j( 0 ); j != 4; ++j )
-                    {
-                        Atom atom1 = crystal_structure.atom( crystal_structure.atom( inversions[i][j] + "_1" ) );
-                        positions.push_back( crystal_lattice.fractional_to_orthogonal( atom1.position() ) );
-                    }
-                    Plane plane( positions[1], positions[2], positions[3] );
-                    double sd = plane.signed_distance( positions[0] );
-                    output_Z2_string += double2string( sd ) + " ";
-                }
-            }
-            text_file_writer.write_line( output_Z1_string );
-            if ( Zprime_is_two )
-                text_file_writer.write_line( output_Z2_string );
-
     // Simulate an experimental powder diffraction pattern
     try
     {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        std::vector< SimulatedPowderPatternCrystalStructure > crystal_structures;
+      //  MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
+     //   std::vector< SimulatedPowderPatternCrystalStructure > crystal_structures;
 //    total_signal_normalisation_(10000.0),
 //    include_PO_(false),
 //    PO_direction_(MillerIndices(0,0,1)),
 //    PO_extent_(1.0),
 //    FWHM_(0.1),
 //    include_background_(true),
-//    background_total_signal_normalisation_(1000.0)
-        SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
-        sim_XRPD_crystal_structure.background_total_signal_normalisation_ = 50000.0;
-        crystal_structures.push_back( sim_XRPD_crystal_structure );
+//    background_total_signal_normalisation_(10000.0)
+      //  SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
         double wavelength( 1.54056 );
-        double zero_point_error = 0.0;
+        // ######################## CHANGE THIS ##################################
+        double zero_point_error = 0.06; // 0.06;
         Angle two_theta_start( 1.0, Angle::DEGREES );
         Angle two_theta_end(  35.0, Angle::DEGREES );
         Angle two_theta_step( 0.015, Angle::DEGREES );
-        PowderPattern result( two_theta_start, two_theta_end, two_theta_step );
-        for ( size_t i( 0 ); i != crystal_structures.size(); ++i )
-        {
-            crystal_structures[i].crystal_structure_.apply_space_group_symmetry();
-            std::cout << "Now calculating powder pattern... " << std::endl;
-            PowderPatternCalculator powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
-            powder_pattern_calculator.set_wavelength( wavelength );
-            powder_pattern_calculator.set_two_theta_start( two_theta_start );
-            powder_pattern_calculator.set_two_theta_end( two_theta_end );
-            powder_pattern_calculator.set_two_theta_step( two_theta_step );
-            powder_pattern_calculator.set_FWHM( crystal_structures[i].FWHM_ );
-            if ( crystal_structures[i].include_PO_ )
-                powder_pattern_calculator.set_preferred_orientation( crystal_structures[i].PO_direction_, crystal_structures[i].PO_extent_ );
-            PowderPattern powder_pattern;
-            powder_pattern_calculator.calculate( powder_pattern );
-            powder_pattern.normalise_total_signal( crystal_structures[i].total_signal_normalisation_ );
-            result += powder_pattern;
-            if ( crystal_structures[i].include_background_ )
-            {
-                PowderPatternCalculator background_powder_pattern_calculator( crystal_structures[i].crystal_structure_ );
-                background_powder_pattern_calculator.set_wavelength( wavelength );
-                background_powder_pattern_calculator.set_two_theta_start( two_theta_start );
-                background_powder_pattern_calculator.set_two_theta_end( two_theta_end );
-                background_powder_pattern_calculator.set_two_theta_step( two_theta_step );
-                background_powder_pattern_calculator.set_FWHM( 5.0 );
-                // We never include PO for the amorphous background
-                PowderPattern powder_pattern;
-                background_powder_pattern_calculator.calculate( powder_pattern );
-                powder_pattern.normalise_total_signal( crystal_structures[i].background_total_signal_normalisation_ );
-                result += powder_pattern;
-            }
-        }
-      //  PowderPattern background_1;
-      //  background_1.read_xye( FileName( "W:\\GC\\Form_I_BKGR.xye" ) );
-      //  background_1.normalise( 1000.0 );
-      //  result += background_1;
-
-        result.normalise_highest_peak( 300.0 );
-        result.add_constant_background( 20.0 );
-        result.recalculate_estimated_standard_deviations();
-        result.add_Poisson_noise();
-        result.correct_zero_point_error( Angle::from_degrees( -zero_point_error ) );
-        result.save_xye( replace_extension( input_file_name, "xye" ), true );
-    MACRO_END_GAME
-
-    try // Calculate angles between two phenyl rings for a list of cifs.
-    {
-        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
-        TextFileWriter text_file_writer( FileName( file_list_file_name.directory(), "phenyl_angles", "txt" ) );
-        std::vector< std::string > ring_1;
-        std::vector< std::string > ring_2;
-        ring_1.push_back( "C15" );
-        ring_1.push_back( "C16" );
-        ring_1.push_back( "C17" );
-        ring_1.push_back( "C18" );
-        ring_1.push_back( "C19" );
-        ring_1.push_back( "C20" );
-        ring_2.push_back( "N2" );
-        ring_2.push_back( "C9" );
-        ring_2.push_back( "C10" );
-        ring_2.push_back( "C11" );
-        ring_2.push_back( "C12" );
-        ring_2.push_back( "C13" );
-        // Note that for Z'=1 structures, we have e.g. "C1_0", for Z'=2 structures, we have e.g. "C1_0" and "C1_1".
-        std::string header_str( "Rank " );
-        // Write header
-        text_file_writer.write_line( header_str );
         for ( size_t i( 0 ); i != file_list.size(); ++i )
-//        for ( size_t i( 0 ); i != 10; ++i )
         {
             CrystalStructure crystal_structure;
             std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
             read_cif( file_list.value( i ), crystal_structure );
-            CrystalLattice crystal_lattice = crystal_structure.crystal_lattice();
-            bool Zprime_is_two( false );
-            try
+            SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
+            // ######################## CHANGE THIS ##################################
+            sim_XRPD_crystal_structure.background_total_signal_normalisation_ = 50000.0;
+            sim_XRPD_crystal_structure.include_PO_ = true;
+          //  sim_XRPD_crystal_structure.include_PO_ = false;
+            if ( sim_XRPD_crystal_structure.include_PO_ )
             {
-                /*size_t index =*/ crystal_structure.atom( ring_1[0] + "_1" );
-                Zprime_is_two = true;
+                // ######################## CHANGE THIS ##################################
+                sim_XRPD_crystal_structure.PO_extent_= 0.7;
+                switch ( crystal_structure.crystal_lattice().lattice_system() )
+                {
+                    case CrystalLattice::TRICLINIC    :
+                    case CrystalLattice::ORTHORHOMBIC : {
+                                                            CrystalLattice crystal_lattice = crystal_structure.crystal_lattice();
+                                                            if ( crystal_lattice.a() < crystal_lattice.b() )
+                                                            {
+                                                                if ( crystal_lattice.a() < crystal_lattice.c() )
+                                                                    sim_XRPD_crystal_structure.PO_direction_ = MillerIndices( 1, 0, 0 );
+                                                            }
+                                                            else // b < a
+                                                            {
+                                                                if ( crystal_lattice.b() < crystal_lattice.c() )
+                                                                    sim_XRPD_crystal_structure.PO_direction_ = MillerIndices( 0, 1, 0 );
+                                                            }
+                                                            break;
+                                                        }
+                    case CrystalLattice::MONOCLINIC   : {
+                                                            sim_XRPD_crystal_structure.PO_direction_ = MillerIndices( 0, 1, 0 );
+                                                            break;
+                                                        }
+                    case CrystalLattice::TRIGONAL     :
+                    case CrystalLattice::TETRAGONAL   :
+                    case CrystalLattice::HEXAGONAL    : break; // Nothing to do
+                    case CrystalLattice::RHOMBOHEDRAL :
+                    case CrystalLattice::CUBIC        : sim_XRPD_crystal_structure.include_PO_ = false;
+                }
             }
-            catch ( std::exception & e ) {}
-            std::string output_Z1_string( size_t2string( i+1 ) + " " );
-            std::string output_Z2_string( size_t2string( i+1 ) + " " );
-            { // Z' = 1
-                std::vector< Vector3D > points_1;
-                for ( size_t i( 0 ); i != ring_1.size(); ++i )
+            // ######################## CHANGE THIS ##################################
+            sim_XRPD_crystal_structure.FWHM_ = 0.25; // 0.2; // ?
+      //      crystal_structures.push_back( sim_XRPD_crystal_structure );
+            PowderPattern result( two_theta_start, two_theta_end, two_theta_step );
+    //        for ( size_t i( 0 ); i != crystal_structures.size(); ++i )
+    //        {
+                sim_XRPD_crystal_structure.crystal_structure_.apply_space_group_symmetry();
+                std::cout << "Now calculating powder pattern... " << std::endl;
+                PowderPatternCalculator powder_pattern_calculator( sim_XRPD_crystal_structure.crystal_structure_ );
+                powder_pattern_calculator.set_wavelength( wavelength );
+                powder_pattern_calculator.set_two_theta_start( two_theta_start );
+                powder_pattern_calculator.set_two_theta_end( two_theta_end );
+                powder_pattern_calculator.set_two_theta_step( two_theta_step );
+                powder_pattern_calculator.set_FWHM( sim_XRPD_crystal_structure.FWHM_ );
+                if ( sim_XRPD_crystal_structure.include_PO_ )
+                    powder_pattern_calculator.set_preferred_orientation( sim_XRPD_crystal_structure.PO_direction_, sim_XRPD_crystal_structure.PO_extent_ );
+                PowderPattern powder_pattern;
+                powder_pattern_calculator.calculate( powder_pattern );
+                powder_pattern.normalise_total_signal( sim_XRPD_crystal_structure.total_signal_normalisation_ );
+                result += powder_pattern;
+                if ( sim_XRPD_crystal_structure.include_background_ )
                 {
-                    size_t i1 = crystal_structure.atom( ring_1[i] + "_0" );
-                    Atom atom = crystal_structure.atom( i1 );
-                    points_1.push_back( crystal_lattice.fractional_to_orthogonal( atom.position() ) );
+                    PowderPatternCalculator background_powder_pattern_calculator( sim_XRPD_crystal_structure.crystal_structure_ );
+                    background_powder_pattern_calculator.set_wavelength( wavelength );
+                    background_powder_pattern_calculator.set_two_theta_start( two_theta_start );
+                    background_powder_pattern_calculator.set_two_theta_end( two_theta_end );
+                    background_powder_pattern_calculator.set_two_theta_step( two_theta_step );
+                    background_powder_pattern_calculator.set_FWHM( 5.0 );
+                    // We never include PO for the amorphous background
+                    PowderPattern powder_pattern;
+                    background_powder_pattern_calculator.calculate( powder_pattern );
+                    powder_pattern.normalise_total_signal( sim_XRPD_crystal_structure.background_total_signal_normalisation_ );
+                    result += powder_pattern;
                 }
-                Plane plane_1( points_1 );
-                std::vector< Vector3D > points_2;
-                for ( size_t i( 0 ); i != ring_2.size(); ++i )
-                {
-                    size_t i1 = crystal_structure.atom( ring_2[i] + "_0" );
-                    Atom atom = crystal_structure.atom( i1 );
-                    points_2.push_back( crystal_lattice.fractional_to_orthogonal( atom.position() ) );
-                }
-                Plane plane_2( points_2 );
-                Angle phi = angle( plane_1, plane_2 );
-                output_Z1_string += double2string( phi.value_in_degrees() ) + " ";
-                text_file_writer.write_line( output_Z1_string );
-            }
-            if ( Zprime_is_two )
-            {
-                std::vector< Vector3D > points_1;
-                for ( size_t i( 0 ); i != ring_1.size(); ++i )
-                {
-                    size_t i1 = crystal_structure.atom( ring_1[i] + "_1" );
-                    Atom atom = crystal_structure.atom( i1 );
-                    points_1.push_back( crystal_lattice.fractional_to_orthogonal( atom.position() ) );
-                }
-                Plane plane_1( points_1 );
-                std::vector< Vector3D > points_2;
-                for ( size_t i( 0 ); i != ring_2.size(); ++i )
-                {
-                    size_t i1 = crystal_structure.atom( ring_2[i] + "_1" );
-                    Atom atom = crystal_structure.atom( i1 );
-                    points_2.push_back( crystal_lattice.fractional_to_orthogonal( atom.position() ) );
-                }
-                Plane plane_2( points_2 );
-                Angle phi = angle( plane_1, plane_2 );
-                output_Z2_string += double2string( phi.value_in_degrees() ) + " ";
-                text_file_writer.write_line( output_Z2_string );
-            }
-        }
-    MACRO_END_GAME
+    //        }
 
-    try // RMSD
-    {
-        size_t natoms( 49 );
-        TextFileReader_2 text_file_reader( FileName( "/Volumes/customer-projects/GC/PBE_NP.txt" ) );
-        std::vector< double > list_1;
-        for ( size_t i( 0 ); i != text_file_reader.size(); ++i )
-            list_1.push_back( string2double( text_file_reader.line( i ) ) * natoms );
-        text_file_reader.read_file( FileName( "/Volumes/customer-projects/GC/DREIDING_SC.txt" ) );
-        std::vector< double > list_2;
-        for ( size_t i( 0 ); i != text_file_reader.size(); ++i )
-            list_2.push_back( string2double( text_file_reader.line( i ) ) * natoms );
-        double RMSD = calculate_sample_RMSD( list_1, list_2 );
-        std::cout << "Number of atoms = " << natoms << std::endl;
-        std::cout << "RMSD = " << RMSD << ", N = " << list_1.size() << std::endl;
+          //  PowderPattern background_1;
+          //  background_1.read_xye( FileName( "W:\\GC\\Form_I_BKGR.xye" ) );
+          //  background_1.normalise( 1000.0 );
+          //  result += background_1;
+
+            // ######################## CHANGE THIS ##################################
+            result.normalise_highest_peak( 300.0 );
+            result.add_constant_background( 20.0 );
+            result.recalculate_estimated_standard_deviations();
+            result.add_Poisson_noise();
+            result.correct_zero_point_error( Angle::from_degrees( -zero_point_error ) );
+
+            PowderPattern background = calculate_Brueckner_background( result,
+                                                                       50, // niterations
+                                                                       round_to_int( 50.0 * ( Angle::from_degrees( 0.015 ) / result.average_two_theta_step() ) ), // window
+                                                                       true, // apply_smoothing
+                                                                       5 ); // smoothing_window
+            result -= background;
+
+            result.save_xye( replace_extension( file_list.value( i ), "xye" ), true );
+        }
     MACRO_END_GAME
 
     try // Sudoku.
@@ -1141,7 +473,7 @@ int main( int argc, char** argv )
             std::cout << "###############################################" << std::endl;
             Sudoku solved_sudoku = solve( sudoku );
             solved_sudoku.show();
-        }  
+        }
         if ( false ) // Toughest
         {
             std::vector< std::string > sudoku_string;
@@ -1157,7 +489,7 @@ int main( int argc, char** argv )
             Sudoku sudoku( sudoku_string );
             std::cout << "###############################################" << std::endl;
             Sudoku solved_sudoku = solve( sudoku );
-            solved_sudoku.show();            
+            solved_sudoku.show();
         }
         if ( false ) // NYT
         {
@@ -1174,7 +506,7 @@ int main( int argc, char** argv )
             Sudoku sudoku( sudoku_string );
             std::cout << "###############################################" << std::endl;
             Sudoku solved_sudoku = solve( sudoku );
-            solved_sudoku.show();            
+            solved_sudoku.show();
         }
         if ( false ) // Learn something (Empty Rectangle)
         {
@@ -1191,7 +523,7 @@ int main( int argc, char** argv )
             Sudoku sudoku( sudoku_string );
             std::cout << "###############################################" << std::endl;
             Sudoku solved_sudoku = solve( sudoku );
-            solved_sudoku.show();            
+            solved_sudoku.show();
         }
         if ( false ) // Learn something (X-Wing)
         {
@@ -1208,7 +540,7 @@ int main( int argc, char** argv )
             Sudoku sudoku( sudoku_string );
             std::cout << "###############################################" << std::endl;
             Sudoku solved_sudoku = solve( sudoku );
-            solved_sudoku.show();            
+            solved_sudoku.show();
         }
         if ( true ) // AI Escargot 6313 guesses, stack pointer = 1
         {
@@ -1225,7 +557,7 @@ int main( int argc, char** argv )
             Sudoku sudoku( sudoku_string );
             std::cout << "###############################################" << std::endl;
             Sudoku solved_sudoku = solve( sudoku );
-            solved_sudoku.show();            
+            solved_sudoku.show();
         }
     MACRO_END_GAME
 
@@ -1236,7 +568,7 @@ int main( int argc, char** argv )
 
     try // BFDH.
     {
-        
+
         //calculate_BFDH( crystal_structure );
     MACRO_END_GAME
 
@@ -1402,6 +734,122 @@ int main( int argc, char** argv )
             Fraction result = Farey( target, 1000 );
             std::cout << "target = " << target << ", fraction = " << result.to_string() << " = " << result.to_double() << std::endl;
         }
+
+    MACRO_END_GAME
+
+    // Insert one hydrogen atom between two atoms.
+    try
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+
+        if ( (true) )
+        {
+        std::string origin_atom_label( "O2" );
+        std::string neighbour_atom_label( "Ow" );
+        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
+        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
+        // Find shortest disance between the two taking periodicity and space-group symmetry into account.
+        double distance;
+        Vector3D difference_frac;
+        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
+        if ( distance > 3.0 )
+            std::cout << "Warning: distance > 3.0 A" << std::endl;
+        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
+        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
+        double target_bond_length( 1.0 );
+        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
+            target_bond_length = 1.089;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
+            target_bond_length = 1.015;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
+            target_bond_length = 0.993;
+        difference_cart *= target_bond_length / distance;
+        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
+        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
+        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
+        }
+
+        {
+        std::string origin_atom_label( "Ow" );
+        std::string neighbour_atom_label( "O5" );
+        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
+        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
+        // Find shortest disance between the two taking periodicity and space-group symmetry into account.
+        double distance;
+        Vector3D difference_frac;
+        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
+        if ( distance > 3.0 )
+            std::cout << "Warning: distance > 3.0 A" << std::endl;
+        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
+        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
+        double target_bond_length( 1.0 );
+        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
+            target_bond_length = 1.089;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
+            target_bond_length = 1.015;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
+            target_bond_length = 0.993;
+        difference_cart *= target_bond_length / distance;
+        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
+        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
+        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
+        }
+
+        if ( (true) )
+        {
+        std::string origin_atom_label( "Ow" );
+        std::string neighbour_atom_label( "O7" );
+        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
+        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
+        // Find shortest disance between the two taking periodicity and space-group symmetry into account.
+        double distance;
+        Vector3D difference_frac;
+        crystal_structure.second_shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
+        if ( distance > 3.0 )
+            std::cout << "Warning: distance > 3.0 A" << std::endl;
+        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
+        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
+        double target_bond_length( 1.0 );
+        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
+            target_bond_length = 1.089;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
+            target_bond_length = 1.015;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
+            target_bond_length = 0.993;
+        difference_cart *= target_bond_length / distance;
+        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
+        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
+        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
+        }
+
+        if ( (false) )
+        {
+        std::string origin_atom_label( "O2" );
+        std::string neighbour_atom_label( "N2" );
+        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
+        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
+        // Find shortest disance between the two taking periodicity and space-group symmetry into account.
+        double distance;
+        Vector3D difference_frac;
+        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
+        if ( distance > 3.0 )
+            std::cout << "Warning: distance > 3.0 A" << std::endl;
+        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
+        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
+        double target_bond_length( 1.0 );
+        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
+            target_bond_length = 1.089;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
+            target_bond_length = 1.015;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
+            target_bond_length = 0.993;
+        difference_cart *= target_bond_length / distance;
+        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
+        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
+        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
+        }
+
+        crystal_structure.save_cif( append_to_file_name( input_file_name, "_H_inserted" ) );
     MACRO_END_GAME
 
     try // RMSCD with / without matching.
@@ -1423,14 +871,14 @@ int main( int argc, char** argv )
         std::cout << result << std::endl;
     MACRO_END_GAME
 
-    try // Loop over all space groups.
+    try // Loop over all space groups
     {
         RandomNumberGenerator_integer rng;
         ReflectionList reflection_list;
         for ( size_t i( 0 ); i != 1; ++i )
             reflection_list.push_back( MillerIndices( rng.next_number( -100, 100 ), rng.next_number( -100, 100 ), rng.next_number( -100, 100 ) ), 1.0, 1.0, 2 );
         std::vector< MillerIndices > PO_directions;
-        if ( false )
+        if ( (false) )
         {
             for ( size_t i( 0 ); i != 3; ++i )
             {
@@ -1535,7 +983,7 @@ int main( int argc, char** argv )
                             {
                                 std::cout << space_group.name() << " " << PO_directions[iPOD] << " " << reference_PO << " " << current_PO << " " << reflection_list.miller_indices( iReflection ) << " " << std::endl;
                             }
-                        
+
                         }
                     }
                 }
@@ -1721,6 +1169,13 @@ int main( int argc, char** argv )
                 }
             }
         }
+    MACRO_END_GAME
+
+    try // Write .inp from .cif + two _restraints.txt files + .xye file.
+    {
+        if ( argc != 3 )
+            throw std::runtime_error( "Please give the name of a .cif file and a .xye file that need to be converted to a .inp file." );
+        inp_writer( FileName( argv[ 1 ] ), FileName( argv[ 2 ] ) );
     MACRO_END_GAME
 
     try // Generate R input file for Pawley or Loopstra-Rietveld plot.
@@ -1964,7 +1419,7 @@ int main( int argc, char** argv )
             CrystalStructure crystal_structure;
  //           std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
             read_cif( file_list.value( i ), crystal_structure );
-            
+
             // ### REMOVE WATER ###
             for ( size_t k( 0 ); k != water_labels.size(); ++k )
             {
@@ -2236,6 +1691,20 @@ int main( int argc, char** argv )
         std::cout << "Packing coefficient = " << double2string( ( crystal_structure.crystal_lattice().volume() - total_void_volume ) / crystal_structure.crystal_lattice().volume() ) << std::endl;
     MACRO_END_GAME
 
+    try // Background subtraction by Brueckner.
+    {
+        MACRO_ONE_XYEFILENAME_AS_ARGUMENT
+        std::cout << powder_pattern.average_two_theta_step() << std::endl;
+        PowderPattern background = calculate_Brueckner_background( powder_pattern,
+                                                                   50, // niterations
+                                                                   round_to_int( 50.0 * ( Angle::from_degrees( 0.015 ) / powder_pattern.average_two_theta_step() ) ), // window
+                                                                   true, // apply_smoothing
+                                                                   5 ); // smoothing_window
+        background.save_xye( append_to_file_name( input_file_name, "_BKGR" ), true );
+        powder_pattern -= background;
+        powder_pattern.save_xye( append_to_file_name( input_file_name, "_NOBKGR" ), true );
+    MACRO_END_GAME
+
     try // Generate a powder pattern based on a list of d-spacings and intensities.
     {
         // We need a dummy crystal stucture.
@@ -2286,6 +1755,117 @@ int main( int argc, char** argv )
         powder_pattern.save_xye( FileName( "/Volumes/Staff/jvds/AMS_ModelSystems/EthylenediamineTartrate/powder_pattern.xye" ), false );
     MACRO_END_GAME
 
+    try // Find voids for FileList.txt.
+    {
+        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
+        std::cout << "WARNING: the molecular volume is estimated assuming that the smallest molecular volume corresponds to Z'=1." << std::endl;
+        std::cout << "WARNING: if the smallest molecular volume corresponds to Z'>1 or Z'<1 then the results will be wrong." << std::endl;
+        TextFileWriter text_file_writer( FileName( file_list_file_name.directory(), "Voids", "txt" ) );
+        std::vector< double > total_voids_volumes_per_symmetry_operator;
+        std::vector< std::string > identifiers;
+        std::vector< double > total_void_volumes;
+        std::vector< double > molecular_volumes;
+        std::vector< double > unit_cell_volumes;
+        text_file_writer.write_line( "Identifier | total void volume | ( unit-cell volume - total void volume) / number of symmetry operators" );
+        if ( file_list.empty() )
+            return 0;
+        size_t nfiles = file_list.size();
+        total_voids_volumes_per_symmetry_operator.reserve( nfiles );
+        identifiers.reserve( nfiles );
+        total_void_volumes.reserve( nfiles );
+        molecular_volumes.reserve( nfiles );
+        unit_cell_volumes.reserve( nfiles );
+        double smallest_molecular_volume( 0.0 );
+        for ( size_t i( 0 ); i != nfiles; ++i )
+        {
+            identifiers.push_back( FileName( "", file_list.value( i ).file_name(), file_list.value( i ).extension() ).full_name() );
+            CrystalStructure crystal_structure;
+            std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
+            read_cif( file_list.value( i ), crystal_structure );
+            unit_cell_volumes.push_back( crystal_structure.crystal_lattice().volume() );
+            crystal_structure.apply_space_group_symmetry();
+            double total_void_volume = find_voids( crystal_structure );
+            total_void_volumes.push_back( total_void_volume );
+            total_voids_volumes_per_symmetry_operator.push_back( total_void_volume / crystal_structure.space_group().nsymmetry_operators() );
+            double molecular_volume = ( crystal_structure.crystal_lattice().volume() - total_void_volume ) / crystal_structure.space_group().nsymmetry_operators();
+            molecular_volumes.push_back( molecular_volume );
+            if ( ( i == 0 ) || ( molecular_volume < smallest_molecular_volume ) )
+                smallest_molecular_volume = molecular_volume;
+            text_file_writer.write_line( FileName( "", file_list.value( i ).file_name(), file_list.value( i ).extension() ).full_name() + " " +
+                                         double2string( total_void_volume ) + " " +
+                                         double2string( molecular_volume ) );
+        }
+        std::vector< double > voids_volumes_per_Z;
+        for ( size_t i( 0 ); i != nfiles; ++i )
+        {
+            // round_to_int( molecular_volumes[i] / smallest_molecular_volume ) = Z'
+            voids_volumes_per_Z.push_back( total_voids_volumes_per_symmetry_operator[i] / round_to_int( molecular_volumes[i] / smallest_molecular_volume ) );
+        }
+        text_file_writer.write_line( "##### customer specific #####" );
+        text_file_writer.write_line( "Rank/Form Void volume Void fraction" );
+        text_file_writer.write_line( "              [A3/Z]              " );
+        for ( size_t i( 0 ); i != nfiles; ++i )
+        {
+            if ( voids_volumes_per_Z[i] < 0.000001 )
+                continue;
+            text_file_writer.write_line( FileName( "", file_list.value( i ).file_name(), "" ).full_name() + " " +
+                                         double2string_2( voids_volumes_per_Z[i], 0 ) + " " +
+                                         double2string_2( 100.0 * ( total_void_volumes[i]/unit_cell_volumes[i] ), 2 ) + "%" );
+        }
+        std::vector< size_t > sorted_map = sort( voids_volumes_per_Z );
+        size_t iStart;
+        for ( iStart = 0; iStart != nfiles; ++iStart )
+        {
+            if ( voids_volumes_per_Z[ sorted_map[iStart] ] > 20.0 )
+                break;
+        }
+
+        if ( iStart == nfiles )
+        {
+            text_file_writer.write_line( "There are no voids greater than 20 A3/Z." );
+        }
+        else
+        {
+            text_file_writer.write_line( "##### sorted #####" );
+            for ( size_t i( iStart ); i != nfiles; ++i )
+                text_file_writer.write_line( identifiers[ sorted_map[i] ] + " " + double2string( voids_volumes_per_Z[ sorted_map[i] ] ) );
+            text_file_writer.write_line();
+            if ( (nfiles - iStart) == 1 )
+            {
+                text_file_writer.write( "Rank " );
+                text_file_writer.write( size_t2string( sorted_map[iStart] + 1 ) );
+                text_file_writer.write( " contains voids amounting to " );
+                text_file_writer.write( double2string_2( voids_volumes_per_Z[sorted_map[iStart]], 0 ) );
+                text_file_writer.write( " A3/Z." );
+            }
+            else
+            {
+//        Ranks 12, 22 5, 17, 1, 9 and 10 contain voids amounting to 20, 21, 21, 24, 28, 40 and 45 ï¿½3/Z, respectively.
+                text_file_writer.write( "Ranks " );
+                for ( size_t i( iStart ); i != nfiles; ++i )
+                {
+                    if ( i == nfiles - 1 )
+                        text_file_writer.write( " and "  );
+                    else if ( i != iStart )
+                        text_file_writer.write( ", "  );
+                    text_file_writer.write( size_t2string( sorted_map[i] + 1 ) );
+                }
+                text_file_writer.write( " contain voids amounting to " );
+                for ( size_t i( iStart ); i != nfiles; ++i )
+                {
+                    if ( i == nfiles - 1 )
+                        text_file_writer.write( " and "  );
+                    else if ( i != iStart )
+                        text_file_writer.write( ", "  );
+                    text_file_writer.write( double2string_2( voids_volumes_per_Z[ sorted_map[i] ], 0 ) );
+                }
+                text_file_writer.write( " A3/Z, respectively." );
+            }
+            text_file_writer.write( " Of interest are voids that are greater than about 20 A3/Z: 21.5 A3/Z suffices to store a water molecule (at least in terms of volume), a chloride ion is about 25 A3/Z." );
+            text_file_writer.write_line( " Voids between 15 and 20 A3/Z are quite common, but voids over 25 A3/Z are rare." );
+        }
+    MACRO_END_GAME
+
     // Calculate powder diffraction pattern.
     try
     {
@@ -2302,10 +1882,10 @@ int main( int argc, char** argv )
         powder_pattern_calculator.set_two_theta_end( two_theta_end );
         powder_pattern_calculator.set_two_theta_step( two_theta_step );
         powder_pattern_calculator.set_FWHM( FWHM );
-        
+
         // ### PREFERRED ORIENTATION ###
       //  powder_pattern_calculator.set_preferred_orientation( MillerIndices( 0, 0, 1 ), 1.0 );
-        
+
         powder_pattern_calculator.calculate( powder_pattern );
         powder_pattern.save_xye( replace_extension( input_file_name, "xye" ), false );
     MACRO_END_GAME
@@ -2711,7 +2291,7 @@ int main( int argc, char** argv )
         com.show();
     MACRO_END_GAME
 
-    try // Split cif with multiple crystal structures.
+    try // Split cif with multiple crystal structures
     {
         FileName file_name( "C:\\Data_Win\\Research\\Refereeing\\GF.cif" );
         TextFileReader text_file_reader_1( file_name );
@@ -2743,6 +2323,15 @@ int main( int argc, char** argv )
             }
             text_file_reader_1.push_back_last_line();
         }
+    MACRO_END_GAME
+
+    try // Generate FileList.txt .
+    {
+        if ( argc != 2 )
+            throw std::runtime_error( "Please give the name of a directory." );
+        TextFileWriter text_file_writer( FileName( argv[ 1 ], "FileList", "txt" ) );
+        for ( size_t i( 0 ); i != 265; ++i )
+            text_file_writer.write_line( "structure_" + size_t2string( i+1, 6, '0') + ".cif" );
     MACRO_END_GAME
 
     try // Calculate powder pattern.
@@ -3183,6 +2772,13 @@ int main( int argc, char** argv )
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( u ) + "_" + size_t2string( v ) + "_" + size_t2string( w ) ) );
     MACRO_END_GAME
 
+    try // Calculate similarity matrix.
+    {
+        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
+        CorrelationMatrix similarity_matrix = calculate_correlation_matrix( file_list );
+        similarity_matrix.save( FileName( file_list_file_name.directory(), "SimilarityMatrix", "txt" ) );
+    MACRO_END_GAME
+
     try // Split reflections from SHELX .hkl file into +(hkl) and -(hkl).
     {
         // We need a CrystalLattice and a space group
@@ -3569,7 +3165,7 @@ int main( int argc, char** argv )
         std::string atom_3_label( "C74" );
         std::string atom_4_label( "N88" );
         std::string atom_5_label( "C97" );
-        
+
         std::string atom_0_label( "C66" );
 
         Vector3D atom_0 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_0_label ) ).position() );
@@ -3586,7 +3182,7 @@ int main( int argc, char** argv )
         points.push_back( atom_4 );
         points.push_back( atom_5 );
         Plane plane( points );
-        
+
         double distance = plane.signed_distance( atom_0 );
         Vector3D new_position = atom_0 + distance * plane.normal();
         crystal_structure.add_atom( Atom( Element( "C" ), crystal_structure.crystal_lattice().orthogonal_to_fractional( new_position ), "C" + size_t2string( crystal_structure.natoms() ) ) );
@@ -3743,13 +3339,24 @@ int main( int argc, char** argv )
             read_cif( file_list.value( fi ), crystal_structure );
             CrystalLattice crystal_lattice = crystal_structure.crystal_lattice();
             bool Zprime_is_two( false );
-            std::string label = ( rings_5.empty() ) ? rings_6[0][0] : rings_5[0][0];
-            try
+            if ( rings_5.empty() )
             {
-                /*size_t index =*/ crystal_structure.atom( label + "_1" );
-                Zprime_is_two = true;
+                try
+                {
+                    /*size_t index =*/ crystal_structure.atom( rings_6[0][0] + "_1" );
+                    Zprime_is_two = true;
+                }
+                catch ( std::exception & e ) {}
             }
-            catch ( std::exception & e ) {}
+            else
+            {
+                try
+                {
+                    /*size_t index =*/ crystal_structure.atom( rings_5[0][0] + "_1" );
+                    Zprime_is_two = true;
+                }
+                catch ( std::exception & e ) {}
+            }
             FiveMemberedRingAnalyser five_membered_ring_analyser;
             for ( size_t j( 0 ); j != rings_5.size(); ++j )
             {
@@ -4084,7 +3691,7 @@ int main( int argc, char** argv )
         PowderPattern powder_pattern_2;
         powder_pattern_2.read_xye( input_file_name_2 );
         powder_pattern_1 -= powder_pattern_2;
-        
+
         powder_pattern_1.correct_zero_point_error( Angle::from_degrees( 0.14068 ) );
         powder_pattern_1.save_xye( append_to_file_name( input_file_name_1, "_zp" ), true );
     MACRO_END_GAME
@@ -4245,7 +3852,7 @@ int main( int argc, char** argv )
     {
         std::vector< PowderPattern > powder_patterns;
         std::vector< double > noscp2ts;
-        
+
         {
         PowderPattern powder_pattern;
         powder_pattern.read_xye( FileName( "C:\\Data_Win\\KOFHOC\\VCT\\NewSample\\range_01.xye" ) );
@@ -4393,7 +4000,7 @@ int main( int argc, char** argv )
         std::vector< DisorderGroup > disorder_groups;
         DisorderGroup disorder_group;
         disorder_group.major_occupancy_labels_.push_back( "N202" );
-        
+
         disorder_group.minor_occupancy_labels_.push_back( "N206" );
         disorder_groups.push_back( disorder_group );
         disorder_group.major_occupancy_labels_.clear();
@@ -4401,7 +4008,7 @@ int main( int argc, char** argv )
         disorder_group.major_occupancy_labels_.push_back( "C221" );
         disorder_group.major_occupancy_labels_.push_back( "H05A" );
         disorder_group.major_occupancy_labels_.push_back( "H05B" );
-        
+
         disorder_group.minor_occupancy_labels_.push_back( "C223" );
         disorder_group.minor_occupancy_labels_.push_back( "H99A" );
         disorder_group.minor_occupancy_labels_.push_back( "H99B" );
@@ -4414,7 +4021,7 @@ int main( int argc, char** argv )
         disorder_group.major_occupancy_labels_.push_back( "F101" );
         disorder_group.major_occupancy_labels_.push_back( "F102" );
         disorder_group.major_occupancy_labels_.push_back( "F103" );
-        
+
         disorder_group.minor_occupancy_labels_.push_back( "C134" );
         disorder_group.minor_occupancy_labels_.push_back( "H98A" );
         disorder_group.minor_occupancy_labels_.push_back( "H98B" );
@@ -4431,7 +4038,7 @@ int main( int argc, char** argv )
         disorder_group.major_occupancy_labels_.push_back( "H3" );
         disorder_group.major_occupancy_labels_.push_back( "C117" );
         disorder_group.major_occupancy_labels_.push_back( "H8" );
-        
+
         disorder_group.minor_occupancy_labels_.push_back( "N106" );
         disorder_group.minor_occupancy_labels_.push_back( "C132" );
         disorder_group.minor_occupancy_labels_.push_back( "H80" );
@@ -4753,7 +4360,7 @@ int main( int argc, char** argv )
         crystal_structure.apply_space_group_symmetry();
         std::cout << crystal_structure.dipole_moment() << std::endl;
     MACRO_END_GAME
-    
+
     try // Calculate libration eigenvectors
     {
         if ( argc != 2 )
@@ -4790,14 +4397,12 @@ int main( int argc, char** argv )
 //    prm !S22  0.0
 //    prm !S23  0.0
 
-
         /*double T11 =*/ read_keyword( "T11", input_file );
         /*double T22 =*/ read_keyword( "T22", input_file );
         /*double T33 =*/ read_keyword( "T33", input_file );
         /*double T12 =*/ read_keyword( "T12", input_file );
         /*double T13 =*/ read_keyword( "T13", input_file );
         /*double T23 =*/ read_keyword( "T23", input_file );
-
         double L11 = read_keyword( "L11", input_file );
         double L22 = read_keyword( "L22", input_file );
         double L33 = read_keyword( "L33", input_file );
@@ -5151,7 +4756,7 @@ int main( int argc, char** argv )
         Matrix3D transformation_matrix(  1.0, 0.0, 1.0,
                                          0.0, 1.0, 0.0,
                                         -1.0, 0.0, 0.0  );
-                                        
+
         std::vector< SymmetricMatrix3D > adps;
         adps.push_back( SymmetricMatrix3D(  0.14836,  0.05714,  0.08416, -0.00810,  0.08528, -0.01550 ) );
         adps.push_back( SymmetricMatrix3D(  0.14486,  0.08051,  0.12858,  0.02659,  0.11302,  0.01117 ) );
@@ -5933,7 +5538,7 @@ int main( int argc, char** argv )
         powder_pattern_sum.recalculate_estimated_standard_deviations();
         powder_pattern_sum.save_xye( FileName( file_list.base_directory(), "MD_sum_" + size_t2string( 0, 4, '0' )+"_"+size_t2string( file_list.size(), 4, '0' ), "xye" ), true );
     MACRO_END_GAME
-    
+
     try // Calculate normalised cross correlation for two powder patterns
     {
         // GF_exp_no_background_5.0-39.98.xye
@@ -6171,9 +5776,9 @@ int main( int argc, char** argv )
         Vector3D r( 0.46306, 0.89770, 0.62438 );
         r = rotation * r;
         r = r + Vector3D( 0.25, 0.25, 0.75 );
-        
+
         std::cout << r << std::endl;
-        
+
         Vector3D translation( 0.0, 0.0, 0.0 );
         SymmetryOperator symmetry_operator( rotation, translation );
     MACRO_END_GAME
@@ -6186,14 +5791,14 @@ int main( int argc, char** argv )
                            -1.0, -1.0,  1.0 );
         Vector3D translation( 0.0, 0.0, 0.0 );
         SymmetryOperator symmetry_operator( rotation, translation );
-        
+
         std::vector< SymmetryOperator > symmetry_operators;
         symmetry_operators.push_back( SymmetryOperator( "x,y,z" ) );
         symmetry_operators.push_back( SymmetryOperator( "y,x,-x-y-z" ) );
         symmetry_operators.push_back( SymmetryOperator( "-z+1/4,x+y+z+1/4,-x+1/4" ) );
         symmetry_operators.push_back( SymmetryOperator( "x+y+z+1/4,-z+1/4,-y+1/4" ) );
         SpaceGroup space_group( symmetry_operators, "Fdd2" );
-        
+
         symmetry_operator.invert();
         space_group.apply_similarity_transformation( symmetry_operator );
         std::ofstream output_file;
@@ -6247,7 +5852,7 @@ int main( int argc, char** argv )
     for ( size_t i( 0 ); i != atoms.size(); ++i )
         text_file_writer.write_line( atoms[ i ].element().symbol() + " " + crystal_lattice.orthogonal_to_fractional( atoms[ i ].position() ).to_string() );
     MACRO_END_GAME
-    
+
     try // Convert MAQDAJ powder pattern to .xye
     {
         TextFileReader text_file_reader( FileName( "C:\\Data\\ActaCryst_powder\\Errors\\MAQDAJ.txt" ) );
@@ -6795,4 +6400,3 @@ int main( int argc, char** argv )
     MACRO_END_GAME
 
 }
-

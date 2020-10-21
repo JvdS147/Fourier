@@ -51,7 +51,7 @@ bool intersects_atoms( const CrystalStructure & crystal_structure, const Vector3
 double calculate_volume( const CrystalStructure & crystal_structure, const std::vector< Vector3D > & void_spheres, const double probe_radius )
 {
     std::cout << "Now calculating the volume." << std::endl;
-    if ( void_spheres.size() == 0 )
+    if ( void_spheres.empty() )
         return 0.0;
     RandomNumberGenerator_double random_number_generator;
     const size_t nprobes( ( crystal_structure.crystal_lattice().volume() * 1000.0 ) / crystal_structure.space_group().nsymmetry_operators() ); // 1000 sampling points per A^3

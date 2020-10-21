@@ -833,7 +833,7 @@ Sudoku solve( const Sudoku & sudoku )
             else
             {
                 // Find first square that has not been solved
-                size_t square_index;
+                size_t square_index( result.nsquares() );
                 for ( size_t i( 0 ); i != result.nsquares(); ++i )
                 {
                     if ( ! result.square( i ).solved() )

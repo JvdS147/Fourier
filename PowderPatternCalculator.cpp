@@ -431,7 +431,7 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
         double multiplicity( 0.0 );
         if ( include_preferred_orientation_ )
         {
-            std::cout << "PO is included" << std::endl;
+      //      std::cout << "PO is included" << std::endl;
             std::set< MillerIndices > equivalent_reflections = calculate_equivalent_reflections( reflection_list.miller_indices( i ) );
             for ( std::set< MillerIndices >::const_iterator it( equivalent_reflections.begin() ); it != equivalent_reflections.end(); ++it )
             {
