@@ -26,6 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "PowderMatchTable.h"
+#include "MillerIndices.h"
+#include "TextFileReader.h"
 #include "Utilities.h"
 
 #include <stdexcept>
@@ -62,7 +64,7 @@ PowderMatchTable::PowderMatchTable( const FileName & file_name )
         figures_of_merit_.push_back( string2double( words[13] ) );
         Biso_values_.push_back( string2double( words[14] ) );
         MarchDollase_values_.push_back( string2double( words[15] ) );
-        PO_directions_.push_back( MillerIndices( ( words[16] ), ( words[17] ), ( words[18] ) ) );
+        PO_directions_.push_back( MillerIndices( string2integer( words[16] ), string2integer( words[17] ), string2integer( words[18] ) ) );
         cell_deformations_.push_back( string2double( words[19] ) );
         double a = string2double( words[20] );
         double b = string2double( words[21] );

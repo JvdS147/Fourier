@@ -35,6 +35,7 @@ class FileName;
 #include "MillerIndices.h"
 
 #include <string>
+#include <vector>
 
 /*
 
@@ -47,6 +48,16 @@ public:
     PowderMatchTable();
 
     PowderMatchTable( const FileName & file_name );
+    
+    std::string name( const size_t i ) const { return names_[i]; }
+    double density( const size_t i ) const { return densities_[i]; }
+    std::string space_group_name( const size_t i ) const { return space_group_names_[i]; }
+    double figure_of_merit( const size_t i ) const { return figures_of_merit_[i]; }
+    double Biso( const size_t i ) const { return Biso_values_[i]; }
+    double MarchDollase( const size_t i ) const { return MarchDollase_values_[i]; }
+    MillerIndices PO_direction( const size_t i ) const { return PO_directions_[i]; }
+    double cell_deformation( const size_t i ) const { return cell_deformations_[i]; }
+    CrystalLattice crystal_lattice( const size_t i ) const { return crystal_lattices_[i]; }
 
 private:
     std::vector< std::string > names_;
