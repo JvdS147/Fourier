@@ -27,10 +27,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PowderMatchTable.h"
 #include "Utilities.h"
+#include "TextFileReader.h"
+#include "MillerIndices.h"
 
 #include <stdexcept>
 
-//  set_name |  structure_name  | directory  | status | comment |     energy      |       density      |     cell_volume    | reduced_cell_volume |  space_group  | number_of_dof |      penalty        | energy_with_penalty |        FOM         |          B             |    MarchDollase      |            h          |          k          |          l            |    CellDeformation   |        a           |        b           |        c           |      alpha       |        beta      |      gamma     
+//  set_name |  structure_name  | directory  | status | comment |     energy      |       density      |     cell_volume    | reduced_cell_volume |  space_group  | number_of_dof |      penalty        | energy_with_penalty |        FOM         |          B             |    MarchDollase      |            h          |          k          |          l            |    CellDeformation   |        a           |        b           |        c           |      alpha       |        beta      |      gamma
 //           |                  |            |        |         | [kcal/mol/atom] |       [g/cm3]      |         [A3]       |       [A3]          |               |               |   [kcal/mol/atom]   |   [kcal/mol/atom]   |                    |                        |                      |                       |                     |                       |                      |                    |                    |                    |                  |                  |
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //    set1   | structure_000001 | jobs/job0  |  done  |  none   |       0         | 1.2529500320242304 | 1795.8846350943263 | 1795.8846350943263  | P 2_1 2_1 2_1 |       60      | 0.57516559613365126 | 0.57516559613365126 | 0.4316837101620814 | -0.037706868362922898  |  1.5513171064752962  |  -0.36060802990789309 |  0.9327174538765467 |          0            | 0.013636944428995774 | 8.2593307806227418 | 13.57628501823058  | 15.470539514891119 |        90        |        90        |         90
@@ -62,7 +64,7 @@ PowderMatchTable::PowderMatchTable( const FileName & file_name )
         figures_of_merit_.push_back( string2double( words[13] ) );
         Biso_values_.push_back( string2double( words[14] ) );
         MarchDollase_values_.push_back( string2double( words[15] ) );
-        PO_directions_.push_back( MillerIndices( ( words[16] ), ( words[17] ), ( words[18] ) ) );
+        PO_directions_.push_back( MillerIndices( ( std::stoi(words[16]) ), ( std::stoi(words[17]) ), ( std::stoi(words[18]) ) ) );
         cell_deformations_.push_back( string2double( words[19] ) );
         double a = string2double( words[20] );
         double b = string2double( words[21] );

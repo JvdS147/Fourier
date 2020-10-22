@@ -1,5 +1,6 @@
 #ifndef POWDERMATCHTABLE_H
 #define POWDERMATCHTABLE_H
+#include <vector>
 
 /* *********************************************
 Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
