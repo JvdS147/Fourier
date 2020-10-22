@@ -60,6 +60,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MathFunctions.h"
 #include "ModelBuilding.h"
 #include "Plane.h"
+#include "PowderMatchTable.h"
 #include "PowderPattern.h"
 #include "PowderPatternCalculator.h"
 #include "RandomNumberGenerator.h"
@@ -246,6 +247,11 @@ int main( int argc, char** argv )
         std::cout << "An exception was thrown" << std::endl;
         std::cout << e.what() << std::endl;
     }
+
+    try // Add class.
+    {
+        add_class( "PowderMatchTable" );
+    MACRO_END_GAME
 
     // Simulate an experimental powder diffraction pattern
     try
@@ -559,11 +565,6 @@ int main( int argc, char** argv )
             Sudoku solved_sudoku = solve( sudoku );
             solved_sudoku.show();
         }
-    MACRO_END_GAME
-
-    try // Add class.
-    {
-        add_class( "SetOfNumbers" );
     MACRO_END_GAME
 
     try // BFDH.

@@ -156,6 +156,14 @@ std::string strip( const std::string & input )
 
 // ********************************************************************************
 
+void strip( std::vector< std::string > & input )
+{
+    for ( size_t i( 0 ); i != input.size(); ++i )
+        input[i] = strip( input[i] );    
+}
+
+// ********************************************************************************
+
 std::string remove_delimiters( const std::string & input, const std::string & start_delimiter, const std::string & end_delimiter )
 {
     if ( input.length() < ( start_delimiter.length() + end_delimiter.length() ) )

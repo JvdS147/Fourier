@@ -78,6 +78,9 @@ std::string interlace( const std::string & input, const char c );
 // Removes all spaces and tabs from the beginning and the end
 std::string strip( const std::string & input );
 
+// Removes all spaces and tabs from the beginning and the end
+void strip( std::vector< std::string > & input );
+
 // Removes delimiters if both present, removes exactly one from start and one from beginning
 // If the delimiters overlap, returns the original string:
 // remove_delimiters( "123", "12", "23" );
