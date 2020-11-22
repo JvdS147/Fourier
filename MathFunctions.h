@@ -44,6 +44,8 @@ double add_absolute_doubles( const std::vector< double > & values );
 double add_squared_doubles( const std::vector< double > & values );
 
 double calculate_average( const std::vector< double > & values );
+double calculate_minimum( const std::vector< double > & values );
+double calculate_maximum( const std::vector< double > & values );
 
 int greatest_common_divisor( const int lhs, const int rhs );
 

@@ -94,6 +94,30 @@ double calculate_average( const std::vector< double > & values )
 
 // ********************************************************************************
 
+double calculate_minimum( const std::vector< double > & values )
+{
+    if ( values.empty() )
+        throw std::runtime_error( "calculate_minimum(): empty" );
+    double result = values[0];
+    for ( size_t i( 1 ); i != values.size(); ++i )
+        result = std::min( result, values[i] );
+    return result;
+}
+
+// ********************************************************************************
+
+double calculate_maximum( const std::vector< double > & values )
+{
+    if ( values.empty() )
+        throw std::runtime_error( "calculate_maximum(): empty" );
+    double result = values[0];
+    for ( size_t i( 1 ); i != values.size(); ++i )
+        result = std::max( result, values[i] );
+    return result;
+}
+
+// ********************************************************************************
+
 int greatest_common_divisor( const int lhs, const int rhs )
 {
     return ( ( rhs == 0 ) ? lhs : greatest_common_divisor( rhs, lhs % rhs ) );
