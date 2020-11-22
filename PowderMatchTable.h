@@ -47,7 +47,9 @@ public:
     // Default constructor
     PowderMatchTable();
 
-    PowderMatchTable( const FileName & file_name );
+    explicit PowderMatchTable( const FileName & file_name );
+    
+    size_t size() const { return names_.size(); }
     
     std::string name( const size_t i ) const { return names_[i]; }
     double density( const size_t i ) const { return densities_[i]; }

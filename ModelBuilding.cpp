@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "3DCalculations.h"
 #include "CrystalStructure.h"
 #include "NormalisedVector3D.h"
+#include "Plane.h"
 #include "Utilities.h"
 #include "Vector3D.h"
 
@@ -104,6 +105,34 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & a
     Angle angle = ATAN2( sine_phi, cosine_phi );
     result.push_back( atom_N + bx * basis_vector_1 + projection * ( angle + Angle::from_degrees( 120.0 ) ).sine() * basis_vector_2 + projection * ( angle + Angle::from_degrees( 120.0 ) ).cosine() * basis_vector_3 );
     result.push_back( atom_N + bx * basis_vector_1 + projection * ( angle + Angle::from_degrees( 240.0 ) ).sine() * basis_vector_2 + projection * ( angle + Angle::from_degrees( 240.0 ) ).cosine() * basis_vector_3 );
+    return result;
+}
+
+// ********************************************************************************
+
+// Add two hydrogen atoms to an sp2 nitrogen atom
+// Returns the coordinates of the two hydrogen atoms
+// atom_1 and atom_2 are required to define the plan in which the two atomd should lie.
+// Everything in Cartesian coordinates
+std::vector< Vector3D > add_2_hydrogen_atoms_to_sp2_nitrogen( const Vector3D & atom_N, const Vector3D & atom_bound_to_N, const Vector3D & atom_1, const Vector3D & atom_2 )
+{
+    double target_bond_length = 1.015;
+    // The H--N--H angle is 120.0. That makes the H--N--X angle also 120.0.
+    std::vector< Vector3D > points;
+    points.push_back( atom_N );
+    points.push_back( atom_bound_to_N );
+    points.push_back( atom_1 );
+    points.push_back( atom_2 );
+    Plane plane( points );
+    Vector3D NminC = atom_N - atom_bound_to_N;
+    NminC /= NminC.length();
+    Vector3D p1 =  cross_product( NminC, NormalisedVector3D2Vector3D( plane.normal() ) );
+    p1 /= p1.length();
+    Vector3D H_atom_1 = atom_N + ( NminC * 0.5 * target_bond_length ) + ( p1 * 0.5 * sqrt(3.0) * target_bond_length );
+    Vector3D H_atom_2 = atom_N + ( NminC * 0.5 * target_bond_length ) - ( p1 * 0.5 * sqrt(3.0) * target_bond_length );
+    std::vector< Vector3D > result;
+    result.push_back( H_atom_1 );
+    result.push_back( H_atom_2 );
     return result;
 }
 
@@ -187,3 +216,96 @@ void normalise_X_H_bonds( CrystalStructure & crystal_structure )
 
 // ********************************************************************************
 
+void normalise_C_F_bonds( CrystalStructure & crystal_structure )
+{
+    // Loop over all atoms.
+    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    {
+        // If not fluorine, continue.
+        if ( crystal_structure.atom( i ).element() != Element( "F" ) )
+            continue;
+        // Find the carbon atom nearest to it.
+        size_t smallest_distance_index = 0;
+        double smallest_distance2 = 10.0;
+        for ( size_t j( 0 ); j != crystal_structure.natoms(); ++j )
+        {
+            // If not carbon, continue.
+            if ( crystal_structure.atom( j ).element() != Element( "C" ) )
+                continue;
+            double distance2 = crystal_structure.crystal_lattice().shortest_distance2( crystal_structure.atom( j ).position(), crystal_structure.atom( i ).position() );
+            if ( distance2 < smallest_distance2 )
+            {
+                smallest_distance2 = distance2;
+                smallest_distance_index = j;
+            }
+        }
+        double smallest_distance = sqrt( smallest_distance2 );
+        if ( smallest_distance < 0.001 )
+            throw std::runtime_error( "normalise_C_F_bonds(): points too close together." );
+        if ( smallest_distance > 3.0 )
+            throw std::runtime_error( "normalise_C_F_bonds(): atoms not bound." );
+        // We need to be able to set the length of the C-F bond, so we must work in Cartesian coordinates.
+        Vector3D difference_frac;
+        double distance;
+        crystal_structure.shortest_distance( crystal_structure.atom( smallest_distance_index ).position(), crystal_structure.atom( i ).position(), distance, difference_frac );
+        if ( ! nearly_equal( distance, smallest_distance ) )
+            throw std::runtime_error( "normalise_C_F_bonds() : distances differ." );
+        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
+        double target_bond_length( 1.40 );
+        difference_cart *= target_bond_length / distance;
+        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
+        Vector3D F_atom_frac = crystal_structure.atom( smallest_distance_index ).position() + difference_frac;
+        Atom new_atom = crystal_structure.atom( i );
+        new_atom.set_position( F_atom_frac );
+        crystal_structure.set_atom( i, new_atom );
+    }
+}
+
+// ********************************************************************************
+
+void normalise_Cu_Cl_bonds( CrystalStructure & crystal_structure )
+{
+    // Loop over all atoms.
+    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    {
+        // If not chlorine, continue.
+        if ( crystal_structure.atom( i ).element() != Element( "Cl" ) )
+            continue;
+        // Find the Cu atom nearest to it.
+        size_t smallest_distance_index = 0;
+        double smallest_distance2 = 10.0;
+        for ( size_t j( 0 ); j != crystal_structure.natoms(); ++j )
+        {
+            // If not Cu, continue.
+            if ( crystal_structure.atom( j ).element() != Element( "Cu" ) )
+                continue;
+            double distance2 = crystal_structure.crystal_lattice().shortest_distance2( crystal_structure.atom( j ).position(), crystal_structure.atom( i ).position() );
+            if ( distance2 < smallest_distance2 )
+            {
+                smallest_distance2 = distance2;
+                smallest_distance_index = j;
+            }
+        }
+        double smallest_distance = sqrt( smallest_distance2 );
+        if ( smallest_distance < 0.001 )
+            throw std::runtime_error( "normalise_Cu_Cl_bonds(): points too close together." );
+        if ( smallest_distance > 3.0 )
+            throw std::runtime_error( "normalise_Cu_Cl_bonds(): atoms not bound." );
+        // We need to be able to set the length of the Cu-Cl bond, so we must work in Cartesian coordinates.
+        Vector3D difference_frac;
+        double distance;
+        crystal_structure.shortest_distance( crystal_structure.atom( smallest_distance_index ).position(), crystal_structure.atom( i ).position(), distance, difference_frac );
+        if ( ! nearly_equal( distance, smallest_distance ) )
+            throw std::runtime_error( "normalise_Cu_Cl_bonds() : distances differ." );
+        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
+        double target_bond_length( 2.25 );
+        difference_cart *= target_bond_length / distance;
+        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
+        Vector3D Cl_atom_frac = crystal_structure.atom( smallest_distance_index ).position() + difference_frac;
+        Atom new_atom = crystal_structure.atom( i );
+        new_atom.set_position( Cl_atom_frac );
+        crystal_structure.set_atom( i, new_atom );
+    }
+}
+
+// ********************************************************************************

@@ -55,9 +55,19 @@ std::vector< Vector3D > add_hydrogen_atoms( const Vector3D & atom_1, const Vecto
 // Everything in Cartesian coordinates
 std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & atom_N, const Vector3D & atom_2, const Vector3D & atom_H );
 
+// Add two hydrogen atoms to an sp2 nitrogen atom
+// Returns the coordinates of the two hydrogen atoms
+// atom_1 and atom_2 are required to define the plan in which the two atomd should lie.
+// Everything in Cartesian coordinates
+std::vector< Vector3D > add_2_hydrogen_atoms_to_sp2_nitrogen( const Vector3D & atom_N, const Vector3D & atom_bound_to_N, const Vector3D & atom_1, const Vector3D & atom_2 );
+
 Vector3D add_hydrogen_atom_to_sp2_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 );
 
 void normalise_X_H_bonds( CrystalStructure & crystal_structure );
+
+void normalise_C_F_bonds( CrystalStructure & crystal_structure );
+
+void normalise_Cu_Cl_bonds( CrystalStructure & crystal_structure );
 
 #endif // MODELBUILDING_H
 

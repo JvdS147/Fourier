@@ -690,7 +690,7 @@ double weighted_cross_correlation( const PowderPattern & lhs, const PowderPatter
         {
             if ( ( ( i + j ) >= 0 ) && ( ( i + j ) < lhs.size() ) )
             {
-                if ( (false) )
+                if ( (true) )
                     result += (1.0-static_cast<double>(abs(j))/m) * lhs.intensity( i ) * rhs.intensity( i + j );
                 else
                     result += (1.0-static_cast<double>(abs(j))/m) * ( lhs.intensity( i ) / lhs.estimated_standard_deviation( i ) ) * ( rhs.intensity( i + j ) / rhs.estimated_standard_deviation( i + j ) );
