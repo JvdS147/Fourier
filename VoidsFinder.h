@@ -33,11 +33,12 @@ class CrystalStructure;
 
 */
 
-// Currently only returns the percentage voids
+// Returns the void volume
 // Uses the old algorithm, based on first finding the set of spheres that determine the voids followed by
 // determining the volume of the set of spheres.
 double find_voids( const CrystalStructure & crystal_structure, const double probe_radius = 1.2 );
 
+// DO NOT USE
 // Currently only returns the percentage voids
 // Uses the new algorithm that samples the unit cell and for each sample point determines if it is
 // part of a void or not.

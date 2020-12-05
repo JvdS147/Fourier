@@ -155,11 +155,12 @@ void CrystalStructure::apply_space_group_symmetry()
     if ( space_group_symmetry_has_been_applied_ )
         std::cout << "CrystalStructure::apply_space_group_symmetry(): WARNING: space group has already been applied." << std::endl;
     std::vector< Atom > atoms;
-    for ( size_t i( 0 ); i != natoms(); ++i )
+
+    for ( size_t j( 1 ); j != space_group_.nsymmetry_operators(); ++j )
     {
-        Vector3D original_position = atom( i ).position();
-        for ( size_t j( 1 ); j != space_group_.nsymmetry_operators(); ++j )
+        for ( size_t i( 0 ); i != natoms(); ++i )
         {
+            Vector3D original_position = atom( i ).position();
             Vector3D new_position = space_group_.symmetry_operator( j ) * original_position;
             double distance = crystal_lattice_.shortest_distance( original_position, new_position );
             // Is it a special position?
@@ -171,10 +172,12 @@ void CrystalStructure::apply_space_group_symmetry()
                 {
                     new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), space_group_.symmetry_operator( j ).rotation(), crystal_lattice_ ) );
                 }
+                new_atom.set_label( atom( i ).label() + "_" + size_t2string( j ) );
                 atoms.push_back( new_atom );
             }
         }
     }
+    
     add_atoms( atoms );
     space_group_symmetry_has_been_applied_ = true;
 }
