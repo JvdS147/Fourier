@@ -72,6 +72,9 @@ bool is_digit( const char argument );
 // Removes all occurences of char c from input string
 std::string remove( const std::string & input, const char c );
 
+// Removes all occurences of char c from the start of the input string, i.e. until another character is found
+std::string remove_from_start( const std::string & input, const char c );
+
 // interlace( "1234", '#' ) returns "1#2#3#4"
 std::string interlace( const std::string & input, const char c );
 
@@ -120,6 +123,11 @@ std::string replace( const std::string & input, const std::string & old_str, con
 // @@ We need to allow escaped quotes, e.g. "He said \"yes\"."
 // This kind of configurability suggests that this could be a class.
 std::vector< std::string > split( const std::string & input );
+
+// Very simple implementation: returns all strings that were separated by the delimiter.
+// No special provisions for empty string (multiple delimiters in a row), whitespace or quotes.
+// E.g. split( "|", '|' ) returns two empty strings.
+std::vector< std::string > split( const std::string & input, const char delimiter );
 
 // Same as split, but single quotes are not treated specially
 // Necessary to read files where a single quote is a comment identifier (such as TOPAS .inp files)

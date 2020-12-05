@@ -122,6 +122,19 @@ std::string remove( const std::string & input, const char c )
 
 // ********************************************************************************
 
+// Removes all occurences of char c from the start of the input string, i.e. until another character is found
+std::string remove_from_start( const std::string & input, const char c )
+{
+    size_t iPos( 0 );
+    while ( ( iPos < input.length() ) && ( input[iPos] == c ) )
+    {
+        ++iPos;
+    }
+    return input.substr( iPos );
+}
+
+// ********************************************************************************
+
 std::string interlace( const std::string & input, const char c )
 {
     std::string result;
@@ -315,6 +328,28 @@ std::vector< std::string > split( const std::string & input )
             current_word = "";
         }
     }
+    return result;
+}
+
+// ********************************************************************************
+
+std::vector< std::string > split( const std::string & input, const char delimiter )
+{
+    std::vector< std::string > result;
+    std::string current_string;
+    size_t iPos( 0 );
+    while ( iPos != input.length() )
+    {
+        if ( input[iPos] == delimiter )
+        {
+            result.push_back( current_string );
+            current_string = "";
+        }
+        else
+            current_string += input[iPos];
+        ++iPos;
+    }
+    result.push_back( current_string );
     return result;
 }
 

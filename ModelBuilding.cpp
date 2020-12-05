@@ -134,6 +134,29 @@ Vector3D add_hydrogen_atom_to_sp2_atom( const Vector3D & central_atom, const Ele
 
 // ********************************************************************************
 
+Vector3D add_hydrogen_atom_to_sp3_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2, const Vector3D & neighbour_3 )
+{
+    Vector3D v1 = neighbour_1 - central_atom;
+    v1.set_length( 1.0 );
+    Vector3D v2 = neighbour_2 - central_atom;
+    v2.set_length( 1.0 );
+    Vector3D v3 = neighbour_3 - central_atom;
+    v3.set_length( 1.0 );
+    Vector3D average_vector = ( v1 + v2 + v3 ) / 3.0;
+    average_vector *= -1.0;
+    double target_bond_length( 1.0 );
+    if ( element_central_atom == Element( "C" ) )
+        target_bond_length = 1.089;
+    else if ( element_central_atom == Element( "N" ) )
+        target_bond_length = 1.015;
+    else if ( element_central_atom == Element( "O" ) )
+        target_bond_length = 0.993;
+    average_vector.set_length( target_bond_length );
+    return central_atom + average_vector;
+}
+
+// ********************************************************************************
+
 void normalise_X_H_bonds( CrystalStructure & crystal_structure )
 {
     // Loop over all atoms.
