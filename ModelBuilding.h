@@ -63,6 +63,8 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp2_nitrogen( const Vector3D & a
 
 Vector3D add_hydrogen_atom_to_sp2_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 );
 
+Vector3D add_hydrogen_atom_to_sp3_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2, const Vector3D & neighbour_3 );
+
 void normalise_X_H_bonds( CrystalStructure & crystal_structure );
 
 void normalise_C_F_bonds( CrystalStructure & crystal_structure );
