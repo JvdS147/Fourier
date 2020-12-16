@@ -46,8 +46,8 @@ std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3
     NormalisedVector3D basis_vector_2;
     NormalisedVector3D basis_vector_3;
     generate_basis( basis_vector_1, basis_vector_2, basis_vector_3 );
-    double bx = 1.089 * Angle::from_degrees( 110.5 - 90.0 ).sine();
-    double projection = 1.089 * Angle::from_degrees( 110.5 - 90.0 ).cosine();
+    double bx = 1.090 * Angle::from_degrees( 110.5 - 90.0 ).sine();
+    double projection = 1.090 * Angle::from_degrees( 110.5 - 90.0 ).cosine();
     std::vector< Vector3D > result;
     result.push_back( atom_1 + bx * basis_vector_1 + projection *                                    angle.sine() * basis_vector_2 + projection *                                    angle.cosine() * basis_vector_3 );
     result.push_back( atom_1 + bx * basis_vector_1 + projection * ( angle + Angle::from_degrees( 120.0 ) ).sine() * basis_vector_2 + projection * ( angle + Angle::from_degrees( 120.0 ) ).cosine() * basis_vector_3 );
@@ -66,12 +66,6 @@ std::vector< Vector3D > add_hydrogen_atoms( const Vector3D & atom_1, const Vecto
     NormalisedVector3D basis_vector_3;
     generate_basis( basis_vector_1, basis_vector_2, basis_vector_3 );
     double target_bond_length( 1.0 );
-//        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-//            target_bond_length = 1.089;
-//        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-//            target_bond_length = 1.015;
-//        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-//            target_bond_length = 0.993;
     double bx = target_bond_length * Angle::from_degrees( 110.5 - 90.0 ).sine();
     double projection = target_bond_length * Angle::from_degrees( 110.5 - 90.0 ).cosine();
     std::vector< Vector3D > result;
@@ -98,7 +92,7 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & a
     std::vector< Vector3D > result;
     difference_vector_temp = atom_H - atom_N;
     if ( difference_vector_temp.length() < 0.001 )
-        throw std::runtime_error( "add_2_hydrogen_atoms_to_sp3_nitrogen() : atoms are too close together 2." );
+        throw std::runtime_error( "add_2_hydrogen_atoms_to_sp3_nitrogen() : atoms are too close together." );
     NormalisedVector3D H_direction = normalised_vector( difference_vector_temp );
     double sine_phi = H_direction * basis_vector_2;
     double cosine_phi = H_direction * basis_vector_3;
@@ -112,7 +106,7 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & a
 
 // Add two hydrogen atoms to an sp2 nitrogen atom
 // Returns the coordinates of the two hydrogen atoms
-// atom_1 and atom_2 are required to define the plan in which the two atomd should lie.
+// atom_1 and atom_2 are required to define the plan in which the two atoms should lie.
 // Everything in Cartesian coordinates
 std::vector< Vector3D > add_2_hydrogen_atoms_to_sp2_nitrogen( const Vector3D & atom_N, const Vector3D & atom_bound_to_N, const Vector3D & atom_1, const Vector3D & atom_2 )
 {
@@ -142,17 +136,19 @@ Vector3D add_hydrogen_atom_to_sp2_atom( const Vector3D & central_atom, const Ele
 {
     Vector3D difference_vector_1 = neighbour_1 - central_atom;
     if ( difference_vector_1.length() < 0.001 )
-        throw std::runtime_error( "add_hydrogen_atom_to_sp2_carbon() : atoms are too close together 1." );
+        throw std::runtime_error( "add_hydrogen_atom_to_sp2_atom() : atoms are too close together 1." );
     difference_vector_1.set_length( 1.0 );
     Vector3D difference_vector_2 = neighbour_2 - central_atom;
     if ( difference_vector_2.length() < 0.001 )
-        throw std::runtime_error( "add_hydrogen_atom_to_sp2_carbon() : atoms are too close together 2." );
+        throw std::runtime_error( "add_hydrogen_atom_to_sp2_atom() : atoms are too close together 2." );
     difference_vector_2.set_length( 1.0 );
     Vector3D average_vector = ( difference_vector_1 + difference_vector_2 ) / 2.0;
     average_vector *= -1.0;
     double target_bond_length( 1.0 );
-    if ( element_central_atom == Element( "C" ) )
-        target_bond_length = 1.089;
+    if ( element_central_atom == Element( "B" ) )
+        target_bond_length = 1.215;
+    else if ( element_central_atom == Element( "C" ) )
+        target_bond_length = 1.090;
     else if ( element_central_atom == Element( "N" ) )
         target_bond_length = 1.015;
     else if ( element_central_atom == Element( "O" ) )
@@ -174,14 +170,45 @@ Vector3D add_hydrogen_atom_to_sp3_atom( const Vector3D & central_atom, const Ele
     Vector3D average_vector = ( v1 + v2 + v3 ) / 3.0;
     average_vector *= -1.0;
     double target_bond_length( 1.0 );
-    if ( element_central_atom == Element( "C" ) )
-        target_bond_length = 1.089;
+    if ( element_central_atom == Element( "B" ) )
+        target_bond_length = 1.215;
+    else if ( element_central_atom == Element( "C" ) )
+        target_bond_length = 1.090;
     else if ( element_central_atom == Element( "N" ) )
         target_bond_length = 1.015;
     else if ( element_central_atom == Element( "O" ) )
         target_bond_length = 0.993;
     average_vector.set_length( target_bond_length );
     return central_atom + average_vector;
+}
+
+// ********************************************************************************
+
+std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 )
+{
+    Vector3D v1 = neighbour_1 - central_atom;
+    v1.set_length( 1.0 );
+    Vector3D v2 = neighbour_2 - central_atom;
+    v2.set_length( 1.0 );
+    Vector3D average_vector = ( v1 + v2 ) / 2.0;
+    average_vector *= -1.0;
+    NormalisedVector3D basis_vector_1( normalised_vector( average_vector ) );
+    NormalisedVector3D basis_vector_2( normalised_vector( cross_product( v1, v2 ) ) );
+    double target_bond_length( 1.0 );
+    if ( element_central_atom == Element( "B" ) )
+        target_bond_length = 1.215;
+    else if ( element_central_atom == Element( "C" ) )
+        target_bond_length = 1.090;
+    else if ( element_central_atom == Element( "N" ) )
+        target_bond_length = 1.015;
+    else if ( element_central_atom == Element( "O" ) )
+        target_bond_length = 0.993;
+    Vector3D H_atom_1 = central_atom + target_bond_length * Angle::from_degrees( 110.5 / 2.0 ).cosine() * basis_vector_1 + target_bond_length * Angle::from_degrees( 110.5 / 2.0 ).sine() * basis_vector_2;
+    Vector3D H_atom_2 = central_atom + target_bond_length * Angle::from_degrees( 110.5 / 2.0 ).cosine() * basis_vector_1 - target_bond_length * Angle::from_degrees( 110.5 / 2.0 ).sine() * basis_vector_2;
+    std::vector< Vector3D > result;
+    result.push_back( H_atom_1 );
+    result.push_back( H_atom_2 );
+    return result;
 }
 
 // ********************************************************************************
@@ -222,9 +249,11 @@ void normalise_X_H_bonds( CrystalStructure & crystal_structure )
             throw std::runtime_error( "normalise_X_H_bonds() : distances differ." );
         Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
         double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "N" ) )
+        if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "B" ) )
+            target_bond_length = 1.215;
+        else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "C" ) )
+            target_bond_length = 1.090;
+          else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "N" ) )
             target_bond_length = 1.015;
         else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "O" ) )
             target_bond_length = 0.993;

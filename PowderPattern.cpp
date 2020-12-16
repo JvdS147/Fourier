@@ -165,6 +165,18 @@ size_t PowderPattern::find_two_theta( const Angle two_theta_value ) const
 
 // ********************************************************************************
 
+// Multiplies intensities and ESDs by factor
+void PowderPattern::scale( const double factor )
+{
+    for ( size_t i( 0 ); i != size(); ++i )
+    {
+        intensities_[i] *= factor;
+        estimated_standard_deviations_[i] *= factor;
+    }
+}
+
+// ********************************************************************************
+
 Angle PowderPattern::average_two_theta_step() const
 {
     if ( empty() )
@@ -569,10 +581,7 @@ void PowderPattern::normalise_highest_peak( const double highest_peak )
     }
     if ( nearly_equal( max_intensity, 0.0 ) )
         throw std::runtime_error( "PowderPattern::normalise_highest_peak(): highest peak is 0.0." );
-    // Scale to highest_peak
-    double scale( highest_peak / max_intensity );
-    for ( size_t i( 0 ); i != size(); ++i )
-        intensities_[i] *= scale;
+    scale( highest_peak / max_intensity );
 }
 
 // ********************************************************************************
@@ -584,9 +593,7 @@ void PowderPattern::normalise_total_signal( const double total_signal )
     if ( nearly_equal( current_total_signal, 0.0 ) )
         throw std::runtime_error( "PowderPattern::normalise_total_signal(): total signal is 0.0." );
     // Scale to total_signal
-    double scale( total_signal / current_total_signal );
-    for ( size_t i( 0 ); i != size(); ++i )
-        intensities_[i] *= scale;
+    scale( total_signal / current_total_signal );
 }
 
 // ********************************************************************************

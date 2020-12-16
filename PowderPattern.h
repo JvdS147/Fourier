@@ -60,6 +60,9 @@ public:
 
     // Returns the *nearest* 2theta value
     size_t find_two_theta( const Angle two_theta_value ) const;
+    
+    // Multiplies intensities and ESDs by factor
+    void scale( const double factor );
 
     Angle two_theta( const size_t i ) const { return two_theta_values_[i]; }
     double intensity( const size_t i ) const { return intensities_[i]; }
@@ -110,7 +113,6 @@ public:
     PowderPattern & operator-=( const PowderPattern & rhs );
 
     // Normalises the highest peak
-    // @@ Does not change the ESDs
     void normalise_highest_peak( const double highest_peak = 10000 );
 
     // Normalises the total signal = area under the pattern = cumulative_intensity() .

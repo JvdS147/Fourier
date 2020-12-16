@@ -221,6 +221,41 @@ std::string SpaceGroup::crystal_system() const
 
 // ********************************************************************************
 
+void SpaceGroup::print_multiplication_table() const
+{
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+        std::cout << size_t2string( i, 3, ' ' ) << " " << symmetry_operators_[i].to_string() << std::endl;
+    std::cout << "    |";
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+        std::cout << size_t2string( i, 3, ' ' ) << " ";
+    std::cout << std::endl;
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+    {
+        std::cout << size_t2string( i, 3, ' ' ) << " |";
+        for ( size_t j( 0 ); j != symmetry_operators_.size(); ++j )
+        {
+            SymmetryOperator result = symmetry_operators_[i] * symmetry_operators_[j];
+            bool found( false );
+            for ( size_t k( 0 ); k != symmetry_operators_.size(); ++k )
+            {
+                if ( nearly_equal( result, symmetry_operators_[k] ) )
+                {
+                    found = true;
+                    std::cout << size_t2string( k, 3, ' ' ) << " ";
+                    break;
+                }
+            }
+            if ( ! found )
+            {
+                throw std::runtime_error( "check_if_closed( std::vector< SymmetryOperator > ): operator not found." );
+            }
+        }
+        std::cout << std::endl;
+    }
+}
+
+// ********************************************************************************
+
 // Decomposes the space group into:
 // 1. Presence of inversion yes / no and its position.
 // 2. List of centring vectors
@@ -356,9 +391,9 @@ void check_if_closed( const std::vector< SymmetryOperator > & symmetry_operators
         {
             SymmetryOperator result = symmetry_operators[i] * symmetry_operators[j];
             bool found( false );
-            for ( size_t i( 0 ); i != symmetry_operators.size(); ++i )
+            for ( size_t k( 0 ); k != symmetry_operators.size(); ++k )
             {
-                if ( nearly_equal( result, symmetry_operators[i] ) )
+                if ( nearly_equal( result, symmetry_operators[k] ) )
                 {
                     found = true;
                     break;
@@ -380,4 +415,3 @@ std::string centring_vectors_to_string( const std::vector< Vector3D > & centring
 }
 
 // ********************************************************************************
-
