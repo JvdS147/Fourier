@@ -226,7 +226,7 @@ void CrystalLattice::rescale_volume( const double target_volume, size_t Z )
 // ********************************************************************************
 
 // Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
-double CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & rhs )
+double CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & rhs ) const
 {
     return sqrt( shortest_distance2( lhs, rhs ) );
 }
@@ -234,7 +234,7 @@ double CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D &
 // ********************************************************************************
 
 // Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
-double CrystalLattice::shortest_distance2( const Vector3D & lhs, const Vector3D & rhs )
+double CrystalLattice::shortest_distance2( const Vector3D & lhs, const Vector3D & rhs ) const
 {
     Vector3D difference_vector = adjust_for_translations( rhs - lhs ); // In fractional coordinates
     // Now we must find the shortest distance.
@@ -271,7 +271,7 @@ double CrystalLattice::shortest_distance2( const Vector3D & lhs, const Vector3D 
 
 // Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
 // Returns the shortest distance and the shortest difference vector (in fractional coordinates).
-void CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & output_distance, Vector3D & output_difference_vector )
+void CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & output_distance, Vector3D & output_difference_vector ) const
 {
     Vector3D difference_vector = adjust_for_translations( rhs - lhs ); // In fractional coordinates
     // Now we must find the shortest distance.
