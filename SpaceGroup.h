@@ -104,6 +104,8 @@ public:
     // Does not include [ 0.0, 0.0, 0.0 ]
     std::vector< Vector3D > centring_vectors() const { return centring_vectors_; }
 
+    void print_multiplication_table() const;
+
 private:
     std::vector< SymmetryOperator > symmetry_operators_;
     std::vector< SymmetryOperator > representative_symmetry_operators_;

@@ -59,13 +59,18 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & a
 
 // Add two hydrogen atoms to an sp2 nitrogen atom
 // Returns the coordinates of the two hydrogen atoms
-// atom_1 and atom_2 are required to define the plan in which the two atomd should lie.
+// atom_1 and atom_2 are required to define the plane in which the two atoms should lie.
 // Everything in Cartesian coordinates
 std::vector< Vector3D > add_2_hydrogen_atoms_to_sp2_nitrogen( const Vector3D & atom_N, const Vector3D & atom_bound_to_N, const Vector3D & atom_1, const Vector3D & atom_2 );
 
+// Everything in Cartesian coordinates
 Vector3D add_hydrogen_atom_to_sp2_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 );
 
+// Everything in Cartesian coordinates
 Vector3D add_hydrogen_atom_to_sp3_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2, const Vector3D & neighbour_3 );
+
+// Everything in Cartesian coordinates
+std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 );
 
 void normalise_X_H_bonds( CrystalStructure & crystal_structure );
 
@@ -74,4 +79,3 @@ void normalise_C_F_bonds( CrystalStructure & crystal_structure );
 void normalise_Cu_Cl_bonds( CrystalStructure & crystal_structure );
 
 #endif // MODELBUILDING_H
-
