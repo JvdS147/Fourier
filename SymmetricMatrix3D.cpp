@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -113,6 +113,13 @@ double SymmetricMatrix3D::determinant() const
 double SymmetricMatrix3D::trace() const
 {
     return data_[0] + data_[2] + data_[5];
+}
+
+// ********************************************************************************
+
+bool SymmetricMatrix3D::is_diagonal() const
+{
+    return ( nearly_zero( data_[1] ) && nearly_zero( data_[3] ) && nearly_zero( data_[4] ) );
 }
 
 // ********************************************************************************

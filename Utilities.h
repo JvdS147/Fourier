@@ -2,7 +2,7 @@
 #define UTILITIES_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -235,6 +235,11 @@ std::string int2string( const int input, const size_t padded_length = 0, const c
 inline bool nearly_equal( const double lhs, const double rhs, const double tolerance = 0.0000001 )
 {
     return ( std::abs( rhs - lhs ) < tolerance );
+}
+
+inline bool nearly_zero( const double lhs, const double tolerance = 0.0000001 )
+{
+    return ( std::abs( lhs ) < tolerance );
 }
 
 // Checks is the string is correctly enquoted, i.e.:

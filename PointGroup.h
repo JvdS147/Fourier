@@ -2,7 +2,7 @@
 #define POINTGROUP_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   Not a general point group, but the point group of a crystal. Five-fold rotation or rotation higher than six-fold are not possible.
 
+  The identity is guaranteed to be the first operator.
+
   The number of symmetry operators is at most 48.
 */
 class PointGroup
@@ -65,6 +67,9 @@ public:
     std::string name() const { return name_; }
 
     bool has_inversion() const { return has_inversion_; }
+    
+    // Average of the matrices
+    Matrix3D special_position_operator() const;
 
 private:
     std::vector< Matrix3D > symmetry_operators_;
@@ -73,10 +78,16 @@ private:
 
 };
 
-// Multiplies all combinations (both ways) and checks that the result is in the symmetry operators
-// This can take a lot of time
-void check_if_closed( const std::vector< Matrix3D > & symmetry_operators );
-
 std::ostream & operator<<( std::ostream & os, const PointGroup & point_group );
+
+// This function checks if two point groups are the same except for the order of the symmetry operators.
+bool same_symmetry_operators( const PointGroup & lhs, const PointGroup & rhs );
+
+// Multiplies all combinations (both ways) and checks that the result is in the symmetry operators
+// Currently throws if not successful, should probably return bool.
+// Should not only check if the result if a symmetry operator that is in the set, but should
+// calculate the entire multiplication table which has as an additional condition that each
+// element must occur exactly once in each row and in each column.
+void check_if_closed( const std::vector< Matrix3D > & symmetry_operators );
 
 #endif // POINTGROUP_H

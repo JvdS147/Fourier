@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -199,7 +199,7 @@ void TLSWriter( const FileName & input_file_name )
     {
         for ( size_t j( 0 ); j < 3; ++j )
         {
-            if ( nearly_equal( f2c.value( i, j ), 0.0 ) )
+            if ( nearly_zero( f2c.value( i, j ) ) )
                 f2c.set_value( i, j, 0.0 );
         }
     }
@@ -247,7 +247,7 @@ void TLSWriter( const FileName & input_file_name )
         {
             for ( s = 0; s < 3; ++s )
             {
-                if ( nearly_equal( c2f.value( r, s ), 0.0 ) )
+                if ( nearly_zero( c2f.value( r, s ) ) )
                     c2f.set_value( r, s, 0.0 );
             }
         }
@@ -695,7 +695,7 @@ void TLSWriter_2( const FileName & input_file_name )
     {
         for ( size_t j( 0 ); j < 3; ++j )
         {
-            if ( nearly_equal( f2c.value( i, j ), 0.0 ) )
+            if ( nearly_zero( f2c.value( i, j ) ) )
                 f2c.set_value( i, j, 0.0 );
         }
     }
@@ -743,7 +743,7 @@ void TLSWriter_2( const FileName & input_file_name )
         {
             for ( s = 0; s < 3; ++s )
             {
-                if ( nearly_equal( c2f.value( r, s ), 0.0 ) )
+                if ( nearly_zero( c2f.value( r, s ) ) )
                     c2f.set_value( r, s, 0.0 );
             }
         }

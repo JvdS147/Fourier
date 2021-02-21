@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -87,5 +87,36 @@ void test_matrix3D( TestSuite & test_suite )
                                                           0.0, 0.0, 1.0, "Matrix3D::invert() 2" );
 
     }
+    {
+    Matrix3D matrix3D( 2.0, 0.0, 0.0,
+                       0.0, 3.0, 0.0,
+                       0.0, 0.0, 4.0 );
+    Matrix3D T;
+    matrix3D.convert_to_row_echelon_form( T );
+    test_one_matrix3D( test_suite, matrix3D, 2.0, 0.0, 0.0,
+                                             0.0, 3.0, 0.0,
+                                             0.0, 0.0, 4.0, "Matrix3D::convert_to_row_echelon_form() 1" );
+    }
+    {
+    Matrix3D matrix3D( 1.0, 0.0, 0.0,
+                       0.0, 0.0, 0.0,
+                       0.0, 0.0, -1.0 );
+    Matrix3D T;
+    matrix3D.convert_to_row_echelon_form( T );
+    test_one_matrix3D( test_suite, matrix3D, 1.0, 0.0, 0.0,
+                                             0.0, 0.0, -1.0,
+                                             0.0, 0.0, 0.0, "Matrix3D::convert_to_row_echelon_form() 2" );
+    }
+    {
+    Matrix3D matrix3D( 2.0, 0.0, 0.0,
+                       1.0, 0.0, 0.0,
+                       0.0, -1.0, 0.0 );
+    Matrix3D T;
+    matrix3D.convert_to_row_echelon_form( T );
+    test_one_matrix3D( test_suite, matrix3D, 2.0, 0.0, 0.0,
+                                             0.0, -1.0, 0.0,
+                                             0.0, 0.0, 0.0, "Matrix3D::convert_to_row_echelon_form() 3" );
+    }
+    
 }
 

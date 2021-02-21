@@ -2,7 +2,7 @@
 #define SPACEGROUP_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -121,11 +121,10 @@ std::ostream & operator<<( std::ostream & os, const SpaceGroup & space_group );
 
 // Technically, two space groups are the same if they correspond to the same entry in the IT,
 // i.e. regardless of the unit-cell setting.
-// This function checks if two space groups are identical (but the order of the symmetry operators is not important).
+// This function checks if two space groups are the same except for the order of the symmetry operators.
 bool same_symmetry_operators( const SpaceGroup & lhs, const SpaceGroup & rhs );
 
 // Multiplies all combinations (both ways) and checks that the result is in the symmetry operators
-// This can take a lot of time
 // Currently throws if not successful, should probably return bool.
 // Should not only check if the result if a symmetry operator that is in the set, but should
 // calculate the entire multiplication table which has as an additional condition that each

@@ -2,7 +2,7 @@
 #define MODELBUILDING_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,8 @@ class Vector3D;
 // Returns the coordinates of the three hydrogen atoms
 // Everything in Cartesian coordinates
 std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3D & atom_2, const Angle angle = Angle() );
+
+std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3D & atom_2, const Vector3D & atom_3 );
 
 // The hydrogen atoms are attached to atom_1, away from atom_2
 // angle allows control over the rotation of the hydrogen atoms as they are attached.

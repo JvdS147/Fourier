@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -323,7 +323,7 @@ std::ostream & operator<<( std::ostream & os, const SpaceGroup & space_group )
 
 // Technically, two space groups are the same if they correspond to the same entry in the IT,
 // i.e. regardless of the unit-cell setting.
-// This function checks if two space groups are identical (but the order of the symmetry operators is not important).
+// This function checks if two space groups are the same except for the order of the symmetry operators.
 bool same_symmetry_operators( const SpaceGroup & lhs, const SpaceGroup & rhs )
 {
     if ( lhs.nsymmetry_operators() != rhs.nsymmetry_operators() )
@@ -356,9 +356,9 @@ void check_if_closed( const std::vector< SymmetryOperator > & symmetry_operators
         {
             SymmetryOperator result = symmetry_operators[i] * symmetry_operators[j];
             bool found( false );
-            for ( size_t i( 0 ); i != symmetry_operators.size(); ++i )
+            for ( size_t k( 0 ); k != symmetry_operators.size(); ++k )
             {
-                if ( nearly_equal( result, symmetry_operators[i] ) )
+                if ( nearly_equal( result, symmetry_operators[k] ) )
                 {
                     found = true;
                     break;

@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -45,13 +45,36 @@ std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3
     NormalisedVector3D basis_vector_1 = normalised_vector( difference_vector_temp );
     NormalisedVector3D basis_vector_2;
     NormalisedVector3D basis_vector_3;
-    generate_basis( basis_vector_1, basis_vector_2, basis_vector_3 );
-    double bx = 1.089 * Angle::from_degrees( 110.5 - 90.0 ).sine();
-    double projection = 1.089 * Angle::from_degrees( 110.5 - 90.0 ).cosine();
+    generate_basis_1( basis_vector_1, basis_vector_2, basis_vector_3 );
+    
+    double XH_bond_length( 1.089 );
+    double bx = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).sine();
+    double projection = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).cosine();
     std::vector< Vector3D > result;
     result.push_back( atom_1 + bx * basis_vector_1 + projection *                                    angle.sine() * basis_vector_2 + projection *                                    angle.cosine() * basis_vector_3 );
     result.push_back( atom_1 + bx * basis_vector_1 + projection * ( angle + Angle::from_degrees( 120.0 ) ).sine() * basis_vector_2 + projection * ( angle + Angle::from_degrees( 120.0 ) ).cosine() * basis_vector_3 );
     result.push_back( atom_1 + bx * basis_vector_1 + projection * ( angle + Angle::from_degrees( 240.0 ) ).sine() * basis_vector_2 + projection * ( angle + Angle::from_degrees( 240.0 ) ).cosine() * basis_vector_3 );
+    return result;
+}
+
+// ********************************************************************************
+
+std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3D & atom_2, const Vector3D & atom_3 )
+{
+    Vector3D difference_vector_temp = atom_1 - atom_2;
+    NormalisedVector3D basis_vector_1 = normalised_vector( difference_vector_temp );
+    Vector3D r = atom_3 - atom_2;
+    NormalisedVector3D basis_vector_2 = orthogonalise( basis_vector_1, r );
+    NormalisedVector3D basis_vector_3;
+    generate_basis_2( basis_vector_1, basis_vector_2, basis_vector_3 );
+    
+    double XH_bond_length( 1.089 );
+    double bx = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).sine();
+    double projection = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).cosine();
+    std::vector< Vector3D > result;
+    result.push_back( atom_1 + bx * basis_vector_1 - projection *                                         basis_vector_2                                                                     );
+    result.push_back( atom_1 + bx * basis_vector_1 - projection * Angle::from_degrees( 120.0 ).cosine() * basis_vector_2 - projection * Angle::from_degrees( 120.0 ).sine() * basis_vector_3 );
+    result.push_back( atom_1 + bx * basis_vector_1 - projection * Angle::from_degrees( 240.0 ).cosine() * basis_vector_2 - projection * Angle::from_degrees( 240.0 ).sine() * basis_vector_3 );
     return result;
 }
 
@@ -64,7 +87,7 @@ std::vector< Vector3D > add_hydrogen_atoms( const Vector3D & atom_1, const Vecto
     NormalisedVector3D basis_vector_1 = normalised_vector( difference_vector_temp );
     NormalisedVector3D basis_vector_2;
     NormalisedVector3D basis_vector_3;
-    generate_basis( basis_vector_1, basis_vector_2, basis_vector_3 );
+    generate_basis_1( basis_vector_1, basis_vector_2, basis_vector_3 );
     double target_bond_length( 1.0 );
 //        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
 //            target_bond_length = 1.089;
@@ -92,7 +115,7 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & a
     NormalisedVector3D basis_vector_1 = normalised_vector( difference_vector_temp );
     NormalisedVector3D basis_vector_2;
     NormalisedVector3D basis_vector_3;
-    generate_basis( basis_vector_1, basis_vector_2, basis_vector_3 );
+    generate_basis_1( basis_vector_1, basis_vector_2, basis_vector_3 );
     double bx = 1.015 * Angle::from_degrees( 111.0 - 90.0 ).sine();
     double projection = 1.015 * Angle::from_degrees( 111.0 - 90.0 ).cosine();
     std::vector< Vector3D > result;
