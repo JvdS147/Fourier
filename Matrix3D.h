@@ -2,7 +2,7 @@
 #define MATRIX3D_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -49,12 +49,13 @@ public:
               const double a20, const double a21, const double a22
             );
 
-    // In keeping with the silly C++ convention: zero-based
+    // In keeping with the silly C++ convention: zero-based.
     double value( const size_t i, const size_t j ) const { return data_[i][j]; }
 
     void set_value( const size_t i, const size_t j, const double value ) { data_[i][j] = value; }
 
     double sum_of_elements() const;
+
     double sum_of_absolute_elements() const;
 
     void invert();
@@ -62,12 +63,26 @@ public:
     void transpose();
 
     double determinant() const;
-
+    
     double trace() const;
+    
+    void swap_rows( const size_t i, const size_t j );
+
+    void swap_columns( const size_t i, const size_t j );
+
+    double maximum_absolute_value_in_row( const size_t i ) const;
+
+    double maximum_absolute_value_in_column( const size_t i ) const;
+
+    bool is_diagonal() const;
 
     // Returns the determinant of the minor matrix defined by element i,j.
-    // In keeping with the silly C++ convention: zero-based
+    // In keeping with the silly C++ convention: zero-based.
     double minor_matrix_determinant( const size_t i, const size_t j ) const;
+
+    void convert_to_row_echelon_form( Matrix3D & T );
+
+    size_t number_of_zero_rows( const double tolerance = 0.000001 ) const;
 
     Matrix3D & operator+=( const Matrix3D & rhs );
     Matrix3D & operator-=( const Matrix3D & rhs );
