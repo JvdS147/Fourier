@@ -2,7 +2,7 @@
 #define CRYSTALLATTICE_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -92,14 +92,14 @@ public:
     void rescale_volume( const double target_volume, size_t Z = 0 );
 
     // Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
-    double shortest_distance( const Vector3D & lhs, const Vector3D & rhs );
+    double shortest_distance( const Vector3D & lhs, const Vector3D & rhs ) const;
 
     // Finds shortest distance^2, in Angstrom^2, between two positions given in fractional coordinates.
-    double shortest_distance2( const Vector3D & lhs, const Vector3D & rhs );
+    double shortest_distance2( const Vector3D & lhs, const Vector3D & rhs ) const;
 
     // Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
     // Returns the shortest distance (in Angstrom) and the shortest difference vector (defined as rhs - lhs, in fractional coordinates).
-    void shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & distance, Vector3D & difference_vector );
+    void shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & distance, Vector3D & difference_vector ) const;
 
     enum LatticeSystem { TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC };
     
