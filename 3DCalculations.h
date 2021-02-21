@@ -2,7 +2,7 @@
 #define DCALCULATIONS_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,10 @@ NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const Vector3D &
 
 // Generates three orthonormal basis vectors based on a single direction. The direction can be e.g. the normal to a plane,
 // the basis within the plane is then chosen arbitrarily but reproducibly.
-void generate_basis( const NormalisedVector3D & basis_vector_1, NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 );
+void generate_basis_1( const NormalisedVector3D & basis_vector_1, NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 );
+
+// Generates three orthonormal basis vectors based two directions.
+void generate_basis_2( const NormalisedVector3D & basis_vector_1, const NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 );
 
 double root_mean_square_devation_from_mean_plane( const CollectionOfPoints & points, const Plane & plane );
 

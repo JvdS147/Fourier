@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ void add_class( const std::string & class_name )
     h_file_writer.write_line( "#define " + to_upper( class_name ) + "_H" );
     h_file_writer.write_line();
     h_file_writer.write_line( "/* *********************************************" );
-    h_file_writer.write_line( "Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek" );
+    h_file_writer.write_line( "Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek" );
     h_file_writer.write_line( "All rights reserved." );
     h_file_writer.write_line();
     h_file_writer.write_line( "Redistribution and use in source and binary forms, with or without" );
@@ -93,7 +93,7 @@ void add_class( const std::string & class_name )
 
     TextFileWriter cpp_file_writer( FileName( directory, class_name, "cpp" ) );
     cpp_file_writer.write_line( "/* *********************************************" );
-    cpp_file_writer.write_line( "Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek" );
+    cpp_file_writer.write_line( "Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek" );
     cpp_file_writer.write_line( "All rights reserved." );
     cpp_file_writer.write_line();
     cpp_file_writer.write_line( "Redistribution and use in source and binary forms, with or without" );
@@ -128,7 +128,7 @@ void add_class( const std::string & class_name )
 
     TextFileWriter test_file_writer( FileName( directory, "Test"+ class_name, "cpp" ) );
     test_file_writer.write_line( "/* *********************************************" );
-    test_file_writer.write_line( "Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek" );
+    test_file_writer.write_line( "Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek" );
     test_file_writer.write_line( "All rights reserved." );
     test_file_writer.write_line();
     test_file_writer.write_line( "Redistribution and use in source and binary forms, with or without" );

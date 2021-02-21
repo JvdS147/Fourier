@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const Vector3D &
 
 // ********************************************************************************
 
-void generate_basis( const NormalisedVector3D & basis_vector_1, NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 )
+void generate_basis_1( const NormalisedVector3D & basis_vector_1, NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 )
 {
     Vector3D best_attempt( 1.0, 0.0, 0.0 );
     double smallest_absolute_inner_product = std::abs( basis_vector_1 * best_attempt );
@@ -90,6 +90,13 @@ void generate_basis( const NormalisedVector3D & basis_vector_1, NormalisedVector
     if ( std::abs( basis_vector_1 * NormalisedVector3D( 0.0, 0.0, 1.0 ) ) < smallest_absolute_inner_product )
         best_attempt = Vector3D( 0.0, 0.0, 1.0 );
     basis_vector_2 = orthogonalise( basis_vector_1, best_attempt );
+    generate_basis_2( basis_vector_1, basis_vector_2, basis_vector_3 );
+}
+
+// ********************************************************************************
+
+void generate_basis_2( const NormalisedVector3D & basis_vector_1, const NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 )
+{
     basis_vector_3 = NormalisedVector3D( basis_vector_1.y() * basis_vector_2.z() - basis_vector_1.z() * basis_vector_2.y(),
                                          basis_vector_1.z() * basis_vector_2.x() - basis_vector_1.x() * basis_vector_2.z(),
                                          basis_vector_1.x() * basis_vector_2.y() - basis_vector_1.y() * basis_vector_2.x() );
@@ -458,7 +465,7 @@ Vector3D rotate_point_about_axis( Vector3D point, const Vector3D & origin, const
 {
     NormalisedVector3D basis_vector_2;
     NormalisedVector3D basis_vector_3;
-    generate_basis( n, basis_vector_2, basis_vector_3 );
+    generate_basis_1( n, basis_vector_2, basis_vector_3 );
     // Calculate the projection of "point" onto the axis (i.e. the point on the axis closest to "point".
     double omega = (n*point)-(n*origin);
     Vector3D new_origin = origin + (omega * n);
@@ -504,7 +511,7 @@ double adjust_for_translations( const double input )
     double result = modf( input, &integer_part );
     if ( result < 0.0 )
         result += 1.0;
-    if ( nearly_equal( result, 0.0 ) || nearly_equal( result, 1.0 ) )
+    if ( nearly_zero( result ) || nearly_equal( result, 1.0 ) )
         result = 0.0;
     return result;
 }
