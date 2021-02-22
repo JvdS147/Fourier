@@ -77,7 +77,7 @@ void CrystalStructure::set_atom( const size_t i, const Atom & atom )
 
 void CrystalStructure::basic_checks() const
 {
-    
+
 }
 
 // ********************************************************************************
@@ -177,7 +177,7 @@ void CrystalStructure::apply_space_group_symmetry()
             }
         }
     }
-    
+
     add_atoms( atoms );
     space_group_symmetry_has_been_applied_ = true;
 }
@@ -202,7 +202,7 @@ void CrystalStructure::perceive_molecules()
         Atom iAtom = atom( i );
         for ( size_t j( i+1 ); j != natoms(); ++j )
         {
-            Atom jAtom = atom( j );                
+            Atom jAtom = atom( j );
             double distance2 = crystal_lattice_.shortest_distance2( iAtom.position(), jAtom.position() );
             if ( are_bonded( iAtom.element(), jAtom.element(), distance2 ) )
             {
@@ -443,6 +443,7 @@ double CrystalStructure::density() const
 
 void CrystalStructure::shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & shortest_distance, Vector3D & shortest_difference_vector )
 {
+    // Identity, initialisation of shortest_distance.
     crystal_lattice_.shortest_distance( lhs, rhs, shortest_distance, shortest_difference_vector );
     // Loop over symmetry operators.
     for ( size_t k( 1 ); k != space_group_.nsymmetry_operators(); ++k )
@@ -466,18 +467,7 @@ void CrystalStructure::shortest_distance( const Vector3D & lhs, const Vector3D &
 void CrystalStructure::second_shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & second_shortest_distance, Vector3D & second_shortest_difference_vector )
 {
     double shortest_distance;
-    crystal_lattice_.shortest_distance( lhs, rhs, shortest_distance, second_shortest_difference_vector );
-    // Loop over symmetry operators.
-    for ( size_t k( 1 ); k != space_group_.nsymmetry_operators(); ++k )
-    {
-        // Fractional coordinates.
-        Vector3D current_position = space_group_.symmetry_operator( k ) * rhs;
-        // Adjust for translations and convert to Cartesian coordinates.
-        double distance;
-        crystal_lattice_.shortest_distance( lhs, current_position, distance, second_shortest_difference_vector );
-        if ( distance < shortest_distance )
-            shortest_distance = distance;
-    }
+    this->shortest_distance( lhs, rhs, shortest_distance, second_shortest_difference_vector );
     second_shortest_distance = 1.0E12;
     // Loop over symmetry operators.
     for ( size_t k( 0 ); k != space_group_.nsymmetry_operators(); ++k )
@@ -1013,11 +1003,11 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
         std::cout << "RMSCD_with_matching(): WARNING: beta angles differ by more than 10 degrees." << std::endl;
     if ( std::abs( lhs_lattice.gamma().value_in_degrees() - rhs_lattice.gamma().value_in_degrees() ) > 10.0 )
         std::cout << "RMSCD_with_matching(): WARNING: gamma angles differ by more than 10 degrees." << std::endl;
-        
+
     // Loop over all symmetry operators.
     // First find all floating axes; these are a problem if there is more than one residue in the asymmetric unit,
     // but we cannot detect that at the moment.
-        
+
     std::vector< Vector3D > best_matches; // Fractional coordinates, from rhs.
     best_matches.reserve( natoms );
     // Find closest match
@@ -1307,4 +1297,3 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
 }
 
 // ********************************************************************************
-
