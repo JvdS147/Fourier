@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 TextFileReader_2::TextFileReader_2( const FileName & file_name )
 {
     read_file( file_name );
+}
+
+// ********************************************************************************
+
+TextFileReader_2::TextFileReader_2( const std::vector< std::string > & lines )
+{
+    lines_ = lines;
 }
 
 // ********************************************************************************

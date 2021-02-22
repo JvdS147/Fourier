@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@ PointGroup::PointGroup( const std::vector< Matrix3D > & symmetry_operators, cons
     has_inversion_ = false;
     // Go through the list of symmetry operators and divide into proper and improper, check for identity and check if there is an inversion.
     bool identity_found( false );
+    size_t identity_index;
     Matrix3D identity;
     Matrix3D inversion( -1.0 * identity );
     for ( size_t i( 0 ); i != symmetry_operators.size(); ++i )
@@ -56,7 +57,10 @@ PointGroup::PointGroup( const std::vector< Matrix3D > & symmetry_operators, cons
         if ( nearly_equal( determinant, 1.0 ) )
         {
             if ( nearly_equal( symmetry_operators[i], identity ) )
+            {
                 identity_found = true;
+                identity_index = i;
+            }
         }
         else if ( nearly_equal( determinant, -1.0 ) )
         {
@@ -69,6 +73,8 @@ PointGroup::PointGroup( const std::vector< Matrix3D > & symmetry_operators, cons
     }
     if ( ! identity_found )
         throw std::runtime_error( "PointGroup::PointGroup(): identity not found." );
+    if ( identity_index != 0  )
+        std::swap( symmetry_operators_[0], symmetry_operators_[identity_index] );
     name_ = name;
 }
 
@@ -82,6 +88,51 @@ void PointGroup::add_inversion()
     size_t old_size = symmetry_operators_.size();
     for ( size_t i( 0 ); i != old_size; ++i )
         symmetry_operators_.push_back( -1.0*symmetry_operators_[i] );
+}
+
+// ********************************************************************************
+
+Matrix3D PointGroup::special_position_operator() const
+{
+    Matrix3D result;
+    for ( size_t i( 1 ); i != symmetry_operators_.size(); ++i )
+        result += symmetry_operators_[i];
+    result /= symmetry_operators_.size();
+    return result;
+}
+
+// ********************************************************************************
+
+std::ostream & operator<<( std::ostream & os, const PointGroup & point_group )
+{
+    for ( size_t i( 0 ); i != point_group.nsymmetry_operators(); ++i )
+        os << point_group.symmetry_operator( i );
+    return os;
+}
+
+// ********************************************************************************
+
+// This function checks if two point groups are the same except for the order of the symmetry operators.
+bool same_symmetry_operators( const PointGroup & lhs, const PointGroup & rhs )
+{
+    if ( lhs.nsymmetry_operators() != rhs.nsymmetry_operators() )
+        return false;
+    // Technically, the following logic is incorrect if lhs contains the same symmetry operator twice, but that should not happen.
+    for ( size_t i( 0 ); i != lhs.nsymmetry_operators(); ++i )
+    {
+        bool found( false );
+        for ( size_t j( 0 ); j != rhs.nsymmetry_operators(); ++j )
+        {
+            if ( nearly_equal( lhs.symmetry_operator( i ), rhs.symmetry_operator( j ) ) )
+            {
+                found = true;
+                break;
+            }
+        }
+        if ( ! found )
+            return false;
+    }
+    return true;
 }
 
 // ********************************************************************************
@@ -110,11 +161,3 @@ void check_if_closed( const std::vector< Matrix3D > & symmetry_operators )
 
 // ********************************************************************************
 
-std::ostream & operator<<( std::ostream & os, const PointGroup & point_group )
-{
-    for ( size_t i( 0 ); i != point_group.nsymmetry_operators(); ++i )
-        os << point_group.symmetry_operator( i );
-    return os;
-}
-
-// ********************************************************************************

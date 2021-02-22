@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -579,7 +579,7 @@ void PowderPattern::normalise_highest_peak( const double highest_peak )
         if ( max_intensity < intensities_[i] )
             max_intensity = intensities_[i];
     }
-    if ( nearly_equal( max_intensity, 0.0 ) )
+    if ( nearly_zero( max_intensity ) )
         throw std::runtime_error( "PowderPattern::normalise_highest_peak(): highest peak is 0.0." );
     scale( highest_peak / max_intensity );
 }
@@ -590,7 +590,7 @@ void PowderPattern::normalise_highest_peak( const double highest_peak )
 void PowderPattern::normalise_total_signal( const double total_signal )
 {
     double current_total_signal = cumulative_intensity();
-    if ( nearly_equal( current_total_signal, 0.0 ) )
+    if ( nearly_zero( current_total_signal ) )
         throw std::runtime_error( "PowderPattern::normalise_total_signal(): total signal is 0.0." );
     // Scale to total_signal
     scale( total_signal / current_total_signal );

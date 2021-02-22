@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -80,7 +80,7 @@ double Matrix3D::sum_of_absolute_elements() const
 void Matrix3D::invert()
 {
     double D = determinant();
-    if ( fabs( D ) < 0.000001 )
+    if ( nearly_zero( D ) )
         std::runtime_error( "Matrix3D::invert(): determinant = 0" );
     transpose();
     Matrix3D adjoint;
@@ -118,6 +118,47 @@ double Matrix3D::trace() const
 
 // ********************************************************************************
 
+void Matrix3D::swap_rows( const size_t i, const size_t j )
+{
+    std::swap( data_[i][0], data_[j][0] );
+    std::swap( data_[i][1], data_[j][1] );
+    std::swap( data_[i][2], data_[j][2] );
+}
+
+// ********************************************************************************
+
+void Matrix3D::swap_columns( const size_t i, const size_t j )
+{
+    std::swap( data_[0][i], data_[0][j] );
+    std::swap( data_[1][i], data_[1][j] );
+    std::swap( data_[2][i], data_[2][j] );    
+}
+
+// ********************************************************************************
+
+double Matrix3D::maximum_absolute_value_in_row( const size_t i ) const
+{
+    return std::max( std::abs( data_[i][0] ), std::max( std::abs( data_[i][1] ), std::abs( data_[i][2] ) ) );
+}
+
+// ********************************************************************************
+
+double Matrix3D::maximum_absolute_value_in_column( const size_t i ) const
+{
+    return std::max( std::abs( data_[0][i] ), std::max( std::abs( data_[1][i] ), std::abs( data_[2][i] ) ) );    
+}
+
+// ********************************************************************************
+
+bool Matrix3D::is_diagonal() const
+{
+    return ( nearly_zero( data_[0][1] ) && nearly_zero( data_[0][2] ) && 
+             nearly_zero( data_[1][0] ) && nearly_zero( data_[1][2] ) && 
+             nearly_zero( data_[2][0] ) && nearly_zero( data_[2][1] ) );
+}
+
+// ********************************************************************************
+
 double Matrix3D::minor_matrix_determinant( const size_t row, const size_t col ) const
 {
     double minor_matrix[2][2];
@@ -138,6 +179,56 @@ double Matrix3D::minor_matrix_determinant( const size_t row, const size_t col ) 
         ++minor_row;
     }
     return minor_matrix[0][0]*minor_matrix[1][1] - minor_matrix[0][1]*minor_matrix[1][0];
+}
+
+// ********************************************************************************
+
+void Matrix3D::convert_to_row_echelon_form( Matrix3D & T )
+{
+    T = Matrix3D();
+    size_t iRow( 0 );
+    size_t iCol( 0 );
+    while ( ( iRow < 2 ) && ( iCol < 3 ) )
+    {
+        // Find the pivot in column iCol.
+        size_t iMax( iRow );
+        for ( size_t i( iRow + 1 ); i != 3; ++i )
+        {
+            if ( std::abs( data_[i][iCol] ) > std::abs( data_[iMax][iCol] ) )
+                iMax = i;
+        }
+        if ( ! nearly_zero( data_[iMax][iCol] ) )
+        {
+            swap_rows( iRow, iMax );
+            T.swap_rows( iRow, iMax );
+            // Do for all rows below pivot.
+            for ( size_t i( iRow + 1 ); i != 3; ++i )
+            {
+                double factor = -1.0 * ( data_[i][iCol] / data_[iRow][iCol] );
+                data_[i][iCol] = 0.0;
+                for ( size_t j( iCol + 1 ); j != 3; ++j )
+                {
+                    data_[i][j] += factor * data_[iRow][j];
+                    T.set_value( i, j, T.value( i, j ) + factor * value( iRow, j ) );
+                }
+            }
+            ++iRow;
+        }
+        ++iCol;
+    }
+}
+
+// ********************************************************************************
+
+size_t Matrix3D::number_of_zero_rows( const double tolerance ) const
+{
+    size_t result( 0 );
+    for ( size_t i( 0 ); i != 3; ++i )
+    {
+        if ( nearly_zero( data_[i][0] ) && nearly_zero( data_[i][1] ) && nearly_zero( data_[i][2] ) )
+            ++result;
+    }
+    return result;
 }
 
 // ********************************************************************************
@@ -280,3 +371,4 @@ Matrix3D transpose( const Matrix3D & matrix3d )
     return result;
 }
 // ********************************************************************************
+

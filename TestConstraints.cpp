@@ -25,19 +25,22 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "ConvexPolygon.h"
+#include "Constraints.h"
+#include "CrystalStructure.h"
+#include "Vector3D.h"
 
 #include "TestSuite.h"
 
 #include <iostream>
 
-void test_ConvexPolygon( TestSuite & test_suite )
+void test_Constraints( TestSuite & test_suite )
 {
-    std::cout << "Now running tests for ConvexPolygon." << std::endl;
+    std::cout << "Now running tests for Constraints." << std::endl;
 
     {
-    ConvexPolygon dummy;
-  //  test_suite.test_equality( dummy, , "ConvexPolygon()" );
+        CrystalStructure crystal_structure;
+        Vector3D point;
+        write_constraints( crystal_structure, point );
     }
 
 }

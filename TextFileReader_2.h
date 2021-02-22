@@ -2,7 +2,7 @@
 #define TEXTFILEREADER_2_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,9 @@ public:
     TextFileReader_2() {}
 
     explicit TextFileReader_2( const FileName & file_name );
+
+    // For testing
+    explicit TextFileReader_2( const std::vector< std::string > & lines );
 
     void read_file( const FileName & file_name );
 

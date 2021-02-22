@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -168,7 +168,40 @@ int SymmetryOperator::rotation_part_type() const
         case  3 : return 1;
     }
     throw std::runtime_error( "SymmetryOperator::rotation_part_type(): Error." );
+}
 
+// ********************************************************************************
+
+// This is wi in Grosse-Kunstleve
+Vector3D SymmetryOperator::intrinsic_translation_part() const
+{
+    int N = rotation_part_type();
+    size_t n = std::abs( N );
+    if ( N == -1 )
+        n = 2;
+    else if ( N == -3 )
+        n = 6;
+    SymmetryOperator result( *this );
+    for ( size_t i( 1 ); i != n; ++i )
+        result = result * ( *this );
+    if ( ! nearly_equal( result.rotation(), Matrix3D() ) )
+        throw std::runtime_error( "SymmetryOperator::intrinsic_translation_part(): result is not the identity." );
+    return result.translation()/n;
+}
+
+// ********************************************************************************
+
+bool SymmetryOperator::has_intrinsic_translation() const
+{
+    return ( ! nearly_equal( intrinsic_translation_part(), Vector3D() ) );
+}
+
+// ********************************************************************************
+
+// This is wl in Grosse-Kunstleve
+Vector3D SymmetryOperator::location_translation_part() const
+{
+    return translation() - intrinsic_translation_part();
 }
 
 // ********************************************************************************

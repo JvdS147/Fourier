@@ -2,7 +2,7 @@
 #define CRYSTALSTRUCTURE_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -138,6 +138,10 @@ public:
 
     void set_molecule_in_crystal( const size_t i, const MoleculeInCrystal & molecule_in_crystal ) { molecules_[i] = molecule_in_crystal; }
 
+    // point is in fractional coordinates
+    // Tolerance is in Angstrom
+    PointGroup point_is_on_special_position( Vector3D & point, const double tolerance = 0.01 ) const;
+    
     bool molecule_is_on_special_position( const size_t i ) const;
 
     Vector3D molecular_centre_of_mass( const size_t i ) const;

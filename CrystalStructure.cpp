@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CrystalStructure.h"
 #include "MathFunctions.h"
 #include "PhysicalConstants.h"
+#include "PointGroup.h"
 #include "RunningAverageAndESD.h"
 #include "TextFileWriter.h"
 #include "Utilities.h"
@@ -231,7 +232,7 @@ void CrystalStructure::perceive_molecules()
 
 // ********************************************************************************
 
-// @@ This requires that you run the molecule preception method first
+// @@ This requires that you run the molecule perception method first
 void CrystalStructure::remove_symmetry_related_molecules()
 {
 }
@@ -244,6 +245,66 @@ MoleculeInCrystal CrystalStructure::molecule_in_crystal( const size_t i ) const
     if ( i >= molecules_.size() )
         throw std::runtime_error( "CrystalStructure::molecule_in_crystal(): i >= molecules_.size()." );
     return molecules_[i];
+}
+
+// ********************************************************************************
+
+PointGroup CrystalStructure::point_is_on_special_position( Vector3D & point, const double tolerance ) const
+{
+    std::vector< bool > used;
+    for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
+        used.push_back( false );
+    bool a_change_was_made( true );
+    while ( a_change_was_made )
+    {
+        a_change_was_made = false;
+        // We start at index 1 because we skip the identity
+        for ( size_t i( 1 ); i != space_group_.nsymmetry_operators(); ++i )
+        {
+            if ( used[i] )
+                continue;
+            Vector3D point_2 = space_group_.symmetry_operator( i ) * point;
+            double distance;
+            Vector3D difference_vector;
+            crystal_lattice_.shortest_distance( point, point_2, distance, difference_vector );
+            if ( distance < tolerance )
+            {
+                used[i] = true;
+                a_change_was_made = true;
+                // Check that the symmetry operator does not have an intrinsic translation--that would be weird
+                if ( space_group_.symmetry_operator( i ).has_intrinsic_translation() )
+                {
+                    std::cout << "CrystalStructure::point_is_on_special_position( Vector3D, double ) : Warning: a symmetry operator with a non-zero intrinsic translation mapped an atom onto itself." << std::endl;
+                }
+                else
+                {
+                    // Average point and point_2
+                    point += difference_vector / 2.0;
+                }
+            }
+        }
+    }
+    std::vector< Matrix3D > point_group_symmetry_operators;
+    for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
+    {
+        Vector3D point_2 = space_group_.symmetry_operator( i ) * point;
+        double distance;
+        Vector3D difference_vector;
+        crystal_lattice_.shortest_distance( point, point_2, distance, difference_vector );
+        if ( distance < tolerance )
+        {
+            // Check that the symmetry operator does not have an intrinsic translation--that would be weird
+            if ( space_group_.symmetry_operator( i ).has_intrinsic_translation() )
+            {
+                std::cout << "CrystalStructure::point_is_on_special_position( Vector3D, double ) : Warning: a symmetry operator with a non-zero intrinsic translation mapped an atom onto itself." << std::endl;
+            }
+            else
+                point_group_symmetry_operators.push_back( space_group_.symmetry_operator( i ).rotation() );
+        }
+    }
+    check_if_closed( point_group_symmetry_operators );
+    PointGroup point_group( point_group_symmetry_operators );
+    return point_group;
 }
 
 // ********************************************************************************
@@ -401,7 +462,7 @@ double CrystalStructure::dipole_moment() const
     for ( size_t i( 0 ); i != atoms_.size(); ++i )
     {
         double charge = atoms_[ i ].charge() - ( nett_charge / atoms_.size() );
-        if ( nearly_equal( charge, 0.0 ) )
+        if ( nearly_zero( charge ) )
             ++natoms_zero_charge;
         Vector3D position = atoms_[ i ].position();
 //        position = adjust_for_translations( position ); // Move the atom to be within the unit cell
@@ -959,7 +1020,7 @@ double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, co
                          (rhs.crystal_lattice().fractional_to_orthogonal( lhs.atom( i ).position() ) - rhs.crystal_lattice().fractional_to_orthogonal( rhs.atom( i ).position() )).length() ) / 2.0;
         result += occupancy * square( displacement );
     }
-    if ( nearly_equal( nnon_H_atoms, 0.0 ) )
+    if ( nearly_zero( nnon_H_atoms ) )
         return 0.0;
     result /= nnon_H_atoms;
     result = sqrt( result );
@@ -1158,7 +1219,7 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
         Vector3D com_rhs = rhs.centre_of_mass();
         for ( size_t i( 0 ); i != 3; ++i )
         {
-            if ( ! nearly_equal( sum.value( i, i ), 0.0 ) )
+            if ( ! nearly_zero( sum.value( i, i ) ) )
             {
                 std::cout << "Floating axis found " << i << std::endl;
                 floating_axes_correction.set_value( i, com_lhs.value(i)-com_rhs.value(i));

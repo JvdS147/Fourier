@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -201,32 +201,32 @@ void TLSWriter( const FileName & input_file_name )
     text_file_writer.write_line( "    ' Unit-cell parameters are assumed to be constant." );
     text_file_writer.write_line();
     Matrix3D f2c = crystal_structure.crystal_lattice().fractional_to_orthogonal_matrix();
-    
+
    // // Many matrix elements evaluate to e.g. -1.0E-18, these are set to 0.0 here.
   //  for ( size_t i( 0 ); i < 3; ++i )
   //  {
   //      for ( size_t j( 0 ); j < 3; ++j )
   //      {
-   //         if ( nearly_equal( f2c.value( i, j ), 0.0 ) )
+   //         if ( nearly_zero( f2c.value( i, j ) ) )
    //             f2c.set_value( i, j, 0.0 );
    //     }
    // }
-    
+
     if ( is_on_inversion_at_origin )
     {
         for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        {
+         {
             std::string label = crystal_structure.atom( i ).label();
             std::string line;
             line = "    prm !rx" + label + " = x" + label + "*" + double2string( f2c.value(0,0) );
-            if ( ! nearly_equal( f2c.value(0,1), 0.0 ) )
+            if ( ! nearly_zero( f2c.value(0,1) ) )
                  line += " + y" + label + "*" + double2string( f2c.value(0,1) );
-            if ( ! nearly_equal( f2c.value(0,2), 0.0 ) )
+            if ( ! nearly_zero( f2c.value(0,2) ) )
                  line += " + z" + label + "*" + double2string( f2c.value(0,2) );
             line += ";";
             text_file_writer.write_line( line );
             line = "    prm !ry" + label + " = y" + label + "*" + double2string( f2c.value(1,1) );
-            if ( ! nearly_equal( f2c.value(1,2), 0.0 ) )
+            if ( ! nearly_zero( f2c.value(1,2) ) )
                  line += " + z" + label + "*" + double2string( f2c.value(1,2) );
             line += ";";
             text_file_writer.write_line( line );
@@ -298,7 +298,7 @@ void TLSWriter( const FileName & input_file_name )
         {
             for ( s = 0; s < 3; ++s )
             {
-                if ( nearly_equal( c2f.value( r, s ), 0.0 ) )
+                if ( nearly_zero( c2f.value( r, s ) ) )
                     c2f.set_value( r, s, 0.0 );
             }
         }
@@ -317,14 +317,14 @@ void TLSWriter( const FileName & input_file_name )
         s_s.push_back( 3 );
         r_s.push_back( 2 );
         s_s.push_back( 3 );
-        
-        
+
+
 //    prm u11H13 = 37.9275 * (
 //        0.160488 * ( ru11H13 * 0.160488 + ru12H13 * 0 + ru13H13 * 0.0246915 ) +
 //        (0) * ( ru12H13 * 0.160488 + ru22H13 * 0 + ru23H13 * 0.0246915 ) +
 //        (0.0246915) * ( ru13H13 * 0.160488 + ru23H13 * 0 + ru33H13 * 0.0246915 ) ); : 0.0
-        
-        
+
+
         for ( size_t j(0); j != r_s.size(); ++j )
         {
             r = r_s[j];
@@ -733,17 +733,17 @@ void TLSWriter_2( const FileName & input_file_name )
     text_file_writer.write_line( "    ' Unit-cell parameters are assumed to be constant." );
     text_file_writer.write_line();
     Matrix3D f2c = crystal_structure.crystal_lattice().fractional_to_orthogonal_matrix();
-    
+
     // Many matrix elements evaluate to e.g. -1.0E-18, these are set to 0.0 here.
     for ( size_t i( 0 ); i < 3; ++i )
     {
         for ( size_t j( 0 ); j < 3; ++j )
         {
-            if ( nearly_equal( f2c.value( i, j ), 0.0 ) )
+            if ( nearly_zero( f2c.value( i, j ) ) )
                 f2c.set_value( i, j, 0.0 );
         }
     }
-    
+
     for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
     {
         std::string label = crystal_structure.atom( i ).label();
@@ -787,7 +787,7 @@ void TLSWriter_2( const FileName & input_file_name )
         {
             for ( s = 0; s < 3; ++s )
             {
-                if ( nearly_equal( c2f.value( r, s ), 0.0 ) )
+                if ( nearly_zero( c2f.value( r, s ) ) )
                     c2f.set_value( r, s, 0.0 );
             }
         }
@@ -1023,7 +1023,7 @@ void TLSWriter_2( const FileName & input_file_name )
            text_file_writer.write_line( "    Angle_Distance_Restrain( corr_ang_" + angle_labels_1[i] + "_" + angle_labels_2[i] + "_" + angle_labels_3[i] + ", " + double2string( angle_target_values[i] ) + ", 0.0, angle_width, angle_weight )" );
         }
     }
-    
+
     while ( iLine != input_file.size() )
     {
         // Find Out_CIF_STR_Uiso and replace by Out_CIF_ADPs_TLS
@@ -1095,4 +1095,3 @@ void TLSWriter_2( const FileName & input_file_name )
 }
 
 // ********************************************************************************
-

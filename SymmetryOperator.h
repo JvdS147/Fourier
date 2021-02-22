@@ -2,7 +2,7 @@
 #define SYMMETRYOPERATOR_H
 
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,14 @@ public:
 
     // This is the "N" in Grosse-Kunstleve
     int rotation_part_type() const;
+    
+    // This is wi in Grosse-Kunstleve
+    Vector3D intrinsic_translation_part() const;
+    
+    bool has_intrinsic_translation() const;
+    
+    // This is wl in Grosse-Kunstleve
+    Vector3D location_translation_part() const;
 
     void invert();
 
