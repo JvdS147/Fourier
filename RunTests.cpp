@@ -38,12 +38,17 @@ void run_tests()
     {
         test_angle( test_suite );
         test_Chebyshev_background( test_suite );
+        test_Constraints( test_suite );
+        test_ConvexPolygon( test_suite );
         test_correlation_matrix( test_suite );
         test_crystal_lattice( test_suite );
         test_crystal_structure( test_suite );
-        test_fraction( test_suite );
         test_file_name( test_suite );
+        test_fraction( test_suite );
         test_matrix3D( test_suite );
+        test_maths( test_suite );
+        test_ModelBuilding( test_suite );
+        test_PowderMatchTable( test_suite );
         test_quaternion( test_suite );
         test_sort( test_suite );
         test_utilities( test_suite );

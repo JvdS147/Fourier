@@ -105,6 +105,8 @@ public:
     std::vector< Vector3D > centring_vectors() const { return centring_vectors_; }
 
     void print_multiplication_table() const;
+    
+    void show() const;
 
 private:
     std::vector< SymmetryOperator > symmetry_operators_;

@@ -123,6 +123,8 @@ public:
     double cosine() const { return cos( angle_ ); }
     void sincos( double & sine, double & cosine ) const { sine = this->sine(); cosine = this->cosine(); }
     double tangent() const { return tan( angle_ ); }
+    double cotangent() const { return 1.0/this->tangent(); }
+    
     void absolute() { angle_ = std::abs( angle_ ); }
 
     friend Angle absolute( const Angle angle );
@@ -145,6 +147,11 @@ std::ostream & operator<<( std::ostream & os, const Angle angle );
 
 inline Angle arcsine( const double value ) { return Angle::from_radians( asin( value ) ); }
 inline Angle arccosine( const double value ) { return Angle::from_radians( acos( value ) ); }
+
+inline Angle arctangent( const double x ) { return Angle::from_radians( atan( x ) ); }
+
+// cot-1(x) = pi/2 - tan-1(x) for any x
+inline Angle arccotangent( const double x ) { return Angle::angle_90_degrees() - arctangent( x ); }
 
 inline Angle operator*( const double lhs, const Angle rhs ) { return Angle::from_radians( rhs.value_in_radians() * lhs ); }
 
