@@ -347,6 +347,31 @@ void SpaceGroup::decompose()
 
 // ********************************************************************************
 
+void SpaceGroup::show() const
+{
+    std::cout << "Symmetry operators:" << std::endl;
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+        std::cout << symmetry_operators_[i].to_string() << std::endl;
+    std::cout << "Representative symmetry operators:" << std::endl;
+    for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
+        std::cout << representative_symmetry_operators_[i].to_string() << std::endl;
+    std::cout << "Centring vectors:" << std::endl;
+    for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
+        std::cout << centring_vectors_[i].to_string() << std::endl;
+    if ( has_inversion_ )
+    {
+        if ( has_inversion_at_origin_ )
+            std::cout << "Has inversion at origin" << std::endl;
+        else
+            std::cout << "Has inversion at: " << position_of_inversion_.to_string() << std::endl;
+    }
+    else
+        std::cout << "No inversion" << std::endl;
+    std::cout << "Name:" << name_ << std::endl;
+}
+
+// ********************************************************************************
+
 std::ostream & operator<<( std::ostream & os, const SpaceGroup & space_group )
 {
     for ( size_t i( 0 ); i != space_group.nsymmetry_operators(); ++i )

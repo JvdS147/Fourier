@@ -31,11 +31,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Matrix3D.h"
 #include "Vector3D.h"
 
+#include <iostream>
+
 // ********************************************************************************
 
 AnisotropicDisplacementParameters::AnisotropicDisplacementParameters()
 {
-    clear();
+    data_ = SymmetricMatrix3D( 0.0 );
 }
 
 // ********************************************************************************
@@ -102,14 +104,10 @@ double AnisotropicDisplacementParameters::average_displacement_squared( const Ve
 
 // ********************************************************************************
 
-void AnisotropicDisplacementParameters::clear()
+void AnisotropicDisplacementParameters::show() const
 {
-    set_value( 0, 0, 0.0 );
-    set_value( 1, 1, 0.0 );
-    set_value( 2, 2, 0.0 );
-    set_value( 0, 1, 0.0 );
-    set_value( 0, 2, 0.0 );
-    set_value( 1, 2, 0.0 );
+    std::cout << "Uiso = " << U_iso() << std::endl;
+    data_.show();
 }
 
 // ********************************************************************************

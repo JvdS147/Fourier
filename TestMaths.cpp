@@ -1,6 +1,3 @@
-#ifndef TESTMATH_H
-#define TESTMATH_H
-
 /* *********************************************
 Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -28,6 +25,33 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "CrystalLattice.h"
+//#include "Utilities.h"
+#include "MathFunctions.h"
 
-#endif // TESTMATH_H
+#include "TestSuite.h"
+
+#include <iostream>
+#include <string>
+
+void test_maths( TestSuite & test_suite )
+{
+    std::cout << "Now running tests for Maths." << std::endl;
+    double a = 6.884;
+    double b = 9.569;
+    double c = 7.093;
+    Angle beta = Angle::from_degrees( 126.61 );
+    CrystalLattice crystal_lattice_non_reduced( sqrt( 9.0*square( a ) + 4.0*square( c ) + 12.0*a*c*beta.cosine() ),
+                                                b,
+                                                c,
+                                                Angle::angle_90_degrees(),
+                                                arccotangent( beta.cotangent() + 2.0*c/( 3.0*a*beta.sine() ) ),
+                                                Angle::angle_90_degrees() );
+     test_suite.test_equality_double( crystal_lattice_non_reduced.a(), 16.6828, "test_maths() a", 0.0001 );
+     test_suite.test_equality_double( crystal_lattice_non_reduced.b(), 9.569, "test_maths() b", 0.0001 );
+     test_suite.test_equality_double( crystal_lattice_non_reduced.c(), 7.093, "test_maths() c", 0.0001 );
+     test_suite.test_equality_double( crystal_lattice_non_reduced.alpha().value_in_degrees(), 90.0, "test_maths() alpha" );
+     test_suite.test_equality_double( crystal_lattice_non_reduced.beta().value_in_degrees(),  83.5645, "test_maths() beta", 0.0001 );
+     test_suite.test_equality_double( crystal_lattice_non_reduced.gamma().value_in_degrees(), 90.0, "test_maths() gamma" );
+}
 

@@ -77,14 +77,14 @@ public:
     // Units: Angstrom^2.
     double average_displacement_squared( const Vector3D & v, const CrystalLattice & crystal_lattice );
     
+    void show() const;
+    
 private:
     // Because this class will be used for analysing MD trajectories, we will have
     // very many instances. It will always take a while to do the analysis,
     // so it does not matter if the class is a bit slower than it could be, but
     // we can easily run out of memory so store as little as possible.
     SymmetricMatrix3D data_; // Stores U_cart, the only one for which no knowledge of the unit cell is needed.
-    
-    void clear();
 
 };
 
