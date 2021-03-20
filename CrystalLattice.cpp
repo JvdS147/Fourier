@@ -37,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 CrystalLattice::CrystalLattice()
 {
     *this = CrystalLattice( 10.0, 10.0, 10.0, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
-    lattice_system_ = deduce_lattice_system( *this );
 }
 
 // ********************************************************************************
@@ -80,6 +79,7 @@ alpha_(alpha), beta_(beta), gamma_(gamma)
     a_star_ = a_star_vector_.length();
     b_star_ = b_star_vector_.length();
     c_star_ = c_star_vector_.length();
+    N_ = SymmetricMatrix3D( a_star_, b_star_, c_star_, 0.0, 0.0, 0.0 );
     alpha_star_ = arccosine( (b_vector_*c_vector_) / (b*c) );
     beta_star_  = arccosine( (a_vector_*c_vector_) / (a*c) );
     gamma_star_ = arccosine( (a_vector_*b_vector_) / (a*b) );

@@ -28,9 +28,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "Vector3D.h"
-#include "Matrix3D.h"
 #include "Angle.h"
+#include "Matrix3D.h"
+#include "SymmetricMatrix3D.h"
+#include "Vector3D.h"
 
 #include <string>
 
@@ -84,6 +85,9 @@ public:
 
     Vector3D orthogonal_to_fractional( const Vector3D & input ) const;
     Vector3D fractional_to_orthogonal( const Vector3D & input ) const;
+
+    // This is the matrix N as used by Grosse-Kunstleve to convert U_cif to U_star
+    SymmetricMatrix3D N() const { return N_; }
 
     // Rescales a, b and c isotropically so that the new unit cell volume becomes
     // equal to the specified target_volume. alpha, beta and gamma are not changed.
@@ -144,6 +148,7 @@ private:
     double volume_;
     Matrix3D fractional_to_orthogonal_matrix_;
     Matrix3D orthogonal_to_fractional_matrix_;
+    SymmetricMatrix3D N_;
     LatticeSystem lattice_system_;
 };
 

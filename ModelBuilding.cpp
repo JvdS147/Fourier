@@ -283,7 +283,7 @@ void normalise_X_H_bonds( CrystalStructure & crystal_structure )
             target_bond_length = 1.215;
         else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "C" ) )
             target_bond_length = 1.090;
-          else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "N" ) )
+        else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "N" ) )
             target_bond_length = 1.015;
         else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "O" ) )
             target_bond_length = 0.993;
