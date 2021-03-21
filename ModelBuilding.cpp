@@ -47,7 +47,7 @@ std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3
     NormalisedVector3D basis_vector_2;
     NormalisedVector3D basis_vector_3;
     generate_basis_1( basis_vector_1, basis_vector_2, basis_vector_3 );
-    
+
     double XH_bond_length( 1.089 );
     double bx = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).sine();
     double projection = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).cosine();
@@ -69,7 +69,7 @@ std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3
     NormalisedVector3D basis_vector_2 = orthogonalise( basis_vector_1, r );
     NormalisedVector3D basis_vector_3;
     generate_basis_2( basis_vector_1, basis_vector_2, basis_vector_3 );
-    
+
     double XH_bond_length( 1.089 );
     double bx = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).sine();
     double projection = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).cosine();
@@ -283,7 +283,7 @@ void normalise_X_H_bonds( CrystalStructure & crystal_structure )
             target_bond_length = 1.215;
         else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "C" ) )
             target_bond_length = 1.090;
-          else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "N" ) )
+        else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "N" ) )
             target_bond_length = 1.015;
         else if ( crystal_structure.atom( smallest_distance_index ).element() == Element( "O" ) )
             target_bond_length = 0.993;
