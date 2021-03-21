@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include <string>
+#include <iosfwd>
 
 /*
  * Fraction class.
@@ -150,6 +151,8 @@ private:
     int numerator_;   // Always same sign as integerPart_. Always smaller than denominator_.
     int denominator_; // Always positive. Always greater than numerator_. Always 1 when numerator_ is 0.
 };
+
+std::ostream & operator<<( std::ostream & os, const Fraction fraction );
 
 // We could remove all the overloads taking one double argument and either make it the
 // responsibility of the programmer to convert the Fraction to a double first, or we could

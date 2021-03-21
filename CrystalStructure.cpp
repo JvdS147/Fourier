@@ -999,7 +999,15 @@ double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, co
 {
     // Check if the number of atoms is the same.
     if ( lhs.natoms() != rhs.natoms() )
-        throw std::runtime_error( "root_mean_square_Cartesian_displacement(): number of atoms is not the same." );
+        throw std::runtime_error( "root_mean_square_Cartesian_displacement(): error: number of atoms is not the same." );
+    // We assume that we are working only with the asymmetric unit here, so we have to check the space group,
+    // whether or not space-group symmetry has been applied and the special positions.
+    if ( lhs.space_group_symmetry_has_been_applied() != rhs.space_group_symmetry_has_been_applied() )
+        throw std::runtime_error( "root_mean_square_Cartesian_displacement(): error: space-group symmetry should have been applied either to neither or to both." );
+    if ( lhs.space_group_symmetry_has_been_applied() )
+        std::cout << "root_mean_square_Cartesian_displacement(): warning: space-group symmetry has been applied to both." << std::endl;
+    if ( ! same_symmetry_operators( lhs.space_group(), rhs.space_group() ) )
+        std::cout << "root_mean_square_Cartesian_displacement(): warning: space-group symmetry operators are different." << std::endl;
     double result( 0.0 );
     // Atoms on special positions contribute fractionally.
     double nnon_H_atoms( 0.0 );
@@ -1011,8 +1019,25 @@ double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, co
             continue;
         // Check if elements the same.
         if ( lhs.atom( i ).element() != rhs.atom( i ).element() )
-            throw std::runtime_error( "root_mean_square_Cartesian_displacement(): elements are not the same." );
-        double occupancy = 1.0;
+            throw std::runtime_error( "root_mean_square_Cartesian_displacement(): error: elements are not the same." );
+        // Check that occupancies are the same
+        if ( ! nearly_equal( lhs.atom( i ).occupancy(), rhs.atom( i ).occupancy() ) )
+            throw std::runtime_error( "root_mean_square_Cartesian_displacement(): error: occupancies are not the same." );
+        if ( ! nearly_equal( lhs.atom( i ).occupancy(), 1.0 ) )
+            std::cout << "root_mean_square_Cartesian_displacement(): warning: occupancies equal, but not 1.0." << std::endl;
+        double occupancy = lhs.atom( i ).occupancy();
+        // No need to check special positions if space group has been applied.
+        if ( ! lhs.space_group_symmetry_has_been_applied() )
+        {
+            Vector3D dummy = lhs.atom( i ).position();
+            PointGroup point_group_lhs = lhs.point_is_on_special_position( dummy );
+            dummy = rhs.atom( i ).position();
+            PointGroup point_group_rhs = rhs.point_is_on_special_position( dummy );
+            if ( ! same_symmetry_operators( point_group_lhs, point_group_rhs ) )
+                throw std::runtime_error( "root_mean_square_Cartesian_displacement(): error: special positions are not the same." );
+            std::cout << "root_mean_square_Cartesian_displacement(): info: atom " + size_t2string( i ) + " on special position of order " + size_t2string( point_group_lhs.nsymmetry_operators() ) + "." << std::endl;
+            occupancy /= static_cast<double>( point_group_lhs.nsymmetry_operators() );
+        }
         nnon_H_atoms += occupancy;
         double displacement;
         //  Cartesian displacement = (|G1 * r1 - G1 * r2| + |G2 * r1 - G2 * r2|) / 2.

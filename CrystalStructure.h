@@ -243,7 +243,11 @@ private:
 
 };
 
-// @@ What about atoms on special positions?
+// Atoms on special positions contribute fractionally if space group has not been applied.
+// If there are atoms on special positions and the space group has not been applied then corresponding atoms must be on the same special position.
+// Atoms with partial occupancies contribute fractionally if the occupancies are the same in both structures.
+// This function in principle operates on the asymmetric unit, so space group should not have been applied.
+// If space group hass been applied, it should have been applied to both.
 double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, const CrystalStructure & rhs );
 
 double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const bool add_shifts );

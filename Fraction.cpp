@@ -295,6 +295,14 @@ void Fraction::clean_up()
 
 // ********************************************************************************
 
+std::ostream & operator<<( std::ostream & os, const Fraction fraction )
+{
+    os << fraction.to_string();
+    return os;
+}
+
+// ********************************************************************************
+
 double   operator*( const Fraction & lhs, const double    rhs )
 {
     return lhs.to_double() * rhs;
