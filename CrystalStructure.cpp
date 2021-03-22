@@ -1045,8 +1045,11 @@ double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, co
             PointGroup point_group_rhs = rhs.point_is_on_special_position( dummy );
             if ( ! same_symmetry_operators( point_group_lhs, point_group_rhs ) )
                 throw std::runtime_error( "root_mean_square_Cartesian_displacement(): error: special positions are not the same." );
-            std::cout << "root_mean_square_Cartesian_displacement(): info: atom " + size_t2string( i ) + " on special position of order " + size_t2string( point_group_lhs.nsymmetry_operators() ) + "." << std::endl;
-            occupancy /= static_cast<double>( point_group_lhs.nsymmetry_operators() );
+            if ( point_group_lhs.nsymmetry_operators() != 1 )
+            {
+                std::cout << "root_mean_square_Cartesian_displacement(): info: atom " + size_t2string( i ) + " on special position of order " + size_t2string( point_group_lhs.nsymmetry_operators() ) + "." << std::endl;
+                occupancy /= static_cast<double>( point_group_lhs.nsymmetry_operators() );
+            }
         }
         nnon_H_atoms += occupancy;
         double displacement;

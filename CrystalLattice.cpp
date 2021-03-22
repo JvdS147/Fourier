@@ -80,6 +80,7 @@ alpha_(alpha), beta_(beta), gamma_(gamma)
     b_star_ = b_star_vector_.length();
     c_star_ = c_star_vector_.length();
     N_ = SymmetricMatrix3D( a_star_, b_star_, c_star_, 0.0, 0.0, 0.0 );
+    N_inverse_ = SymmetricMatrix3D( 1.0/a_star_, 1.0/b_star_, 1.0/c_star_, 0.0, 0.0, 0.0 );
     alpha_star_ = arccosine( (b_vector_*c_vector_) / (b*c) );
     beta_star_  = arccosine( (a_vector_*c_vector_) / (a*c) );
     gamma_star_ = arccosine( (a_vector_*b_vector_) / (a*b) );

@@ -93,6 +93,9 @@ private:
 // @@@ Should probably be converted to working with u_cart, so that it can accept and return a AnisotropicDisplacementParameters object
 SymmetricMatrix3D transform_adps( const SymmetricMatrix3D & U_cif, Matrix3D transformation, CrystalLattice crystal_lattice );
 
+// The following is what is needed to transform the ADPs when the unit cell is transformed with a transformation matrix
+AnisotropicDisplacementParameters transform_adps( const AnisotropicDisplacementParameters & ADPs, Matrix3D transformation, CrystalLattice crystal_lattice );
+
 // The following is what is needed to rotate the ADPs as part of a symmetry operation
 AnisotropicDisplacementParameters rotate_adps( const AnisotropicDisplacementParameters & ADPs, const Matrix3D & rotation, const CrystalLattice & crystal_lattice );
 
