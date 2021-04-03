@@ -672,6 +672,14 @@ void PowderPattern::add_Poisson_noise()
 
 // ********************************************************************************
 
+void PowderPattern::make_counts_integer()
+{
+    for ( size_t i( 0 ); i != size(); ++i )
+        intensities_[i] = round_to_int( intensities_[i] );
+}
+
+// ********************************************************************************
+
 // Check that the two patterns have the same range and 2theta step
 bool same_range( const PowderPattern & lhs, const PowderPattern & rhs )
 {

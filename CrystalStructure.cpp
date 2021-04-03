@@ -25,10 +25,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "CrystalStructure.h"
 #include "3DCalculations.h"
 #include "ChemicalFormula.h"
 #include "ConnectivityTable.h"
-#include "CrystalStructure.h"
 #include "MathFunctions.h"
 #include "PhysicalConstants.h"
 #include "PointGroup.h"
@@ -36,9 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TextFileWriter.h"
 #include "Utilities.h"
 
-#include <stdexcept>
-
 #include <iostream>
+#include <stdexcept>
 
 // ********************************************************************************
 
@@ -53,6 +52,15 @@ Atom CrystalStructure::atom( const size_t i ) const
     if ( i >= atoms_.size() )
         throw std::runtime_error( "CrystalStructure::atom( size_t ): i >= atoms_.size()" );
     return atoms_[i];
+}
+
+// ********************************************************************************
+
+void CrystalStructure::add_atom( const Atom & atom )
+{
+    atoms_.push_back( atom );
+    suppressed_.push_back( false );
+    basic_checks();
 }
 
 // ********************************************************************************
@@ -141,7 +149,11 @@ void CrystalStructure::reduce_to_asymmetric_unit()
             if ( atom(i).element() != atom(j).element() )
                 continue;
             if ( shortest_distance2( atom(i).position(), atom(j).position() ) < square( 0.001 ) )
+            {
+                if ( ! nearly_equal( atom(i).occupancy(), atom(j).occupancy() ) )
+                    std::cout << "CrystalStructure::reduce_to_asymmetric_unit(): warning: duplicate atoms have different occupancies." << std::endl;
                 is_duplicate[j] = true;
+            }
         }
         new_atoms.push_back( atom(i) );
     }
@@ -1005,7 +1017,28 @@ void CrystalStructure::save_cif( const FileName & file_name ) const
 
 // ********************************************************************************
 
-double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, const CrystalStructure & rhs )
+// | element | element | number of bonded atoms | number of bonded hydrogen/deuterium atoms | first bonded atom by atomic number, H == D, '0' if none | second bonded atom by atomic number
+// | third bonded atom by atomic number | fourth bonded atom by atomic number | member of three-membered ring | member of four-membered ring
+// | member of five-membered ring | member of six-membered ring | member of seven-membered ring | cyclic
+// All these properties must be independent of the presence of 3D coordinates, they are topological attributes.
+void CrystalStructure::calculate_topological_attributes()
+{
+    for ( size_t i( 0 ); i != natoms(); ++i )
+    {
+        Atom new_atom( atoms_[i] );
+        std::string topological_attributes;
+        topological_attributes = new_atom.element().symbol();
+        topological_attributes = pad( topological_attributes, 2 );
+        
+        
+        new_atom.set_topological_attributes( topological_attributes );
+        this->set_atom( i, new_atom );
+    }
+}
+
+// ********************************************************************************
+
+double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, const CrystalStructure & rhs, const bool include_hydrogens )
 {
     // Check if the number of atoms is the same.
     if ( lhs.natoms() != rhs.natoms() )
@@ -1024,8 +1057,7 @@ double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, co
     for ( size_t i( 0 ); i != lhs.natoms(); ++i )
     {
         // If both H or D, skip this atom.
-        if ( ( ( lhs.atom( i ).element() == Element( "H" ) ) || ( lhs.atom( i ).element() == Element( "D" ) ) ) &&
-             ( ( rhs.atom( i ).element() == Element( "H" ) ) || ( rhs.atom( i ).element() == Element( "D" ) ) ) )
+        if ( ( ! include_hydrogens ) && lhs.atom( i ).element().is_H_or_D() && rhs.atom( i ).element().is_H_or_D() )
             continue;
         // Check if elements the same.
         if ( lhs.atom( i ).element() != rhs.atom( i ).element() )
@@ -1067,14 +1099,7 @@ double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, co
 
 // ********************************************************************************
 
-double absolute_relative_difference( const double lhs, const double rhs )
-{
-    return std::abs( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
-}
-
-// ********************************************************************************
-
-double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const bool add_shifts )
+double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const size_t shift_steps, const bool include_hydrogens )
 {
     // Some simple checks:
     size_t natoms = rhs.natoms();
@@ -1082,52 +1107,41 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
         throw std::runtime_error( "RMSCD_with_matching(): numbers of atoms are not the same." );
     if ( natoms == 0 )
         return 0.0;
-    CrystalLattice lhs_lattice( lhs.crystal_lattice() );
-    CrystalLattice rhs_lattice( rhs.crystal_lattice() );
-    CrystalLattice average_lattice( ( lhs_lattice.a() + rhs_lattice.a() ) / 2.0,
-                                    ( lhs_lattice.b() + rhs_lattice.b() ) / 2.0,
-                                    ( lhs_lattice.c() + rhs_lattice.c() ) / 2.0,
-                                    ( lhs_lattice.alpha() + rhs_lattice.alpha() ) / 2.0,
-                                    ( lhs_lattice.beta()  + rhs_lattice.beta()  ) / 2.0,
-                                    ( lhs_lattice.gamma() + rhs_lattice.gamma() ) / 2.0 );
-    if ( absolute_relative_difference( lhs_lattice.a(), rhs_lattice.a() ) > 0.10 )
-        std::cout << "RMSCD_with_matching(): WARNING: a parameters differ by more than 10%." << std::endl;
-    if ( absolute_relative_difference( lhs_lattice.b(), rhs_lattice.b() ) > 0.10 )
-        std::cout << "RMSCD_with_matching(): WARNING: b parameters differ by more than 10%." << std::endl;
-    if ( absolute_relative_difference( lhs_lattice.c(), rhs_lattice.c() ) > 0.10 )
-        std::cout << "RMSCD_with_matching(): WARNING: c parameters differ by more than 10%." << std::endl;
-    if ( std::abs( lhs_lattice.alpha().value_in_degrees() - rhs_lattice.alpha().value_in_degrees() ) > 10.0 )
-        std::cout << "RMSCD_with_matching(): WARNING: alpha angles differ by more than 10 degrees." << std::endl;
-    if ( std::abs( lhs_lattice.beta().value_in_degrees() - rhs_lattice.beta().value_in_degrees() ) > 10.0 )
-        std::cout << "RMSCD_with_matching(): WARNING: beta angles differ by more than 10 degrees." << std::endl;
-    if ( std::abs( lhs_lattice.gamma().value_in_degrees() - rhs_lattice.gamma().value_in_degrees() ) > 10.0 )
-        std::cout << "RMSCD_with_matching(): WARNING: gamma angles differ by more than 10 degrees." << std::endl;
-        
+    CrystalLattice average_lattice = average( lhs.crystal_lattice(), rhs.crystal_lattice() );
+    if ( ! nearly_equal( lhs.crystal_lattice(), rhs.crystal_lattice() ) )
+        std::cout << "RMSCD_with_matching(): WARNING: unit cells differ." << std::endl;
+
     // Loop over all symmetry operators.
     // First find all floating axes; these are a problem if there is more than one residue in the asymmetric unit,
     // but we cannot detect that at the moment.
         
     std::vector< Vector3D > best_matches; // Fractional coordinates, from rhs.
     best_matches.reserve( natoms );
+    std::vector< size_t > matching_indices; // Indices from rhs.
+    matching_indices.reserve( natoms );
     // Find closest match
     std::vector< bool > done( natoms, false );
     // In principle, the two structures could have different space groups,
     // but for the moment they must have the same space group.
+    if ( ! same_symmetry_operators( lhs.space_group(), rhs.space_group() ) )
+        std::cout << "find_match(): WARNING: Space groups are different, this will give non-sensical results." << std::endl;
     SpaceGroup space_group = rhs.space_group();
-    // Add all combinations of shifts of 1/2 along a, b and c.
     std::vector< Vector3D > shifts;
-    if ( add_shifts )
-        shifts.reserve( 8 );
-    shifts.push_back( Vector3D( 0.0, 0.0, 0.0 ) );
-    if ( add_shifts )
+    if ( ( shift_steps == 0 ) || ( shift_steps == 1 ) )
+        shifts.push_back( Vector3D( 0.0, 0.0, 0.0 ) );
+    else
     {
-        shifts.push_back( Vector3D( 0.5, 0.0, 0.0 ) );
-        shifts.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
-        shifts.push_back( Vector3D( 0.5, 0.0, 0.5 ) );
-        shifts.push_back( Vector3D( 0.0, 0.5, 0.0 ) );
-        shifts.push_back( Vector3D( 0.0, 0.5, 0.5 ) );
-        shifts.push_back( Vector3D( 0.0, 0.0, 0.5 ) );
-        shifts.push_back( Vector3D( 0.5, 0.5, 0.5 ) );
+        shifts.reserve( shift_steps*shift_steps*shift_steps );
+        for ( size_t i1( 0 ); i1 != shift_steps; ++i1 )
+        {
+            for ( size_t i2( 0 ); i2 != shift_steps; ++i2 )
+            {
+                for ( size_t i3( 0 ); i3 != shift_steps; ++i3 )
+                {
+                    shifts.push_back( Vector3D( static_cast<double>(i1)/static_cast<double>(shift_steps), static_cast<double>(i2)/static_cast<double>(shift_steps), static_cast<double>(i3)/static_cast<double>(shift_steps) ) );
+                }
+            }
+        }
     }
     for ( size_t i( 0 ); i != natoms; ++i )
     {
@@ -1173,6 +1187,7 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
         }
         done[ matching_index ] = true;
         best_matches.push_back( best_match );
+        matching_indices.push_back( matching_index );
     }
     // Save cif for this match.
     CrystalStructure reordered_crystal_structure;
@@ -1180,29 +1195,12 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
     reordered_crystal_structure.set_space_group( rhs.space_group() );
     for ( size_t i( 0 ); i != natoms; ++i )
     {
-        reordered_crystal_structure.add_atom( Atom( lhs.atom( i ).element(), best_matches[i], lhs.atom( i ).label() ) );
+        Atom new_atom( rhs.atom( matching_indices[i] ) );
+        new_atom.set_position( best_matches[i] );
+        reordered_crystal_structure.add_atom( new_atom );
     }
-    reordered_crystal_structure.save_cif( FileName( "C:\\Data_Win\\reordered.cif" ) );
-    // Calculate RMSCD for this match.
-    double result( 0.0 );
-    size_t nnon_H_atoms( 0 );
-    for ( size_t i( 0 ); i != lhs.natoms(); ++i )
-    {
-        // If both H or D, skip this atom.
-        if ( lhs.atom( i ).element().is_H_or_D() )
-            continue;
-        ++nnon_H_atoms;
-        double displacement;
-        //  Cartesian displacement = (|G1 * r1 - G1 * r2| + |G2 * r1 - G2 * r2|) / 2.
-        displacement = ( ( lhs.crystal_lattice().fractional_to_orthogonal( lhs.atom( i ).position() ) - lhs.crystal_lattice().fractional_to_orthogonal( best_matches[i] ) ).length() +
-                         ( rhs.crystal_lattice().fractional_to_orthogonal( lhs.atom( i ).position() ) - rhs.crystal_lattice().fractional_to_orthogonal( best_matches[i] ) ).length() ) / 2.0;
-        result += square( displacement );
-    }
-    if ( nnon_H_atoms == 0 )
-        return 0.0;
-    result /= nnon_H_atoms;
-    result = sqrt( result );
-    return result;
+    reordered_crystal_structure.save_cif( FileName( "C:\\Users\\jacco\\Documents\\reordered.cif" ) );
+    return root_mean_square_Cartesian_displacement( lhs, reordered_crystal_structure, include_hydrogens );
 }
 
 // ********************************************************************************
@@ -1215,26 +1213,9 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
     size_t natoms = rhs.natoms();
     if ( natoms != lhs.natoms() )
         throw std::runtime_error( "find_match(): numbers of atoms are not the same." );
-    CrystalLattice lhs_lattice( lhs.crystal_lattice() );
-    CrystalLattice rhs_lattice( rhs.crystal_lattice() );
-    CrystalLattice average_lattice( ( lhs_lattice.a() + rhs_lattice.a() ) / 2.0,
-                                    ( lhs_lattice.b() + rhs_lattice.b() ) / 2.0,
-                                    ( lhs_lattice.c() + rhs_lattice.c() ) / 2.0,
-                                    ( lhs_lattice.alpha() + rhs_lattice.alpha() ) / 2.0,
-                                    ( lhs_lattice.beta()  + rhs_lattice.beta()  ) / 2.0,
-                                    ( lhs_lattice.gamma() + rhs_lattice.gamma() ) / 2.0 );
-    if ( absolute_relative_difference( lhs_lattice.a(), rhs_lattice.a() ) > 0.10 )
-        std::cout << "find_match(): WARNING: a parameters differ by more than 10%." << std::endl;
-    if ( absolute_relative_difference( lhs_lattice.b(), rhs_lattice.b() ) > 0.10 )
-        std::cout << "find_match(): WARNING: b parameters differ by more than 10%." << std::endl;
-    if ( absolute_relative_difference( lhs_lattice.c(), rhs_lattice.c() ) > 0.10 )
-        std::cout << "find_match(): WARNING: c parameters differ by more than 10%." << std::endl;
-    if ( std::abs( lhs_lattice.alpha().value_in_degrees() - rhs_lattice.alpha().value_in_degrees() ) > 10.0 )
-        std::cout << "find_match(): WARNING: alpha angles differ by more than 10 degrees." << std::endl;
-    if ( std::abs( lhs_lattice.beta().value_in_degrees() - rhs_lattice.beta().value_in_degrees() ) > 10.0 )
-        std::cout << "find_match(): WARNING: beta angles differ by more than 10 degrees." << std::endl;
-    if ( std::abs( lhs_lattice.gamma().value_in_degrees() - rhs_lattice.gamma().value_in_degrees() ) > 10.0 )
-        std::cout << "find_match(): WARNING: gamma angles differ by more than 10 degrees." << std::endl;
+    CrystalLattice average_lattice = average( lhs.crystal_lattice(), rhs.crystal_lattice() );
+    if ( ! nearly_equal( lhs.crystal_lattice(), rhs.crystal_lattice() ) )
+        std::cout << "find_match(): WARNING: unit cells differ." << std::endl;
     if ( natoms == 0 )
         return SymmetryOperator();
     // Find closest match
@@ -1389,7 +1370,7 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
     std::cout << "Integer shifts are " << integer_shifts[0] << " " << integer_shifts[1] << " " << integer_shifts[2] << std::endl;
     std::cout << "Rotation = " << std::endl;
     space_group.symmetry_operator( most_common_space_group_index ).rotation().show();
-        // @@ Can still be off by integer multiples!
+    // @@ Can still be off by integer multiples!
     std::cout << "Translation = " << std::endl;
     result.translation().show();
     return result;

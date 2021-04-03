@@ -67,6 +67,10 @@ public:
 
     bool skip_empty_lines() const { return skip_empty_lines_; }
     void set_skip_empty_lines( const bool skip_empty_lines ) { skip_empty_lines_ = skip_empty_lines; }
+
+    bool skip_whitespace_only_lines() const { return skip_whitespace_only_lines_; }
+    void set_skip_whitespace_only_lines( const bool skip_whitespace_only_lines ) { skip_whitespace_only_lines_ = skip_whitespace_only_lines; }
+
     bool allow_single_quotes() const { return allow_single_quotes_; }
     void set_allow_single_quotes( const bool allow_single_quotes ) { allow_single_quotes_ = allow_single_quotes; }
 
@@ -84,6 +88,7 @@ private:
     std::string line_;
     size_t line_number_;
     bool skip_empty_lines_;
+    bool skip_whitespace_only_lines_;
     bool allow_single_quotes_; // Ugly name and quick hack to allow reading of .inp files without trying to interpret "'"
     std::vector< std::string > comment_identifiers_;
     mutable bool push_back_last_line_;

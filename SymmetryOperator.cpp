@@ -292,6 +292,15 @@ bool nearly_equal( const SymmetryOperator & lhs, const SymmetryOperator & rhs, c
 
 void SymmetryOperator::canonicalise()
 {
+    // Check if all rotation entries are -1.0, 0.0 or 1.0
+    for ( size_t i( 0 ); i != 2; ++i )
+    {
+        for ( size_t j( 0 ); j != 2; ++j )
+        {
+            if ( ! ( nearly_equal( rotation_matrix_.value( i, j ), -1.0 ) || nearly_zero( rotation_matrix_.value( i, j ) ) || nearly_equal( rotation_matrix_.value( i, j ), 1.0 ) ) )
+                std::cout << "SymmetryOperator::canonicalise(): warning: rotation matrix element is not -1, 0 or 1." << std::endl;
+        }
+    }
     translation_vector_ = adjust_for_translations( translation_vector_ );
 }
 

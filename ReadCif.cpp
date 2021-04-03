@@ -266,6 +266,8 @@ void deal_with_symmetry_loop( TextFileReader & text_file_reader, const std::vect
 // Example: -y+x,-y,1/3+z
 //1 x,y,z
 
+    bool skip_whitespace_only_lines = text_file_reader.skip_whitespace_only_lines();
+    text_file_reader.set_skip_whitespace_only_lines( true );
     size_t symmetry_equiv_pos_as_xyz_index = loop_items.size();
     for ( size_t i(0); i != loop_items.size(); ++i )
     {
@@ -286,8 +288,7 @@ void deal_with_symmetry_loop( TextFileReader & text_file_reader, const std::vect
             text_file_reader.push_back_last_line();
             finished = true;
         }
-        // When we are here, we have a symmetry line
-        else
+        else // When we are here, we have a symmetry line
         {
             if ( words.size() != loop_items.size() )
                 throw std::runtime_error( "read_cif(): symmetry line must have same number of items as specified in loop." );
@@ -295,6 +296,7 @@ void deal_with_symmetry_loop( TextFileReader & text_file_reader, const std::vect
             symmetry_operators.push_back( symmetry_operator );
         }
     } while ( ! finished );
+    text_file_reader.set_skip_whitespace_only_lines( skip_whitespace_only_lines );
     SpaceGroup space_group( symmetry_operators, "P21/c" );
     crystal_structure.set_space_group( space_group );
 }

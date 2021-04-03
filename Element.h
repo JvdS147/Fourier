@@ -82,8 +82,10 @@ bool are_bonded( const Element & lhs, const Element & rhs, const double distance
 // "C_3" and "Ow14" are also interpreted correctly.
 Element element_from_atom_label( std::string label );
 
+// H and D test as different.
 inline bool operator==( const Element & lhs, const Element & rhs ) { return ( lhs.id() == rhs.id() ); }
 
+// H and D test as different.
 inline bool operator!=( const Element & lhs, const Element & rhs ) { return ! ( lhs == rhs ); }
 
 //double scattering_factor( const Element element, const double sine_theta_over_lambda );

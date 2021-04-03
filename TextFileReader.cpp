@@ -95,6 +95,8 @@ bool TextFileReader::get_next_line( std::string & line )
             continue;
         if ( skip_empty_lines_ && line_.empty() )
             continue;
+        if ( skip_whitespace_only_lines_ && strip(line_).empty() )
+            continue;            
         line = line_;
         return true;
     }

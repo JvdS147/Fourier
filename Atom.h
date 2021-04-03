@@ -88,6 +88,15 @@ public:
 
     void set_Uiso( const double Uiso );
 
+    // | element | element | number of bonded atoms | number of bonded hydrogen/deuterium atoms | first bonded atom by atomic number, H == D, 0 if none | second bonded atom by atomic number
+    // | third bonded atom by atomic number | fourth bonded atom by atomic number | member of three-membered ring | member of four-membered ring
+    // | member of five-membered ring | member of six-membered ring | member of seven-membered ring | cyclic
+    // All these properties must be independent of the presence of 3D coordinates, they are topological attributes.
+    // They cannot be calculated in this class, they can be calculated in e.g. the CrystalStructure class
+    std::string topological_attributes() const { return topological_attributes_; }
+    
+    void set_topological_attributes( const std::string & topological_attributes ) { topological_attributes_ = topological_attributes; }
+
 private:
     Element element_;
     Vector3D position_; // Fractional coordinates
@@ -99,6 +108,7 @@ private:
     double occupancy_;
     std::string disorder_assembly_;
     std::string disorder_group_;
+    std::string topological_attributes_;
 };
 
 #endif // ATOM_H

@@ -440,3 +440,4 @@ std::string centring_vectors_to_string( const std::vector< Vector3D > & centring
 }
 
 // ********************************************************************************
+

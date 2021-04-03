@@ -133,9 +133,11 @@ public:
     // It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
     // For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
     // makes all points of the pattern behave as Gaussian.
-    // Returns the noise
+    // The noise is stored separately.
     void add_Poisson_noise();
-    
+
+    void make_counts_integer();
+
     // Should not be necessary. Introduced to manipulate data from a tool that extracted a powder pattern from a bitmap picture.
     void sort_two_theta();
     

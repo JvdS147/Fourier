@@ -45,7 +45,7 @@ void test_crystal_structure( TestSuite & test_suite )
     crystal_structure_1.add_atom( atom_1 );
     Atom atom_2( Element( "C" ), Vector3D( 0.2, 0.0, 0.0 ), "C2" );
     crystal_structure_2.add_atom( atom_2 );
-    double result = root_mean_square_Cartesian_displacement( crystal_structure_1, crystal_structure_2 );
+    double result = root_mean_square_Cartesian_displacement( crystal_structure_1, crystal_structure_2, false );
     test_suite.test_equality_double( result, 1.0, "CrystalStructure::root_mean_square_Cartesian_displacement() : maximum error has changed." );
     }
     {
