@@ -28,14 +28,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include <vector>
-#include <string>
 #include <cmath>
-
-class TestSuite;
-
-//function pointer
-//typedef void (* TestFunction)(TestSuite&);
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 class TestSuite
 {
@@ -50,6 +46,14 @@ public:
             error_messages_.push_back( error_message );
     }
 
+    void test_equality( const size_t lhs, const int rhs, const std::string & error_message )
+    {
+        if ( rhs < 0 )
+            throw std::runtime_error( "test_equality( size_t, int ): int is negative in " + error_message );
+        if ( ! ( lhs == static_cast< size_t >( rhs ) ) )
+            error_messages_.push_back( error_message );
+    }
+
     void test_equality_double( const double lhs, const double rhs, const std::string & error_message, double tolerance = 0.000001 )
     {
         if ( fabs( lhs - rhs ) > tolerance )
@@ -60,7 +64,7 @@ public:
     {
         error_messages_.push_back( error_message );
     }
-    
+
     void report() const;
 
 private:

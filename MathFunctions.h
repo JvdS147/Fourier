@@ -53,6 +53,10 @@ int round_to_int( const double x );
 
 size_t round_to_size_t( const double x );
 
+// ********************************************************************************
+
+double absolute_relative_difference( const double lhs, const double rhs );
+
 // It is more efficient to calculate sine and cosine of the same angle simultaneously
 // The algorithm that is used is an APPROXIMATION
 void sincos( Angle angle, double & sine, double & cosine );

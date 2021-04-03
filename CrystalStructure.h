@@ -71,7 +71,7 @@ public:
     std::vector< Atom > atoms() const { return atoms_; }
 
     void reserve_natoms( const size_t value ) { atoms_.reserve( value ); suppressed_.reserve( value ); }
-    void add_atom( const Atom & atom ) { atoms_.push_back( atom ); suppressed_.push_back( false ); }
+    void add_atom( const Atom & atom );
     void add_atoms( const std::vector< Atom > & atoms );
     
     // Replaces an existing atom, enables making changes to atoms in the crystal
@@ -232,6 +232,8 @@ public:
     
     void save_cif( const FileName & file_name ) const;
 
+    void calculate_topological_attributes();
+
 private:
     SpaceGroup space_group_;
     CrystalLattice crystal_lattice_;
@@ -247,10 +249,10 @@ private:
 // If there are atoms on special positions and the space group has not been applied then corresponding atoms must be on the same special position.
 // Atoms with partial occupancies contribute fractionally if the occupancies are the same in both structures.
 // This function in principle operates on the asymmetric unit, so space group should not have been applied.
-// If space group hass been applied, it should have been applied to both.
-double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, const CrystalStructure & rhs );
+// If space group has been applied, it should have been applied to both.
+double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, const CrystalStructure & rhs, const bool include_hydrogens );
 
-double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const bool add_shifts );
+double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const size_t shift_steps, const bool include_hydrogens );
 
 // Hydrogen / Deuterium is ignored
 // What is returned is not necessarily a symmetry operator, it is a combination of a rotation matrix and a translation vector that may or may not correspond to a symmetry operator.

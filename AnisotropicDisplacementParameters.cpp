@@ -80,12 +80,7 @@ SymmetricMatrix3D AnisotropicDisplacementParameters::U_cart() const
 
 SymmetricMatrix3D AnisotropicDisplacementParameters::U_cif( const CrystalLattice & crystal_lattice ) const
 {
-    SymmetricMatrix3D N;
-    N.set_value( 0, 0 , 1.0 / crystal_lattice.a_star() );
-    N.set_value( 1, 1 , 1.0 / crystal_lattice.b_star() );
-    N.set_value( 2, 2 , 1.0 / crystal_lattice.c_star() );
-    Matrix3D result = N * U_star( crystal_lattice ) * N;
-    return Matrix3D2SymmetricMatrix3D( result );
+    return Matrix3D2SymmetricMatrix3D( crystal_lattice.N_inverse() * U_star( crystal_lattice ) * crystal_lattice.N_inverse() );
 }
 
 // ********************************************************************************
@@ -114,26 +109,30 @@ void AnisotropicDisplacementParameters::show() const
 
 // The following is what is needed to transform the ADPs when the unit cell is transformed with a transformation matrix
 // The output is in U_cif format.
-SymmetricMatrix3D transform_adps( const SymmetricMatrix3D & U_cif, Matrix3D transformation_matrix, CrystalLattice crystal_lattice )
+SymmetricMatrix3D transform_adps( const SymmetricMatrix3D & U_cif, Matrix3D transformation, CrystalLattice crystal_lattice )
 {
-    Matrix3D original_transformation_matrix( transformation_matrix );
-    // Routine was tested and is correct. What is going on is highly non-obvious...
-    transformation_matrix.invert();
-    Matrix3D transformation_matrix_transpose( transformation_matrix );
-    transformation_matrix.transpose();
-
     // We must convert U_cif to U_star
-    SymmetricMatrix3D N( crystal_lattice.a_star(), crystal_lattice.b_star(), crystal_lattice.c_star(), 0.0, 0.0, 0.0 );
-    Matrix3D U_star = N * U_cif * N;
-
+    SymmetricMatrix3D U_star = U_cif_2_U_star( U_cif, crystal_lattice );
+    crystal_lattice.transform( transformation );
+    transformation.invert();
+    transformation.transpose();
     // The actual transformation of the ADPs
-    Matrix3D U_star_new = transformation_matrix * U_star * transformation_matrix_transpose;
-
+    U_star = Matrix3D2SymmetricMatrix3D( transformation * U_star * transpose( transformation ) );
     // Now convert the new U_star back to new U_cif
-    crystal_lattice.transform( original_transformation_matrix );
-    SymmetricMatrix3D N_2( 1.0 / crystal_lattice.a_star(), 1.0 / crystal_lattice.b_star(), 1.0 / crystal_lattice.c_star(), 0.0, 0.0, 0.0 );
-    Matrix3D U_cif_new = N_2 * U_star_new * N_2;
-    return Matrix3D2SymmetricMatrix3D( U_cif_new );
+    return U_star_2_U_cif( U_star, crystal_lattice );
+}
+
+// ********************************************************************************
+
+AnisotropicDisplacementParameters transform_adps( const AnisotropicDisplacementParameters & ADPs, Matrix3D transformation, CrystalLattice crystal_lattice )
+{
+    SymmetricMatrix3D U_star = ADPs.U_star( crystal_lattice );
+    crystal_lattice.transform( transformation );
+    transformation.invert();
+    transformation.transpose();
+    // The actual transformation of the ADPs
+    U_star = Matrix3D2SymmetricMatrix3D( transformation * U_star * transpose( transformation ) );
+    return AnisotropicDisplacementParameters( U_star_2_U_cart( U_star, crystal_lattice ) );
 }
 
 // ********************************************************************************
@@ -158,8 +157,7 @@ SymmetricMatrix3D U_star_2_U_cart( const SymmetricMatrix3D & U_star, const Cryst
 
 SymmetricMatrix3D U_star_2_U_cif ( const SymmetricMatrix3D & U_star, const CrystalLattice & crystal_lattice )
 {
-    SymmetricMatrix3D N( 1.0 / crystal_lattice.a_star(), 1.0 / crystal_lattice.b_star(), 1.0 / crystal_lattice.c_star(), 0.0, 0.0, 0.0 );
-    return Matrix3D2SymmetricMatrix3D( N * U_star * N );
+    return Matrix3D2SymmetricMatrix3D( crystal_lattice.N_inverse() * U_star * crystal_lattice.N_inverse() );
 }
 
 // ********************************************************************************
@@ -173,8 +171,7 @@ SymmetricMatrix3D U_cart_2_U_cif ( const SymmetricMatrix3D & U_cart, const Cryst
 
 SymmetricMatrix3D U_cart_2_U_star( const SymmetricMatrix3D & U_cart, const CrystalLattice & crystal_lattice )
 {
-    Matrix3D A = crystal_lattice.fractional_to_orthogonal_matrix();
-    A.invert();
+    Matrix3D A = crystal_lattice.orthogonal_to_fractional_matrix();
     return Matrix3D2SymmetricMatrix3D( A * U_cart * transpose( A ) );
 }
 
@@ -182,8 +179,7 @@ SymmetricMatrix3D U_cart_2_U_star( const SymmetricMatrix3D & U_cart, const Cryst
 
 SymmetricMatrix3D U_cif_2_U_star( const SymmetricMatrix3D & U_cif, const CrystalLattice & crystal_lattice )
 {
-    SymmetricMatrix3D N( crystal_lattice.a_star(), crystal_lattice.b_star(), crystal_lattice.c_star(), 0.0, 0.0, 0.0 );
-    return Matrix3D2SymmetricMatrix3D( N * U_cif * N );
+    return Matrix3D2SymmetricMatrix3D( crystal_lattice.N() * U_cif * crystal_lattice.N() );
 }
 
 // ********************************************************************************

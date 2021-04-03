@@ -45,6 +45,10 @@ class FileName;
 // MacOS >= 10   : \n
 // C++ in principle uses (e.g. absorbs upon reading) \n
 // This class deletes all \r characters from all input.
+
+// @@ It would really be nice if this class interface and the interface of TextFileReader were essentially the same.
+// @@ Would be nice to include some kind of filter, like an on-the-fly purge?
+
 class TextFileReader_2
 {
 public:
@@ -61,7 +65,14 @@ public:
     size_t size() const { return lines_.size(); }
 
     // In keeping with C++ convention: zero-based.
-    std::string line( const size_t i ) const { return lines_[i]; }
+    std::string line( const size_t i ) const;
+
+    // Deletes entire lines.
+    // comment_identifier must start at the start of the line.
+    void purge_comment_lines( std::string comment_identifier, const bool case_sensitive = true );
+
+    // Empty means empty, a line with only whitespace is not empty
+    void purge_empty_lines();
 
     // Starts search from line i
     // return a line number or std::string::npos

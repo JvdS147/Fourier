@@ -52,7 +52,7 @@ void TextFileReader_2::read_file( const FileName & file_name )
 {
     std::ifstream input_file( file_name.full_name().c_str() );
     if ( ! input_file )
-       throw std::runtime_error( std::string( "TextFileReader::read_file(): Could not open file " ) + file_name.full_name() );
+       throw std::runtime_error( std::string( "TextFileReader_2::read_file(): Could not open file " ) + file_name.full_name() );
     lines_.clear();
     std::string line;
     do
@@ -67,6 +67,59 @@ void TextFileReader_2::read_file( const FileName & file_name )
         lines_.push_back( line );
     }
     while ( true );
+}
+
+// ********************************************************************************
+
+std::string TextFileReader_2::line( const size_t i ) const
+{
+    if ( i < lines_.size() )
+        return lines_[i];
+    throw std::runtime_error( "TextFileReader_2::line( size_t ): out of bounds." );
+}
+
+// ********************************************************************************
+
+// Deletes entire lines.
+// comment_identifier must start at the start of the line.
+void TextFileReader_2::purge_comment_lines( std::string comment_identifier, const bool case_sensitive )
+{
+    if ( ! case_sensitive )
+        comment_identifier = to_upper( comment_identifier );
+    size_t iPos( 0 );
+    for ( size_t i( 0 ); i != lines_.size(); ++i )
+    {
+        bool is_comment( false );
+        if ( case_sensitive )
+            is_comment = ( lines_[i].substr( 0, comment_identifier.length() ) == comment_identifier );
+        else
+            is_comment = ( to_upper( lines_[i].substr( 0, comment_identifier.length() ) ) == comment_identifier );
+        if ( ! is_comment )
+        {
+            if ( iPos != i )
+                lines_[iPos] = lines_[i];
+            ++iPos;
+        }
+    }
+    lines_.resize( iPos );
+}
+
+// ********************************************************************************
+
+// Empty means empty, a line with only whitespace is not empty
+void TextFileReader_2::purge_empty_lines()
+{
+    size_t iPos( 0 );
+    for ( size_t i( 0 ); i != lines_.size(); ++i )
+    {
+        if ( ! lines_[i].empty() )
+        {
+            if ( iPos != i )
+                lines_[iPos] = lines_[i];
+            ++iPos;
+        }
+    }
+    lines_.resize( iPos );    
 }
 
 // ********************************************************************************

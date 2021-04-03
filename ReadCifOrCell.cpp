@@ -1,6 +1,3 @@
-#ifndef RUNTESTS_H
-#define RUNTESTS_H
-
 /* *********************************************
 Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -28,30 +25,32 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-class TestSuite;
+#include "ReadCifOrCell.h"
+#include "CrystalStructure.h"
+#include "ReadCell.h"
+#include "ReadCif.h"
+#include "Utilities.h"
 
-void test_angle( TestSuite & test_suite );
-void test_Chebyshev_background( TestSuite & test_suite );
-void test_Constraints( TestSuite & test_suite );
-void test_ConvexPolygon( TestSuite & test_suite );
-void test_correlation_matrix( TestSuite & test_suite );
-void test_crystal_lattice( TestSuite & test_suite );
-void test_crystal_structure( TestSuite & test_suite );
-void test_file_name( TestSuite & test_suite );
-void test_fraction( TestSuite & test_suite );
-void test_matrix3D( TestSuite & test_suite );
-void test_maths( TestSuite & test_suite );
-void test_ModelBuilding( TestSuite & test_suite );
-void test_PowderMatchTable( TestSuite & test_suite );
-void test_quaternion( TestSuite & test_suite );
-void test_ReadCell( TestSuite & test_suite );
-void test_sort( TestSuite & test_suite );
-void test_TextFileReader_2( TestSuite & test_suite );
-void test_TLS_ADPs( TestSuite & test_suite );
-void test_utilities( TestSuite & test_suite );
-void test_3D_calculations( TestSuite & test_suite );
+#include <stdexcept>
+#include <iostream>
 
-void run_tests();
+// ********************************************************************************
 
-#endif // RUNTESTS_H
+void read_cif_or_cell( const FileName & file_name, CrystalStructure & crystal_structure )
+{
+    if ( to_upper( file_name.extension() ) == "CIF" )
+    {
+        std::cout << "Now reading cif... " + file_name.full_name() << std::endl;
+        read_cif( file_name, crystal_structure );
+    }
+    else if ( to_upper( file_name.extension() ) == "CELL" )
+    {
+        std::cout << "Now reading cell... " + file_name.full_name() << std::endl;
+        read_cell( file_name, crystal_structure );
+    }
+    else
+        throw std::runtime_error( "read_cif_or_cell(): extension not recognised: " + file_name.extension() );
+}
+
+// ********************************************************************************
 

@@ -128,7 +128,6 @@ public:
     void absolute() { angle_ = std::abs( angle_ ); }
 
     friend Angle absolute( const Angle angle );
-    friend Angle square( const Angle angle );
 
 private:
     double angle_; // The angle, stored in radians

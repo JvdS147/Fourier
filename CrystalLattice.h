@@ -50,6 +50,9 @@ public:
                     const Angle beta,
                     const Angle gamma );
 
+    // Initialises from a CASTEP LATTICE_CART block in a .cell file.
+    void from_CASTEP( const Matrix3D & matrix );
+
     // We need a() as a vector and a() as a length. We cannot overload by return type,
     // so they must have different names
     double a() const { return a_; }
@@ -88,6 +91,7 @@ public:
 
     // This is the matrix N as used by Grosse-Kunstleve to convert U_cif to U_star
     SymmetricMatrix3D N() const { return N_; }
+    SymmetricMatrix3D N_inverse() const { return N_inverse_; }
 
     // Rescales a, b and c isotropically so that the new unit cell volume becomes
     // equal to the specified target_volume. alpha, beta and gamma are not changed.
@@ -149,6 +153,7 @@ private:
     Matrix3D fractional_to_orthogonal_matrix_;
     Matrix3D orthogonal_to_fractional_matrix_;
     SymmetricMatrix3D N_;
+    SymmetricMatrix3D N_inverse_;
     LatticeSystem lattice_system_;
 };
 
@@ -156,6 +161,11 @@ private:
 CrystalLattice::LatticeSystem deduce_lattice_system( const CrystalLattice & crystal_lattice );
 
 std::string LatticeSystem2string( const CrystalLattice::LatticeSystem lattice_system );
+
+CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs );
+
+// Length tolerance is relative, angle tolerance is absolute
+bool nearly_equal( const CrystalLattice & lhs, const CrystalLattice & rhs, double length_tolerance_percentage = 10.0, const Angle angle_tolerance = Angle::from_degrees( 10.0 ) );
 
 #endif // CRYSTALLATTICE_H
 

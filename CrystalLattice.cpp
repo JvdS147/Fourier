@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Utilities.h"
 
 #include <iostream>
+#include <stdexcept>
 
 // ********************************************************************************
 
@@ -80,10 +81,28 @@ alpha_(alpha), beta_(beta), gamma_(gamma)
     b_star_ = b_star_vector_.length();
     c_star_ = c_star_vector_.length();
     N_ = SymmetricMatrix3D( a_star_, b_star_, c_star_, 0.0, 0.0, 0.0 );
-    alpha_star_ = arccosine( (b_vector_*c_vector_) / (b*c) );
+    N_inverse_ = SymmetricMatrix3D( 1.0/a_star_, 1.0/b_star_, 1.0/c_star_, 0.0, 0.0, 0.0 );
+    alpha_star_ = arccosine( (b_vector_*c_vector_) / (b*c) ); // ?? @@ Why is this not arccosine( (b_star_vector_*c_star_vector_) / (b_star_*c_star_) ) ??
     beta_star_  = arccosine( (a_vector_*c_vector_) / (a*c) );
     gamma_star_ = arccosine( (a_vector_*b_vector_) / (a*b) );
     lattice_system_ = deduce_lattice_system( *this );
+}
+
+// ********************************************************************************
+
+// Initialises from a CASTEP LATTICE_CART block in a .cell file.
+void CrystalLattice::from_CASTEP( const Matrix3D & matrix )
+{
+    Vector3D a_vector( matrix.value( 0, 0 ), matrix.value( 0, 1 ), matrix.value( 0, 2 ) );
+    Vector3D b_vector( matrix.value( 1, 0 ), matrix.value( 1, 1 ), matrix.value( 1, 2 ) );
+    Vector3D c_vector( matrix.value( 2, 0 ), matrix.value( 2, 1 ), matrix.value( 2, 2 ) );
+    double a = a_vector.length();
+    double b = b_vector.length();
+    double c = c_vector.length();
+    Angle alpha = arccosine( (b_vector*c_vector) / (b*c) );
+    Angle beta  = arccosine( (a_vector*c_vector) / (a*c) );
+    Angle gamma = arccosine( (a_vector*b_vector) / (a*b) );
+    *this = CrystalLattice( a, b, c, alpha, beta, gamma );
 }
 
 // ********************************************************************************
@@ -393,6 +412,7 @@ std::string LatticeSystem2string( const CrystalLattice::LatticeSystem lattice_sy
         case CrystalLattice::HEXAGONAL    : return "Hexagonal";
         case CrystalLattice::RHOMBOHEDRAL : return "Rhombohedral";
         case CrystalLattice::CUBIC        : return "Cubic";
+        default                           : return "Error";
     }
 }
 
@@ -429,6 +449,48 @@ Matrix3D CrystalLattice::Downs_G_star() const
                      a_star_ * b_star_ * gamma_star_.cosine(), b_star_ * b_star_                        , b_star_ * c_star_ * alpha_star_.cosine(),
                      a_star_ * c_star_ * beta_star_.cosine() , b_star_ * c_star_ * alpha_star_.cosine() , c_star_ * c_star_ );
 
+}
+
+// ********************************************************************************
+
+CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs )
+{
+    if ( ! nearly_equal( lhs, rhs ) )
+        std::cout << "average( CrystalLattice, CrystalLattice ): warning: lattices differ."<< std::endl;
+    return CrystalLattice( ( lhs.a() + rhs.a() ) / 2.0,
+                           ( lhs.b() + rhs.b() ) / 2.0,
+                           ( lhs.c() + rhs.c() ) / 2.0,
+                           ( lhs.alpha() + rhs.alpha() ) / 2.0,
+                           ( lhs.beta()  + rhs.beta()  ) / 2.0,
+                           ( lhs.gamma() + rhs.gamma() ) / 2.0 );
+}
+
+// ********************************************************************************
+
+bool nearly_equal( const CrystalLattice & lhs, const CrystalLattice & rhs, double length_tolerance_percentage, const Angle angle_tolerance )
+{
+    if ( length_tolerance_percentage < 0.0 )
+        throw std::runtime_error( "nearly_equal( CrystalLattice, CrystalLattice ): error: length tolerance is negative." );
+    if ( length_tolerance_percentage > 100.0 )
+        throw std::runtime_error( "nearly_equal( CrystalLattice, CrystalLattice ): error: length tolerance > 100%." );
+    if ( angle_tolerance < Angle::from_degrees( 0.0 ) )
+        throw std::runtime_error( "nearly_equal( CrystalLattice, CrystalLattice ): error: angle tolerance is negative." );
+    if ( angle_tolerance > Angle::angle_90_degrees() )
+        throw std::runtime_error( "nearly_equal( CrystalLattice, CrystalLattice ): error: angle tolerance > 90 degrees." );
+    length_tolerance_percentage = length_tolerance_percentage / 100.0;
+    if ( absolute_relative_difference( lhs.a(), rhs.a() ) > length_tolerance_percentage )
+        return false;
+    if ( absolute_relative_difference( lhs.b(), rhs.b() ) > length_tolerance_percentage )
+        return false;
+    if ( absolute_relative_difference( lhs.c(), rhs.c() ) > length_tolerance_percentage )
+        return false;
+    if ( ! nearly_equal( lhs.alpha(), rhs.alpha(), angle_tolerance ) )
+        return false;
+    if ( ! nearly_equal( lhs.beta(), rhs.beta(), angle_tolerance ) )
+        return false;
+    if ( ! nearly_equal( lhs.gamma(), rhs.gamma(), angle_tolerance ) )
+        return false;
+    return true;
 }
 
 // ********************************************************************************

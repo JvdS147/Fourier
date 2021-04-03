@@ -132,6 +132,13 @@ int round_to_int( const double x )
 
 // ********************************************************************************
 
+double absolute_relative_difference( const double lhs, const double rhs )
+{
+    return std::abs( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
+}
+
+// ********************************************************************************
+
 size_t round_to_size_t( const double x )
 {
     if ( x < -0.5 )
