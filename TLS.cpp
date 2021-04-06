@@ -119,12 +119,14 @@ Angle TLS::libration() const
 // @@ Could move this to the TOPAS class?
 std::vector< std::string > TLS::TOPAS_lines( const Vector3D & r ) const
 {
+    std::vector< std::string > result;
     if ( is_on_inversion_ )
     {
     }
     else
     {
     }
+    return result;
 //    u11" + label + " = L22*rz" + label + "^2 + L33*ry" + label + "^2 - 2*ry" + label + "*rz" + label + "*L23 - 2*ry" + label + "*S31 + 2*rz" + label + "*S21 + T11; : 0.0" );
 //    u22" + label + " = L11*rz" + label + "^2 + L33*rx" + label + "^2 - 2*rx" + label + "*rz" + label + "*L13 - 2*rz" + label + "*S12 + 2*rx" + label + "*S32 + T22; : 0.0" );
 //    u33" + label + " = L11*ry" + label + "^2 + L22*rx" + label + "^2 - 2*rx" + label + "*ry" + label + "*L12 - 2*rx" + label + "*S23 + 2*ry" + label + "*S13 + T33; : 0.0" );
@@ -147,7 +149,7 @@ Vector3D TLS::corrected_relative_Cartesian_coordinate( const Vector3D & r ) cons
 
 //double TLS::corrected_distance( const Vector3D & lhs, const Vector3D & rhs ) const
 //{
-//    
+//
 //    Vector3D dr( 0.5*( ( L_.value( 1, 1 ) + L_.value( 2, 2 ) )*rx                         -L_.value( 0, 1 )*ry                         -L_.value( 0, 2 )*rz ),
 //                 0.5*(                       -L_.value( 0, 1 )*rx + ( L_.value( 0, 0 ) + L_.value( 2, 2 ) )*ry                         -L_.value( 1, 2 )*rz ),
 //                 0.5*(                       -L_.value( 0, 2 )*rx                         -L_.value( 1, 2 )*ry + ( L_.value( 0, 0 ) + L_.value( 1, 1 ) )*rz ) );
@@ -155,4 +157,3 @@ Vector3D TLS::corrected_relative_Cartesian_coordinate( const Vector3D & r ) cons
 //}
 
 // ********************************************************************************
-
