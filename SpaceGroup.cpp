@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "SpaceGroup.h"
+#include "3DCalculations.h"
 #include "PointGroup.h"
 #include "Utilities.h"
 
@@ -52,15 +53,11 @@ SpaceGroup::SpaceGroup( const std::vector< SymmetryOperator > & symmetry_operato
     
     symmetry_operators_ = symmetry_operators;
     // Make the identity the first symmetry operator
-    Matrix3D identity;
-    Vector3D zero_vector;
-    if ( ! ( nearly_equal( symmetry_operators_[0].rotation(), identity ) &&
-             nearly_equal( symmetry_operators_[0].translation(), zero_vector ) ) )
+    if ( ! symmetry_operators_[0].is_nearly_the_identity() )
     {
         for ( size_t i( 1 ); i != symmetry_operators_.size(); ++i )
         {
-            if ( nearly_equal( symmetry_operators_[i].rotation(), identity ) &&
-                 nearly_equal( symmetry_operators_[i].translation(), zero_vector ) )
+            if ( symmetry_operators_[i].is_nearly_the_identity() )
             {
                 std::swap( symmetry_operators_[0], symmetry_operators_[i] );
                 break;
@@ -247,7 +244,7 @@ void SpaceGroup::print_multiplication_table() const
             }
             if ( ! found )
             {
-                throw std::runtime_error( "check_if_closed( std::vector< SymmetryOperator > ): operator not found." );
+                throw std::runtime_error( "SpaceGroup::print_multiplication_table(): operator not found." );
             }
         }
         std::cout << std::endl;
@@ -268,7 +265,6 @@ void SpaceGroup::decompose()
     has_inversion_at_origin_ = false;
     std::vector< Vector3D > centring_vectors;
     std::vector< Vector3D > inversion_translation_vectors;
-    Matrix3D identity;
     Matrix3D inversion( -1.0 );
     size_t nproper( 0 );
     size_t nimproper( 0 );
@@ -278,7 +274,7 @@ void SpaceGroup::decompose()
         if ( nearly_equal( determinant, 1.0 ) )
         {
             ++nproper;
-            if ( nearly_equal( symmetry_operators_[i].rotation(), identity ) )
+            if ( symmetry_operators_[i].rotation().is_nearly_the_identity() )
                 centring_vectors.push_back( symmetry_operators_[i].translation() );
         }
         else if ( nearly_equal( determinant, -1.0 ) )
@@ -293,13 +289,12 @@ void SpaceGroup::decompose()
         else
             throw std::runtime_error( "SpaceGroup::decompose(): unexpected determinant = " + double2string( determinant ) );
     }
-    Vector3D zero_vector;
     // Remove [ 0, 0, 0 ] and check for identity.
     bool identity_found( false );
     centring_vectors_.reserve( centring_vectors.size() - 1 );
     for ( size_t i( 0 ); i != centring_vectors.size(); ++i )
     {
-        if ( nearly_equal( centring_vectors[i], zero_vector ) )
+        if ( centring_vectors[i].nearly_zero() )
             identity_found = true;
         else
             centring_vectors_.push_back( centring_vectors[i] );
@@ -320,7 +315,7 @@ void SpaceGroup::decompose()
                 position_of_inversion_ = inversion_translation_vectors[i];
             }
         }
-        if ( nearly_equal( smallest_value, 0.0 ) )
+        if ( nearly_zero( smallest_value ) )
             has_inversion_at_origin_ = true;
     }
     // List of representative symmetry operators here.
@@ -342,6 +337,72 @@ void SpaceGroup::decompose()
         }
         if ( ! found )
             representative_symmetry_operators_.push_back( symmetry_operators_[i] );
+    }
+    // Now determine the centring.
+    centring_ = "U"; // Unknown
+    if ( centring_vectors_.empty() )
+        centring_ = "P";
+    else if ( centring_vectors_.size() == 1 ) // C-centred
+    {
+        if ( nearly_equal( centring_vectors_[0], Vector3D( 0.0, 0.5, 0.5 ) ) )
+            centring_ = "A";
+        else if ( nearly_equal( centring_vectors_[0], Vector3D( 0.5, 0.0, 0.5 ) ) )
+            centring_ = "B";
+        else if ( nearly_equal( centring_vectors_[0], Vector3D( 0.5, 0.5, 0.0 ) ) )
+            centring_ = "C";
+        else if ( nearly_equal( centring_vectors_[0], Vector3D( 0.5, 0.5, 0.5 ) ) )
+            centring_ = "I";
+    }
+    else if ( centring_vectors_.size() == 2 ) // R-centred
+    {
+        bool R1_found( false );
+        bool R2_found( false );
+        for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
+        {
+            if ( nearly_equal( centring_vectors_[i], Vector3D( 2.0/3.0, 1.0/3.0, 1.0/3.0 ) ) )
+            {
+                if ( R1_found )
+                    throw std::runtime_error( "SpaceGroup::decompose(): error: R1 centring found twice." );
+                R1_found = true;
+            }
+            if ( nearly_equal( centring_vectors_[i], Vector3D( 1.0/3.0, 2.0/3.0, 2.0/3.0 ) ) )
+            {
+                if ( R2_found )
+                    throw std::runtime_error( "SpaceGroup::decompose(): error: R2 centring found twice." );
+                R2_found = true;
+            }
+        }
+        if ( R1_found && R2_found )
+            centring_ = "R";
+    }
+    else if ( centring_vectors_.size() == 3 ) // F-centred
+    {
+        bool A_found( false );
+        bool B_found( false );
+        bool C_found( false );
+        for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
+        {
+            if ( nearly_equal( centring_vectors_[i], Vector3D( 0.0, 0.5, 0.5 ) ) )
+            {
+                if ( A_found )
+                    throw std::runtime_error( "SpaceGroup::decompose(): error: A centring found twice." );
+                A_found = true;
+            }
+            if ( nearly_equal( centring_vectors_[i], Vector3D( 0.5, 0.0, 0.5 ) ) )
+            {
+                if ( B_found )
+                    throw std::runtime_error( "SpaceGroup::decompose(): error: B centring found twice." );
+                B_found = true;
+            }
+            if ( nearly_equal( centring_vectors_[i], Vector3D( 0.5, 0.5, 0.0 ) ) )
+            {
+                if ( C_found )
+                    throw std::runtime_error( "SpaceGroup::decompose(): error: C centring found twice." );
+                C_found = true;
+            }
+        }
+        if ( A_found && B_found && C_found )
+            centring_ = "F";
     }
 }
 
@@ -430,13 +491,6 @@ void check_if_closed( const std::vector< SymmetryOperator > & symmetry_operators
             }
         }
     }
-}
-
-// ********************************************************************************
-
-std::string centring_vectors_to_string( const std::vector< Vector3D > & centring_vectors )
-{
-    return "P";
 }
 
 // ********************************************************************************

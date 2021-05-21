@@ -83,6 +83,8 @@ public:
     void convert_to_row_echelon_form( Matrix3D & T );
 
     size_t number_of_zero_rows( const double tolerance = 0.000001 ) const;
+    
+    bool is_nearly_the_identity( const double tolerance = 0.000001 ) const;
 
     Matrix3D & operator+=( const Matrix3D & rhs );
     Matrix3D & operator-=( const Matrix3D & rhs );

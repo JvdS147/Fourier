@@ -58,7 +58,7 @@ void TLS::set_is_on_inversion( const bool value )
     is_on_inversion_ = value;
     if ( ! is_on_inversion_ )
         return;
-    if ( ! nearly_equal( origin_, Vector3D() ) )
+    if ( ! nearly_zero( origin_ ) )
         throw std::runtime_error( "TLS::set_is_on_inversion( true ): origin is not the zero vector." );
     origin_ = Vector3D();
     // S is now the zero matrix

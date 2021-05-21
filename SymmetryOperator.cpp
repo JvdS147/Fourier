@@ -36,11 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ********************************************************************************
 
-SymmetryOperator::SymmetryOperator() :
-rotation_matrix_( Matrix3D() ),
-translation_vector_( Vector3D( 0.0, 0.0, 0.0 ) )
+SymmetryOperator::SymmetryOperator()
 {
-
 }
 
 // ********************************************************************************
@@ -57,8 +54,7 @@ translation_vector_( translation_vector )
 SymmetryOperator::SymmetryOperator( std::string input ) :
 rotation_matrix_( 0.0, 0.0, 0.0,
                   0.0, 0.0, 0.0,
-                  0.0, 0.0, 0.0 ),
-translation_vector_( 0.0, 0.0, 0.0 )
+                  0.0, 0.0, 0.0 )
 {
     std::string original_input( input );
     // Remove all spaces
@@ -184,7 +180,7 @@ Vector3D SymmetryOperator::intrinsic_translation_part() const
     SymmetryOperator result( *this );
     for ( size_t i( 1 ); i != n; ++i )
         result = result * ( *this );
-    if ( ! nearly_equal( result.rotation(), Matrix3D() ) )
+    if ( ! result.rotation().is_nearly_the_identity() )
         throw std::runtime_error( "SymmetryOperator::intrinsic_translation_part(): result is not the identity." );
     return result.translation()/n;
 }
@@ -193,7 +189,7 @@ Vector3D SymmetryOperator::intrinsic_translation_part() const
 
 bool SymmetryOperator::has_intrinsic_translation() const
 {
-    return ( ! nearly_equal( intrinsic_translation_part(), Vector3D() ) );
+    return ( ! nearly_zero( intrinsic_translation_part() ) );
 }
 
 // ********************************************************************************
@@ -211,6 +207,13 @@ void SymmetryOperator::invert()
     rotation_matrix_.invert();
     translation_vector_ = -1.0 * rotation_matrix_ * translation_vector_;
     canonicalise();
+}
+
+// ********************************************************************************
+
+bool SymmetryOperator::is_nearly_the_identity( const double tolerance ) const
+{
+    return ( rotation_matrix_.is_nearly_the_identity( tolerance ) && translation_vector_.nearly_zero( tolerance ) );
 }
 
 // ********************************************************************************

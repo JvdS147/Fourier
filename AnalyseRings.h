@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //class CollectionOfPoints;
 class Vector3D;
 
+#include "Mapping.h"
+
 #include <cstddef> // For definition of size_t
 #include <vector>
 
@@ -63,7 +65,7 @@ public:
 
     std::vector< double > distances_from_plane_;
     std::vector< double > rmsds_from_mean_plane_;
-    std::vector< size_t > sorted_map_;
+    Mapping sorted_map_;
 
 private:
     std::vector< Vector3D > points_;

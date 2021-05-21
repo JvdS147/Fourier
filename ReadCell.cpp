@@ -177,6 +177,45 @@ void read_cell( TextFileReader_2 & text_file_reader, CrystalStructure & crystal_
 //  0.000000000000000   0.000000000000000  -1.000000000000000 
 //  0.000000000000000   0.000000000000000   0.000000000000000 
 //%ENDBLOCK SYMMETRY_OPS
+
+
+//This is from Cif2Cell
+//        # Space group operations to cartesian representation
+//        lv = self.conventional_latticevectors()
+// The function self.conventional_latticevectors() is weird function. For for example orthogonal unit cells, it creates a martix that looks like this:
+//
+//  | 1.0  0.0  0.0 |
+//  | 0.0  b/a  0.0 |
+//  | 0.0  0.0  c/a |
+//
+//        for op in self.symops:
+//            op.rotation = lv.transform(op.rotation)
+//            op.rotation = op.rotation.transform(minv3(lv))
+//            # transform translations
+//            op.translation = op.translation.transform(minv3(self.lattrans))
+// // minv3v = matrix inversion 3x3 matrix
+//        # Test that the lattice vectors are invariant under all space group operations
+//        # If not, the data is given in some non-standard representation that presently
+//        # can't be handled.
+//        if self.crystal_system() == 'hexagonal' or self.crystal_system() == 'trigonal':
+//            # Hexagonal and trigonal as a special case... check that the hexagonal planes are in the ab plane
+//            for op in self.symops:
+//                if not (op.rotation[2] == Vector([0,0,1]) or op.rotation[2] == Vector([0,0,-1])):
+//                    raise SymmetryError("Lattice vectors do not fulfil the given symmetries of the lattice!\n"+
+//                                        "The cell is given in some non-standard setting presently not handled by the program.")
+//        else:
+//            for op in self.symops:
+//                if not op.translation.length() > self.compeps:
+//                    fails = False
+//                    for vec1 in lv:
+//                        transvec = vec1.transform(op.rotation)
+//                        if not (transvec == lv[0] or transvec == lv[1] or transvec == lv[2]
+//                                or transvec == -lv[0] or transvec == -lv[1] or transvec == -lv[2]):
+//                            fails = True
+//                    if fails:
+//                        raise SymmetryError("Lattice vectors do not fulfil the given symmetries of the lattice!\n"\
+//                                            "The cell is given in some non-standard setting presently not handled by the program.")
+
     iPos = text_file_reader.find( "%BLOCK SYMMETRY_OPS" );
     if ( iPos == std::string::npos )
         throw std::runtime_error( "read_cell(): symmetry operators not found." );
@@ -189,23 +228,23 @@ void read_cell( TextFileReader_2 & text_file_reader, CrystalStructure & crystal_
         if ( words.size() != 3 )
             throw std::runtime_error( "read_cell(): symmetry operators not found 1." );
         matrix.set_value( 0, 0, string2double( words[0] ) );
-        matrix.set_value( 0, 1, string2double( words[1] ) );
-        matrix.set_value( 0, 2, string2double( words[2] ) );
+        matrix.set_value( 1, 0, string2double( words[1] ) );
+        matrix.set_value( 2, 0, string2double( words[2] ) );
         ++iPos;
         line = text_file_reader.line( iPos );
         words = split( line );
         if ( words.size() != 3 )
             throw std::runtime_error( "read_cell(): symmetry operators not found 2." );
-        matrix.set_value( 1, 0, string2double( words[0] ) );
+        matrix.set_value( 0, 1, string2double( words[0] ) );
         matrix.set_value( 1, 1, string2double( words[1] ) );
-        matrix.set_value( 1, 2, string2double( words[2] ) );
+        matrix.set_value( 2, 1, string2double( words[2] ) );
         ++iPos;
         line = text_file_reader.line( iPos );
         words = split( line );
         if ( words.size() != 3 )
             throw std::runtime_error( "read_cell(): symmetry operators not found 3." );
-        matrix.set_value( 2, 0, string2double( words[0] ) );
-        matrix.set_value( 2, 1, string2double( words[1] ) );
+        matrix.set_value( 0, 2, string2double( words[0] ) );
+        matrix.set_value( 1, 2, string2double( words[1] ) );
         matrix.set_value( 2, 2, string2double( words[2] ) );
         ++iPos;
         line = text_file_reader.line( iPos );

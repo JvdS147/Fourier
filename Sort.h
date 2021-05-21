@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // and the requirement that all elements in the original data structure must now be addressed as:
 // value = values[ sorted_map[i] ]; and values[ sorted_map[i] ] = value;
 
+#include "Mapping.h"
 #include "Utilities.h"
 
 #include <algorithm>
@@ -65,13 +66,13 @@ private:
 // ********************************************************************************
 
 template <class T>
-std::vector< size_t > sort( const std::vector< T > & values, const bool reverse_order = false )
+Mapping sort( const std::vector< T > & values, const bool reverse_order = false )
 {
     // We don't actually sort the list, but create a sorted map
     // We use std::stable_sort() with a functor
     std::vector< size_t > sorted_map = initialise_with_sequential_values( values.size() );
     std::stable_sort( sorted_map.begin(), sorted_map.end(), Compare<T>( values, reverse_order ) );
-    return sorted_map;
+    return Mapping( sorted_map );
 }
 
 // ********************************************************************************

@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <string>
 #include <cmath>
+#include <iostream> // @@ Only necessary for show(), this is bad
 
 // We must have a separate StringFunctions.h
 
@@ -48,6 +49,15 @@ std::vector< T > initialise_with_sequential_values( const T & end_value )
     }
     return result;
 }
+
+template <class T>
+void show( const std::vector< T > & values )
+{
+    for ( size_t i( 0 ); i != values.size(); ++i )
+        std::cout << values[i] << std::endl;
+}
+
+std::vector< size_t > invert_mapping( const std::vector< size_t > & mapping );
 
 // Outputs between 0 and max_size (inclusive) number of c characters, proportional to value.
 // Basically generates a quick and dirty ASCII histogram (rotated by 90 degrees).

@@ -47,28 +47,28 @@ void test_sort( TestSuite & test_suite )
     // -1,-5, 0, 9, 8, 7, 8, 9
     // -5,-1, 0, 7, 8, 8, 9, 9
     {
-    std::vector< size_t > sorted_map = sort( objects );
-    test_suite.test_equality( objects[ sorted_map[ 0 ] ], -5,  "Sort() 0" );
-    test_suite.test_equality( objects[ sorted_map[ 1 ] ], -1,  "Sort() 1" );
-    test_suite.test_equality( objects[ sorted_map[ 2 ] ],  0,  "Sort() 2" );
-    test_suite.test_equality( objects[ sorted_map[ 3 ] ],  5,  "Sort() 3" );
-    test_suite.test_equality( objects[ sorted_map[ 4 ] ],  7,  "Sort() 4" );
-    test_suite.test_equality( objects[ sorted_map[ 5 ] ],  8,  "Sort() 5" );
-    test_suite.test_equality( objects[ sorted_map[ 6 ] ],  8,  "Sort() 6" );
-    test_suite.test_equality( objects[ sorted_map[ 7 ] ],  9,  "Sort() 7" );
-    test_suite.test_equality( objects[ sorted_map[ 8 ] ],  9,  "Sort() 8" );
+    Mapping sorted_map = sort( objects );
+    test_suite.test_equality( objects[ sorted_map.map( 0 ) ], -5,  "Sort() 0" );
+    test_suite.test_equality( objects[ sorted_map.map( 1 ) ], -1,  "Sort() 1" );
+    test_suite.test_equality( objects[ sorted_map.map( 2 ) ],  0,  "Sort() 2" );
+    test_suite.test_equality( objects[ sorted_map.map( 3 ) ],  5,  "Sort() 3" );
+    test_suite.test_equality( objects[ sorted_map.map( 4 ) ],  7,  "Sort() 4" );
+    test_suite.test_equality( objects[ sorted_map.map( 5 ) ],  8,  "Sort() 5" );
+    test_suite.test_equality( objects[ sorted_map.map( 6 ) ],  8,  "Sort() 6" );
+    test_suite.test_equality( objects[ sorted_map.map( 7 ) ],  9,  "Sort() 7" );
+    test_suite.test_equality( objects[ sorted_map.map( 8 ) ],  9,  "Sort() 8" );
     }
     {
-    std::vector< size_t > sorted_map = sort( objects, true );
-    test_suite.test_equality( objects[ sorted_map[ 0 ] ],  9,  "Sort() 10" );
-    test_suite.test_equality( objects[ sorted_map[ 1 ] ],  9,  "Sort() 11" );
-    test_suite.test_equality( objects[ sorted_map[ 2 ] ],  8,  "Sort() 12" );
-    test_suite.test_equality( objects[ sorted_map[ 3 ] ],  8,  "Sort() 13" );
-    test_suite.test_equality( objects[ sorted_map[ 4 ] ],  7,  "Sort() 14" );
-    test_suite.test_equality( objects[ sorted_map[ 5 ] ],  5,  "Sort() 15" );
-    test_suite.test_equality( objects[ sorted_map[ 6 ] ],  0,  "Sort() 16" );
-    test_suite.test_equality( objects[ sorted_map[ 7 ] ], -1,  "Sort() 17" );
-    test_suite.test_equality( objects[ sorted_map[ 8 ] ], -5,  "Sort() 18" );
+    Mapping sorted_map = sort( objects, true );
+    test_suite.test_equality( objects[ sorted_map.map( 0 ) ],  9,  "Sort() 10" );
+    test_suite.test_equality( objects[ sorted_map.map( 1 ) ],  9,  "Sort() 11" );
+    test_suite.test_equality( objects[ sorted_map.map( 2 ) ],  8,  "Sort() 12" );
+    test_suite.test_equality( objects[ sorted_map.map( 3 ) ],  8,  "Sort() 13" );
+    test_suite.test_equality( objects[ sorted_map.map( 4 ) ],  7,  "Sort() 14" );
+    test_suite.test_equality( objects[ sorted_map.map( 5 ) ],  5,  "Sort() 15" );
+    test_suite.test_equality( objects[ sorted_map.map( 6 ) ],  0,  "Sort() 16" );
+    test_suite.test_equality( objects[ sorted_map.map( 7 ) ], -1,  "Sort() 17" );
+    test_suite.test_equality( objects[ sorted_map.map( 8 ) ], -5,  "Sort() 18" );
     }
 
 }

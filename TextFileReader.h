@@ -42,6 +42,20 @@ class FileName;
 // MacOS >= 10   : \n
 // C++ in principle uses (e.g. absorbs upon reading) \n
 // This class deletes all \r characters from all input.
+
+// Example code:
+//        TextFileReader text_file_reader( FileName( "file_name.txt" ) );
+//        text_file_reader.set_skip_empty_lines( false );
+//        std::string line;
+//        std::vector< std::string > words;
+//        while ( text_file_reader.get_next_line( line ) )
+//        while ( text_file_reader.get_next_line( words ) )
+//        {
+//            if ( words.size() != 4 )
+//                std::cout << "Warning: words.size() != 4" << std::endl;
+//            ...
+//        }
+
 class TextFileReader
 {
 public:

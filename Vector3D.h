@@ -53,13 +53,11 @@ public:
     void set_z( const double value ) { data_[2] = value; }
     double value( const size_t i ) const { return data_[i]; }
     void set_value( const size_t i, const double value ) { data_[i] = value; }
-    
+
     void set_length( const double value );
 
-    // Checks if norm2() is smaller than tolerance
-    // (To avoid the sqrt of length() .)
-    bool is_zero_vector( const double tolerance = 0.000001 ) const;
-    
+    bool nearly_zero( const double tolerance = 0.000001 ) const;
+
     // Checks if norm2() is smaller than tolerance
     // (To avoid the sqrt of length() .)
     void throw_if_zero_vector( const double tolerance = 0.000001 ) const;
@@ -90,7 +88,8 @@ private:
 
 std::ostream & operator<<( std::ostream & os, const Vector3D & vector3d );
 
-bool nearly_equal( const Vector3D & lhs, const Vector3D & rhs, const double tolerance = 0.0000001 );
+bool nearly_equal( const Vector3D & lhs, const Vector3D & rhs, const double tolerance = 0.000001 );
+bool nearly_zero( const Vector3D & lhs, const double tolerance = 0.000001 );
 
 Vector3D operator+( const Vector3D & lhs, const Vector3D & rhs );
 Vector3D operator-( const Vector3D & lhs, const Vector3D & rhs );

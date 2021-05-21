@@ -49,14 +49,13 @@ PointGroup::PointGroup( const std::vector< Matrix3D > & symmetry_operators, cons
     // Go through the list of symmetry operators and divide into proper and improper, check for identity and check if there is an inversion.
     bool identity_found( false );
     size_t identity_index;
-    Matrix3D identity;
-    Matrix3D inversion( -1.0 * identity );
+    Matrix3D inversion( -1.0 );
     for ( size_t i( 0 ); i != symmetry_operators.size(); ++i )
     {
         double determinant = symmetry_operators[i].determinant();
         if ( nearly_equal( determinant, 1.0 ) )
         {
-            if ( nearly_equal( symmetry_operators[i], identity ) )
+            if ( symmetry_operators[i].is_nearly_the_identity() )
             {
                 identity_found = true;
                 identity_index = i;
