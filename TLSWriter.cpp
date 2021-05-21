@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "TLSWriter.h"
+#include "CopyTextFile.h"
 #include "CrystalStructure.h"
 #include "ReadCif.h"
 #include "TextFileReader_2.h"
@@ -41,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // From .cif file
 void TLSWriter( const FileName & input_file_name )
 {
+    bool is_on_inversion_at_origin( true );
     TextFileWriter text_file_writer( replace_extension( append_to_file_name( input_file_name, "_TLS" ), "inp" ) );
     bool write_bond_restraints = FileName( input_file_name.directory(), input_file_name.file_name() + "_bond_restraints", "txt" ).exists();
     bool write_angle_restraints = FileName( input_file_name.directory(), input_file_name.file_name() + "_angle_restraints", "txt" ).exists();
@@ -56,14 +58,14 @@ void TLSWriter( const FileName & input_file_name )
         std::cout << "Bond restraints file found, bond restraints will be written out." << std::endl;
         TextFileReader_2 file_bond_restraints( FileName( input_file_name.directory(), input_file_name.file_name() + "_bond_restraints", "txt" ) );
         std::vector< std::string > words;
-        for ( size_t i( 0 ); i != file_bond_restraints.size(); ++i )
+        for ( size_t i( 1 ); i != file_bond_restraints.size(); ++i )
         {
             words = split( file_bond_restraints.line( i ) );
-            if ( words.size() != 3 )
+            if ( words.size() != 4 )
                 throw std::runtime_error( "TLS .inp writer: unexpected format in bond restraints file: >" + file_bond_restraints.line( i ) + "<" );
-            bond_labels_1.push_back( words[0] );
-            bond_labels_2.push_back( words[1] );
-            bond_target_values.push_back( string2double( words[2] ) );
+            bond_labels_1.push_back( words[1] );
+            bond_labels_2.push_back( words[2] );
+            bond_target_values.push_back( string2double( words[3] ) );
         }
     }
     else
@@ -73,15 +75,15 @@ void TLSWriter( const FileName & input_file_name )
         std::cout << "Angle restraints file found, angle restraints will be written out." << std::endl;
         TextFileReader_2 file_angle_restraints( FileName( input_file_name.directory(), input_file_name.file_name() + "_angle_restraints", "txt" ) );
         std::vector< std::string > words;
-        for ( size_t i( 0 ); i != file_angle_restraints.size(); ++i )
+        for ( size_t i( 1 ); i != file_angle_restraints.size(); ++i )
         {
             words = split( file_angle_restraints.line( i ) );
-            if ( words.size() != 4 )
+            if ( words.size() != 5 )
                 throw std::runtime_error( "TLS .inp writer: unexpected format in angle restraints file: >" + file_angle_restraints.line( i ) + "<" );
-            angle_labels_1.push_back( words[0] );
-            angle_labels_2.push_back( words[1] );
-            angle_labels_3.push_back( words[2] );
-            angle_target_values.push_back( string2double( words[3] ) );
+            angle_labels_1.push_back( words[1] );
+            angle_labels_2.push_back( words[2] );
+            angle_labels_3.push_back( words[3] );
+            angle_target_values.push_back( string2double( words[4] ) );
         }
     }
     else
@@ -147,12 +149,15 @@ void TLSWriter( const FileName & input_file_name )
     CrystalStructure crystal_structure;
     std::cout << "Now reading cif... " + input_file_name.full_name() << std::endl;
     read_cif( input_file_name, crystal_structure );
-    text_file_writer.write_line( "    ' Origin of the molecule (fractional coordinates)." );
-    Vector3D c_o_m = crystal_structure.centre_of_mass();
-    text_file_writer.write_line( "    prm centx " + double2string( c_o_m.x() ) );
-    text_file_writer.write_line( "    prm centy " + double2string( c_o_m.y() ) );
-    text_file_writer.write_line( "    prm centz " + double2string( c_o_m.z() ) );
-    text_file_writer.write_line();
+    if ( ! is_on_inversion_at_origin )
+    {
+        text_file_writer.write_line( "    ' Origin of the molecule (fractional coordinates)." );
+        Vector3D c_o_m = crystal_structure.centre_of_mass();
+        text_file_writer.write_line( "    prm centx " + double2string( c_o_m.x() ) );
+        text_file_writer.write_line( "    prm centy " + double2string( c_o_m.y() ) );
+        text_file_writer.write_line( "    prm centz " + double2string( c_o_m.z() ) );
+        text_file_writer.write_line();
+    }
     text_file_writer.write_line( "    ' T11 etc. are elements of the T, L and S tensors." );
     text_file_writer.write_line( "    prm T11  0.05" );
     text_file_writer.write_line( "    prm T22  0.05" );
@@ -166,19 +171,22 @@ void TLSWriter( const FileName & input_file_name )
     text_file_writer.write_line( "    prm L12  0.0" );
     text_file_writer.write_line( "    prm L13  0.0" );
     text_file_writer.write_line( "    prm L23  0.0" );
-    text_file_writer.write_line( "    prm S11  0.0" );
-    text_file_writer.write_line( "    prm S12  0.0" );
-    text_file_writer.write_line( "    prm S13  0.0" );
-    text_file_writer.write_line( "    prm S22  0.0" );
-    text_file_writer.write_line( "    prm S23  0.0" );
-    text_file_writer.write_line();
-    text_file_writer.write_line( "    ' Choice of origin to make S symmetric (Downs, p80-81)." );
-    text_file_writer.write_line( "    prm S21 = S12;" );
-    text_file_writer.write_line( "    prm S31 = S13;" );
-    text_file_writer.write_line( "    prm S32 = S23;" );
-    text_file_writer.write_line();
-    text_file_writer.write_line( "    ' Standard constraint to make equations determinate." );
-    text_file_writer.write_line( "    prm S33 = -S11 - S22; : 0.0" );
+    if ( ! is_on_inversion_at_origin )
+    {
+        text_file_writer.write_line( "    prm S11  0.0" );
+        text_file_writer.write_line( "    prm S12  0.0" );
+        text_file_writer.write_line( "    prm S13  0.0" );
+        text_file_writer.write_line( "    prm S22  0.0" );
+        text_file_writer.write_line( "    prm S23  0.0" );
+        text_file_writer.write_line();
+        text_file_writer.write_line( "    ' Choice of origin to make S symmetric (Downs, p80-81)." );
+        text_file_writer.write_line( "    prm S21 = S12;" );
+        text_file_writer.write_line( "    prm S31 = S13;" );
+        text_file_writer.write_line( "    prm S32 = S23;" );
+        text_file_writer.write_line();
+        text_file_writer.write_line( "    ' Standard constraint to make equations determinate." );
+        text_file_writer.write_line( "    prm S33 = -S11 - S22; : 0.0" );
+    }
     text_file_writer.write_line();
     text_file_writer.write_line( "    ' The libration is sqrt(trace(L))." );
     text_file_writer.write_line( "    prm libration = Sqrt(L11 + L22 + L33) * Rad; : 0.0" );
@@ -193,40 +201,83 @@ void TLSWriter( const FileName & input_file_name )
     text_file_writer.write_line( "    ' Unit-cell parameters are assumed to be constant." );
     text_file_writer.write_line();
     Matrix3D f2c = crystal_structure.crystal_lattice().fractional_to_orthogonal_matrix();
-    
-    // Many matrix elements evaluate to e.g. -1.0E-18, these are set to 0.0 here.
-    for ( size_t i( 0 ); i < 3; ++i )
+
+   // // Many matrix elements evaluate to e.g. -1.0E-18, these are set to 0.0 here.
+  //  for ( size_t i( 0 ); i < 3; ++i )
+  //  {
+  //      for ( size_t j( 0 ); j < 3; ++j )
+  //      {
+   //         if ( nearly_zero( f2c.value( i, j ) ) )
+   //             f2c.set_value( i, j, 0.0 );
+   //     }
+   // }
+
+    if ( is_on_inversion_at_origin )
     {
-        for ( size_t j( 0 ); j < 3; ++j )
-        {
-            if ( nearly_zero( f2c.value( i, j ) ) )
-                f2c.set_value( i, j, 0.0 );
+        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+         {
+            std::string label = crystal_structure.atom( i ).label();
+            std::string line;
+            line = "    prm !rx" + label + " = x" + label + "*" + double2string( f2c.value(0,0) );
+            if ( ! nearly_zero( f2c.value(0,1) ) )
+                 line += " + y" + label + "*" + double2string( f2c.value(0,1) );
+            if ( ! nearly_zero( f2c.value(0,2) ) )
+                 line += " + z" + label + "*" + double2string( f2c.value(0,2) );
+            line += ";";
+            text_file_writer.write_line( line );
+            line = "    prm !ry" + label + " = y" + label + "*" + double2string( f2c.value(1,1) );
+            if ( ! nearly_zero( f2c.value(1,2) ) )
+                 line += " + z" + label + "*" + double2string( f2c.value(1,2) );
+            line += ";";
+            text_file_writer.write_line( line );
+            line = "    prm !rz" + label + " = z" + label + "*" + double2string( f2c.value(2,2) );
+            line += ";";
+            text_file_writer.write_line( line );
         }
     }
-    
-    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    else
     {
-        std::string label = crystal_structure.atom( i ).label();
-        text_file_writer.write_line( "    prm !rx" + label + " = (x" + label + " - centx)*" + double2string( f2c.value(0,0) ) + " + (y" + label + " - centy)*" + double2string( f2c.value(0,1) ) + " + (z" + label + " - centz)*" + double2string( f2c.value(0,2) ) + ";" );
-        text_file_writer.write_line( "    prm !ry" + label + " = (y" + label + " - centy)*" + double2string( f2c.value(1,1) ) + " + (z" + label + " - centz)*" + double2string( f2c.value(1,2) ) + ";" );
-        text_file_writer.write_line( "    prm !rz" + label + " = (z" + label + " - centz)*" + double2string( f2c.value(2,2) ) + ";" );
+        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+        {
+            std::string label = crystal_structure.atom( i ).label();
+            text_file_writer.write_line( "    prm !rx" + label + " = (x" + label + " - centx)*" + double2string( f2c.value(0,0) ) + " + (y" + label + " - centy)*" + double2string( f2c.value(0,1) ) + " + (z" + label + " - centz)*" + double2string( f2c.value(0,2) ) + ";" );
+            text_file_writer.write_line( "    prm !ry" + label + " = (y" + label + " - centy)*" + double2string( f2c.value(1,1) ) + " + (z" + label + " - centz)*" + double2string( f2c.value(1,2) ) + ";" );
+            text_file_writer.write_line( "    prm !rz" + label + " = (z" + label + " - centz)*" + double2string( f2c.value(2,2) ) + ";" );
+        }
     }
     text_file_writer.write_line();
     text_file_writer.write_line( "    ' Calculation of Uij values in Cartesian framework. See Dunitz page 251, Eqn 5.42 and Table 5.1 page 252." );
     text_file_writer.write_line();
-    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    if ( is_on_inversion_at_origin )
     {
-        std::string label = crystal_structure.atom( i ).label();
-        text_file_writer.write_line( "    prm ru11" + label + " = L22*rz" + label + "^2 + L33*ry" + label + "^2 - 2*ry" + label + "*rz" + label + "*L23 - 2*ry" + label + "*S31 + 2*rz" + label + "*S21 + T11; : 0.0" );
-        text_file_writer.write_line( "    prm ru22" + label + " = L11*rz" + label + "^2 + L33*rx" + label + "^2 - 2*rx" + label + "*rz" + label + "*L13 - 2*rz" + label + "*S12 + 2*rx" + label + "*S32 + T22; : 0.0" );
-        text_file_writer.write_line( "    prm ru33" + label + " = L11*ry" + label + "^2 + L22*rx" + label + "^2 - 2*rx" + label + "*ry" + label + "*L12 - 2*rx" + label + "*S23 + 2*ry" + label + "*S13 + T33; : 0.0" );
-        text_file_writer.write_line( "    prm ru12" + label + " = -rx" + label + "*ry" + label + "*L33 + rx" + label + "*rz" + label + "*L23 + ry" + label + "*rz" + label + "*L13 - rz" + label + "^2*L12 - rz" + label +
+        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+        {
+            std::string label = crystal_structure.atom( i ).label();
+            text_file_writer.write_line( "    prm ru11" + label + " = L22*rz" + label + "^2 + L33*ry" + label + "^2 - 2*ry" + label + "*rz" + label + "*L23 + T11; : 0.0" );
+            text_file_writer.write_line( "    prm ru22" + label + " = L11*rz" + label + "^2 + L33*rx" + label + "^2 - 2*rx" + label + "*rz" + label + "*L13 + T22; : 0.0" );
+            text_file_writer.write_line( "    prm ru33" + label + " = L11*ry" + label + "^2 + L22*rx" + label + "^2 - 2*rx" + label + "*ry" + label + "*L12 + T33; : 0.0" );
+            text_file_writer.write_line( "    prm ru12" + label + " = -rx" + label + "*ry" + label + "*L33 + rx" + label + "*rz" + label + "*L23 + ry" + label + "*rz" + label + "*L13 - rz" + label + "^2*L12 + T12; : 0.0" );
+            text_file_writer.write_line( "    prm ru13" + label + " = -rx" + label + "*rz" + label + "*L22 + rx" + label + "*ry" + label + "*L23 - ry" + label + "^2*L13 + ry" + label + "*rz" + label + "*L12 + T13; : 0.0" );
+            text_file_writer.write_line( "    prm ru23" + label + " = -ry" + label + "*rz" + label + "*L11 - rx" + label + "^2*L23 + rx" + label + "*ry" + label + "*L13 + rx" + label + "*rz" + label + "*L12 + T23; : 0.0" );
+            text_file_writer.write_line();
+        }
+    }
+    else
+    {
+        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+        {
+            std::string label = crystal_structure.atom( i ).label();
+            text_file_writer.write_line( "    prm ru11" + label + " = L22*rz" + label + "^2 + L33*ry" + label + "^2 - 2*ry" + label + "*rz" + label + "*L23 - 2*ry" + label + "*S31 + 2*rz" + label + "*S21 + T11; : 0.0" );
+            text_file_writer.write_line( "    prm ru22" + label + " = L11*rz" + label + "^2 + L33*rx" + label + "^2 - 2*rx" + label + "*rz" + label + "*L13 - 2*rz" + label + "*S12 + 2*rx" + label + "*S32 + T22; : 0.0" );
+            text_file_writer.write_line( "    prm ru33" + label + " = L11*ry" + label + "^2 + L22*rx" + label + "^2 - 2*rx" + label + "*ry" + label + "*L12 - 2*rx" + label + "*S23 + 2*ry" + label + "*S13 + T33; : 0.0" );
+            text_file_writer.write_line( "    prm ru12" + label + " = -rx" + label + "*ry" + label + "*L33 + rx" + label + "*rz" + label + "*L23 + ry" + label + "*rz" + label + "*L13 - rz" + label + "^2*L12 - rz" + label +
                                      "*S11 + rz" + label + "*S22 + rx" + label + "*S31 - ry" + label + "*S32 + T12; : 0.0" );
-        text_file_writer.write_line( "    prm ru13" + label + " = -rx" + label + "*rz" + label + "*L22 + rx" + label + "*ry" + label + "*L23 - ry" + label + "^2*L13 + ry" + label + "*rz" + label + "*L12 + ry" + label +
+            text_file_writer.write_line( "    prm ru13" + label + " = -rx" + label + "*rz" + label + "*L22 + rx" + label + "*ry" + label + "*L23 - ry" + label + "^2*L13 + ry" + label + "*rz" + label + "*L12 + ry" + label +
                                      "*S11 - ry" + label + "*S33 + rz" + label + "*S23 - rx" + label + "*S21 + T13; : 0.0" );
-        text_file_writer.write_line( "    prm ru23" + label + " = -ry" + label + "*rz" + label + "*L11 - rx" + label + "^2*L23 + rx" + label + "*ry" + label + "*L13 + rx" + label + "*rz" + label + "*L12 - rx" + label +
+            text_file_writer.write_line( "    prm ru23" + label + " = -ry" + label + "*rz" + label + "*L11 - rx" + label + "^2*L23 + rx" + label + "*ry" + label + "*L13 + rx" + label + "*rz" + label + "*L12 - rx" + label +
                                      "*S22 + rx" + label + "*S33 + ry" + label + "*S12 - rz" + label + "*S13 + T23; : 0.0" );
-        text_file_writer.write_line();
+            text_file_writer.write_line();
+        }
     }
     text_file_writer.write_line( "    ' ru11N1 = u11 of atom N1 in Cartesian coordinates." );
     text_file_writer.write_line( "    ' u11N1 = u11 of atom N1 in cif coordinates." );
@@ -266,6 +317,14 @@ void TLSWriter( const FileName & input_file_name )
         s_s.push_back( 3 );
         r_s.push_back( 2 );
         s_s.push_back( 3 );
+
+
+//    prm u11H13 = 37.9275 * (
+//        0.160488 * ( ru11H13 * 0.160488 + ru12H13 * 0 + ru13H13 * 0.0246915 ) +
+//        (0) * ( ru12H13 * 0.160488 + ru22H13 * 0 + ru23H13 * 0.0246915 ) +
+//        (0.0246915) * ( ru13H13 * 0.160488 + ru23H13 * 0 + ru33H13 * 0.0246915 ) ); : 0.0
+
+
         for ( size_t j(0); j != r_s.size(); ++j )
         {
             r = r_s[j];
@@ -273,31 +332,15 @@ void TLSWriter( const FileName & input_file_name )
             text_file_writer.write_line( "    prm u" + size_t2string(r) + size_t2string(s) + label + " = " + double2string( k[r-1] * k[s-1] ) + " * ( " );
             text_file_writer.write_line( "        " + double2string( c2f.value(r-1,0) ) + " * ( ru11" + label + " * " + double2string( c2f.value(s-1,0) ) + " + ru12" + label + " * " + double2string( c2f.value(s-1,1) ) + " + ru13" + label + " * " + double2string( c2f.value(s-1,2) ) + " ) + " );
             text_file_writer.write_line( "        (" + double2string( c2f.value(r-1,1) ) + ") * ( ru12" + label + " * " + double2string( c2f.value(s-1,0) ) + " + ru22" + label + " * " + double2string( c2f.value(s-1,1) ) + " + ru23" + label + " * " + double2string( c2f.value(s-1,2) ) + " ) + " );
-            text_file_writer.write_line( "        (" + double2string( c2f.value(r-1,2) ) + ") * ( ru13" + label + " * " + double2string( c2f.value(s-1,0) ) + " + ru23" + label + " * " + double2string( c2f.value(s-1,1) ) + " + ru33" + label + " * " + double2string( c2f.value(s-1,2) ) + " ) ); : 0.0" );
+            text_file_writer.write_line( "        (" + double2string( c2f.value(r-1,2) ) + ") * ( ru13" + label + " * " + double2string( c2f.value(s-1,0) ) + " + ru23" + label + " * " + double2string( c2f.value(s-1,1) ) + " + ru33" + label + " * " + double2string( c2f.value(s-1,2) ) + " )" + " ); : 0.0" );
         }
         text_file_writer.write_line();
     }
 
-//Matrix3D AnisotropicDisplacementParameters::U_star( const CrystalLattice & crystal_lattice ) const
-//{
-//    return crystal_lattice.orthogonal_to_fractional_matrix() * U_cart() * transpose( crystal_lattice.orthogonal_to_fractional_matrix() );
-//}
-//
-//Matrix3D AnisotropicDisplacementParameters::U_cif( const CrystalLattice & crystal_lattice ) const
-//{
-//    Matrix3D N;
-//    N.set_value( 0, 0 , 1.0 / crystal_lattice.a_star() );
-//    N.set_value( 1, 1 , 1.0 / crystal_lattice.b_star() );
-//    N.set_value( 2, 2 , 1.0 / crystal_lattice.c_star() );
-//    return N * U_star( crystal_lattice ) * N;
-//}
-
     for ( size_t i( 0 ); i < crystal_structure.natoms(); ++i )
     {
         std::string label = crystal_structure.atom( i ).label();
-        text_file_writer.write_line( "    site " + label + " x x" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().x(), 5, ' ' ) +
-                                                           " y y" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().y(), 5, ' ' ) +
-                                                           " z z" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().z(), 5, ' ' ) +
+        text_file_writer.write_line( "    site " + label + " x = x" + label + ";" + " y = y" + label + ";" + " z = z" + label + ";" +
                                      " occ " + crystal_structure.atom( i ).element().symbol() + " 1 ADPs_Keep_PD u11=u11" + label + "; u22=u22" + label + "; u33=u33" + label + "; u12=u12" + label + "; u13=u13" + label + "; u23=u23" + label + ";" );
     }
     text_file_writer.write_line();
@@ -320,16 +363,16 @@ void TLSWriter( const FileName & input_file_name )
         for ( size_t i( 0 ); i < bond_labels_1.size(); ++i )
         {
             text_file_writer.write_line( "    prm !curr_dist_" + bond_labels_1[i] + "_" + bond_labels_2[i] + " = Sqrt( (rx" + bond_labels_1[i] + "-rx" + bond_labels_2[i] + ")^2 + " +
-                                                                                                                     "(ry" + bond_labels_1[i] + "-ry" + bond_labels_2[i] + ")^2 + " +
-                                                                                                                     "(rz" + bond_labels_1[i] + "-rz" + bond_labels_2[i] + ")^2 ); : 0.0" );
+                                                                                                                      "(ry" + bond_labels_1[i] + "-ry" + bond_labels_2[i] + ")^2 + " +
+                                                                                                                      "(rz" + bond_labels_1[i] + "-rz" + bond_labels_2[i] + ")^2 ); : 0.0" );
         }
         text_file_writer.write_line();
         text_file_writer.write_line( "    ' Calculate corrected relative Cartesian coordinates. See Downs, page 83." );
         for ( size_t i( 0 ); i < bond_labels_1.size(); ++i )
         {
             text_file_writer.write_line( "    prm !corr_dist_" + bond_labels_1[i] + "_" + bond_labels_2[i] + " = Sqrt( (crx" + bond_labels_1[i] + "-crx" + bond_labels_2[i] + ")^2 + " +
-                                                                                                                     "(cry" + bond_labels_1[i] + "-cry" + bond_labels_2[i] + ")^2 + " +
-                                                                                                                     "(crz" + bond_labels_1[i] + "-crz" + bond_labels_2[i] + ")^2 ); : 0.0" );
+                                                                                                                      "(cry" + bond_labels_1[i] + "-cry" + bond_labels_2[i] + ")^2 + " +
+                                                                                                                      "(crz" + bond_labels_1[i] + "-crz" + bond_labels_2[i] + ")^2 ); : 0.0" );
         }
         text_file_writer.write_line();
         text_file_writer.write_line( "    prm !bond_width   0" );
@@ -449,6 +492,7 @@ void TLSWriter( const FileName & input_file_name )
     text_file_writer.write_line( "        out file append" );
     text_file_writer.write_line( "        Out_String(\"\\n\")" );
     text_file_writer.write_line( "    }" );
+    copy_text_file( replace_extension( append_to_file_name( input_file_name, "_TLS" ), "inp" ), replace_extension( append_to_file_name( input_file_name, "_TLS" ), "org" ) );
 }
 
 // ********************************************************************************
@@ -689,7 +733,7 @@ void TLSWriter_2( const FileName & input_file_name )
     text_file_writer.write_line( "    ' Unit-cell parameters are assumed to be constant." );
     text_file_writer.write_line();
     Matrix3D f2c = crystal_structure.crystal_lattice().fractional_to_orthogonal_matrix();
-    
+
     // Many matrix elements evaluate to e.g. -1.0E-18, these are set to 0.0 here.
     for ( size_t i( 0 ); i < 3; ++i )
     {
@@ -699,7 +743,7 @@ void TLSWriter_2( const FileName & input_file_name )
                 f2c.set_value( i, j, 0.0 );
         }
     }
-    
+
     for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
     {
         std::string label = crystal_structure.atom( i ).label();
@@ -778,14 +822,14 @@ void TLSWriter_2( const FileName & input_file_name )
         std::string label = crystal_structure.atom( i ).label();
         bool keep_ADPs_positive_definite = false;
         if ( keep_ADPs_positive_definite )
-            text_file_writer.write_line( "    site " + label + " x x" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().x(), 5, ' ' ) +
-                                                               " y y" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().y(), 5, ' ' ) +
-                                                               " z z" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().z(), 5, ' ' ) +
+            text_file_writer.write_line( "    site " + label + " x = x" + label + "; " +
+                                                               " y = y" + label + "; " +
+                                                               " z = z" + label + "; " +
                                          " occ " + crystal_structure.atom( i ).element().symbol() + " 1 ADPs_Keep_PD u11=u11" + label + "; u22=u22" + label + "; u33=u33" + label + "; u12=u12" + label + "; u13=u13" + label + "; u23=u23" + label + ";" );
         else
-            text_file_writer.write_line( "    site " + label + " x x" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().x(), 5, ' ' ) +
-                                                               " y y" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().y(), 5, ' ' ) +
-                                                               " z z" + label + " " + double2string_pad_plus( crystal_structure.atom( i ).position().z(), 5, ' ' ) +
+            text_file_writer.write_line( "    site " + label + " x = x" + label + "; " +
+                                                               " y = y" + label + "; " +
+                                                               " z = z" + label + "; " +
                                          " occ " + crystal_structure.atom( i ).element().symbol() + " 1 ADPs { =u11" + label + "; =u22" + label + "; =u33" + label + "; =u12" + label + "; =u13" + label + "; =u23" + label + "; }" );
     }
     text_file_writer.write_line();
@@ -979,7 +1023,7 @@ void TLSWriter_2( const FileName & input_file_name )
            text_file_writer.write_line( "    Angle_Distance_Restrain( corr_ang_" + angle_labels_1[i] + "_" + angle_labels_2[i] + "_" + angle_labels_3[i] + ", " + double2string( angle_target_values[i] ) + ", 0.0, angle_width, angle_weight )" );
         }
     }
-    
+
     while ( iLine != input_file.size() )
     {
         // Find Out_CIF_STR_Uiso and replace by Out_CIF_ADPs_TLS
@@ -1047,7 +1091,7 @@ void TLSWriter_2( const FileName & input_file_name )
     text_file_writer.write_line( "        out file append" );
     text_file_writer.write_line( "        Out_String(\"\\n\")" );
     text_file_writer.write_line( "    }" );
+    copy_text_file( append_to_file_name( input_file_name, "_TLS" ), replace_extension( append_to_file_name( input_file_name, "_TLS" ), "org" ) );
 }
 
 // ********************************************************************************
-

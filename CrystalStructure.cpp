@@ -110,7 +110,7 @@ void CrystalStructure::set_atom( const size_t i, const Atom & atom )
 
 void CrystalStructure::basic_checks() const
 {
-    
+
 }
 
 // ********************************************************************************
@@ -214,7 +214,7 @@ void CrystalStructure::apply_space_group_symmetry()
             }
         }
     }
-    
+
     add_atoms( atoms );
     space_group_symmetry_has_been_applied_ = true;
 }
@@ -275,7 +275,7 @@ void CrystalStructure::perceive_molecules( const bool I_know_Zprime_is_one )
         Atom iAtom = atom( i );
         for ( size_t j( i+1 ); j != natoms(); ++j )
         {
-            Atom jAtom = atom( j );                
+            Atom jAtom = atom( j );
             double distance2 = crystal_lattice_.shortest_distance2( iAtom.position(), jAtom.position() );
             // @@ Are we now doing this time and time again because we do not keep track if an atom had already been moved or not???
             if ( are_bonded( iAtom.element(), jAtom.element(), distance2 ) )
@@ -1106,8 +1106,8 @@ void CrystalStructure::calculate_topological_attributes()
         std::string topological_attributes;
         topological_attributes = new_atom.element().symbol();
         topological_attributes = pad( topological_attributes, 2 );
-        
-        
+
+
         new_atom.set_topological_attributes( topological_attributes );
         this->set_atom( i, new_atom );
     }
@@ -1191,7 +1191,7 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
     // Loop over all symmetry operators.
     // First find all floating axes; these are a problem if there is more than one residue in the asymmetric unit,
     // but we cannot detect that at the moment.
-        
+
     std::vector< Vector3D > best_matches; // Fractional coordinates, from rhs.
     best_matches.reserve( natoms );
     std::vector< size_t > matching_indices; // Indices from rhs.
