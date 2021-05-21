@@ -1,6 +1,3 @@
-#ifndef LABELSANDSHIELDINGS_H
-#define LABELSANDSHIELDINGS_H
-
 /* *********************************************
 Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -28,47 +25,35 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-class FileName;
-
-#include "Element.h"
 #include "Mapping.h"
 
-#include <vector>
-#include <string>
+#include "TestSuite.h"
 
-class LabelsAndShieldings
+#include <iostream>
+
+void test_Mapping( TestSuite & test_suite )
 {
-public:
+    std::cout << "Now running tests for Mapping." << std::endl;
 
-    LabelsAndShieldings() {}
+    {
+    Mapping dummy();
+//    test_suite.test_equality( dummy, , "Mapping()" );
+    }
+    {
+    Mapping dummy( 5 );
+//    test_suite.test_equality( dummy, , "Mapping()" );
+    }
+    {
+    std::vector< size_t > mapping;
+    mapping.push_back( 1 );
+    mapping.push_back( 0 );
+    mapping.push_back( 3 );
+    mapping.push_back( 4 );
+    mapping.push_back( 2 );
+    Mapping dummy( mapping );
+    dummy.invert();
+//    test_suite.test_equality( dummy, , "Mapping()" );
+    }
 
-    // Invalidates the sorting of the list
-    void push_back( const std::string & label, const double shielding );
-
-    size_t size() const { return labels_.size(); }
-
-    // The index is zero-based
-    // We don't actually sort the lists, but create a sorted map
-    std::string label(     const size_t i ) const { return labels_[ sorted_map_.map( i ) ]; }
-    double      shielding( const size_t i ) const { return shieldings_[ sorted_map_.map( i ) ]; }
-
-
-    // For debugging
-    void show() const;
-
-    void save( const FileName & file_name ) const;
-
-private:
-    std::vector< std::string > labels_;
-    std::vector< Element > elements_;
-    std::vector< double > shieldings_;
-    // We don't actually sort the lists, but create a sorted map
-    mutable Mapping sorted_map_;
-
-    // We don't actually sort the lists, but create a sorted map
-    // We sort first by element, then by shieldings in descending order
-    void sort() const;
-};
-
-#endif // LABELSANDSHIELDINGS_H
+}
 

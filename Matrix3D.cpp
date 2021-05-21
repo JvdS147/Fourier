@@ -233,6 +233,15 @@ size_t Matrix3D::number_of_zero_rows( const double tolerance ) const
 
 // ********************************************************************************
 
+bool Matrix3D::is_nearly_the_identity( const double tolerance ) const
+{
+    return ( nearly_equal( value( 0, 0 ), 1.0, tolerance ) && nearly_zero( value( 0, 1 ), tolerance ) && nearly_zero( value( 0, 2 ), tolerance ) &&
+             nearly_zero( value( 1, 0 ), tolerance ) && nearly_equal( value( 1, 1 ), 1.0, tolerance ) && nearly_zero( value( 1, 2 ), tolerance ) &&
+             nearly_zero( value( 2, 0 ), tolerance ) && nearly_zero( value( 2, 1 ), tolerance ) && nearly_equal( value( 2, 2 ), 1.0, tolerance ) );
+}
+
+// ********************************************************************************
+
 Matrix3D & Matrix3D::operator+=( const Matrix3D & rhs )
 {
     *this = Matrix3D( value( 0, 0 ) + rhs.value( 0, 0 ), value( 0, 1 ) + rhs.value( 0, 1 ), value( 0, 2 ) + rhs.value( 0, 2 ),

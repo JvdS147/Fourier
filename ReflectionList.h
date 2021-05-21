@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class FileName;
 
+#include "Mapping.h"
 #include "MillerIndices.h"
 
 #include <vector>
@@ -54,15 +55,15 @@ public:
 
     // The index is zero-based
     // We don't actually sort the lists, but create a sorted map
-    MillerIndices miller_indices( const size_t i ) const { return miller_indices_[ sorted_map_[i] ];   }
-    double        F_squared(      const size_t i ) const { return F_squared_[ sorted_map_[i] ];      }
-    double        d_spacing(      const size_t i ) const { return d_spacings_[ sorted_map_[i] ]; }
-    size_t        multiplicity(   const size_t i ) const { return multiplicity_[ sorted_map_[i] ]; }
+    MillerIndices miller_indices( const size_t i ) const { return miller_indices_[ sorted_map_.map( i ) ];   }
+    double        F_squared(      const size_t i ) const { return F_squared_[ sorted_map_.map( i ) ];      }
+    double        d_spacing(      const size_t i ) const { return d_spacings_[ sorted_map_.map( i ) ]; }
+    size_t        multiplicity(   const size_t i ) const { return multiplicity_[ sorted_map_.map( i ) ]; }
 
-    void set_miller_indices( const size_t i, const MillerIndices & miller_indices ) { miller_indices_[ sorted_map_[i] ] = miller_indices; }
-    void set_F_squared(      const size_t i, const double F_squared ) { F_squared_[ sorted_map_[i] ] = F_squared; }
-    void set_d_spacing(      const size_t i, const double d_spacing ) { d_spacings_[ sorted_map_[i] ] = d_spacing; sort_by_d_spacing(); }
-    void set_multiplicity(   const size_t i, const size_t multiplicity ) { multiplicity_[ sorted_map_[i] ] = multiplicity; }
+    void set_miller_indices( const size_t i, const MillerIndices & miller_indices ) { miller_indices_[ sorted_map_.map( i ) ] = miller_indices; }
+    void set_F_squared(      const size_t i, const double F_squared ) { F_squared_[ sorted_map_.map( i ) ] = F_squared; }
+    void set_d_spacing(      const size_t i, const double d_spacing ) { d_spacings_[ sorted_map_.map( i ) ] = d_spacing; sort_by_d_spacing(); }
+    void set_multiplicity(   const size_t i, const size_t multiplicity ) { multiplicity_[ sorted_map_.map( i ) ] = multiplicity; }
 
     // A ReflectionsList and a SHELX .hkl file are quite different, so this is a bit of an abuse of the class...
     void read_hkl( const FileName & file_name );
@@ -78,7 +79,7 @@ private:
     std::vector< double >        d_spacings_;
     std::vector< size_t >        multiplicity_;
     // We don't actually sort the lists, but create a sorted map
-    std::vector< size_t > sorted_map_;
+    Mapping sorted_map_;
 
     // We don't actually sort the lists, but create a sorted map
     void sort_by_d_spacing();

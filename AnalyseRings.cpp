@@ -94,40 +94,40 @@ void FiveMemberedRingAnalyser::analyse( const std::vector< Vector3D > & points )
     sorted_map_ = sort( distances_from_plane_ );
 
     // For the two greatest distances, determine the two signed distances to the plane through the remaining three points
-    // But only of the RMSD from the plane is very low (< 0.075).
+    // But only if the RMSD from the plane is very low (< 0.075).
     
     std::vector< Vector3D > points2;
     for ( size_t i( 0 ); i != 5; ++i )
     {
-        if ( ( i != sorted_map_[4] ) && ( i != sorted_map_[3] ) )
+        if ( ( i != sorted_map_.map( 4 ) ) && ( i != sorted_map_.map( 3 ) ) )
             points2.push_back( points[i] );
     }
     Plane plane_123( points2 );
-    double dist1 = plane_123.signed_distance( points[ sorted_map_[4] ] );
-    double dist2 = plane_123.signed_distance( points[ sorted_map_[3] ] );
+    double dist1 = plane_123.signed_distance( points[ sorted_map_.map( 4 ) ] );
+    double dist2 = plane_123.signed_distance( points[ sorted_map_.map( 3 ) ] );
     if ( ( sign( dist1 ) * sign( dist2 ) ) < 0 )
     {
         // The points lie on different sides of the plane.
         // The following should probably be done based on dist1 and dist2, but I do not have the proper limits
         // from tests I get the impression that the old criterion is much more specific
-        if ( std::abs( distances_from_plane_[ sorted_map_[4] ] - distances_from_plane_[ sorted_map_[3] ] ) < 0.0275 )
+        if ( std::abs( distances_from_plane_[ sorted_map_.map( 4 ) ] - distances_from_plane_[ sorted_map_.map( 3 ) ] ) < 0.0275 )
         {
-            if ( rmsds_from_mean_plane_[ sorted_map_[3] ] < 0.075 )
+            if ( rmsds_from_mean_plane_[ sorted_map_.map( 3 ) ] < 0.075 )
             {
                 is_double_envelope_ = true;
-                root_mean_square_devation_from_mean_plane_ = rmsds_from_mean_plane_[ sorted_map_[4] ];
-                distance_ = distances_from_plane_[ sorted_map_[4] ];
-                unique_envelope_point_1_ = sorted_map_[4];
-                unique_envelope_point_2_ = sorted_map_[3];
+                root_mean_square_devation_from_mean_plane_ = rmsds_from_mean_plane_[ sorted_map_.map( 4 ) ];
+                distance_ = distances_from_plane_[ sorted_map_.map( 4 ) ];
+                unique_envelope_point_1_ = sorted_map_.map( 4 );
+                unique_envelope_point_2_ = sorted_map_.map( 3 );
                 return;
             }
         }
     }
     // When we are here, the ring is not flat and it is not a double envelope.
     is_envelope_ = true;
-    unique_envelope_point_1_ = sorted_map_[4];
-    root_mean_square_devation_from_mean_plane_ = rmsds_from_mean_plane_[ sorted_map_[4] ];
-    distance_ = distances_from_plane_[ sorted_map_[4] ];
+    unique_envelope_point_1_ = sorted_map_.map( 4 );
+    root_mean_square_devation_from_mean_plane_ = rmsds_from_mean_plane_[ sorted_map_.map( 4 ) ];
+    distance_ = distances_from_plane_[ sorted_map_.map( 4 ) ];
     return;
     
     root_mean_square_devation_from_mean_plane_ = 1.0;

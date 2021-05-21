@@ -104,6 +104,9 @@ public:
     // Does not include [ 0.0, 0.0, 0.0 ]
     std::vector< Vector3D > centring_vectors() const { return centring_vectors_; }
 
+    // Returns "P", "A", "B", "C", "I", "R", "F" or "U" for Unknown
+    std::string centring() const { return centring_; }
+
     void print_multiplication_table() const;
     
     void show() const;
@@ -112,6 +115,7 @@ private:
     std::vector< SymmetryOperator > symmetry_operators_;
     std::vector< SymmetryOperator > representative_symmetry_operators_;
     std::vector< Vector3D > centring_vectors_;
+    std::string centring_; // "P", "A", "B", "C", "I", "R", "F" or "U" for Unknown
     bool has_inversion_;
     bool has_inversion_at_origin_;
     Vector3D position_of_inversion_;
@@ -134,9 +138,6 @@ bool same_symmetry_operators( const SpaceGroup & lhs, const SpaceGroup & rhs );
 // calculate the entire multiplication table which has as an additional condition that each
 // element must occur exactly once in each row and in each column.
 void check_if_closed( const std::vector< SymmetryOperator > & symmetry_operators );
-
-// @@ Not yet implemented
-std::string centring_vectors_to_string( const std::vector< Vector3D > & centring_vectors );
 
 #endif // SPACEGROUP_H
 

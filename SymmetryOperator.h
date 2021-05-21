@@ -80,6 +80,8 @@ public:
 
     void invert();
 
+    bool is_nearly_the_identity( const double tolerance = 0.000001 ) const;
+
     // cif format: "x,y,-z+1/2"
     std::string to_string() const;
 

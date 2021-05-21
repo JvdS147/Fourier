@@ -428,6 +428,7 @@ void deal_with_loop( TextFileReader & text_file_reader, CrystalStructure & cryst
 // from Materials Studio.
 void read_cif( const FileName & file_name, CrystalStructure & crystal_structure )
 {
+    crystal_structure = CrystalStructure();
     TextFileReader text_file_reader( file_name );
     text_file_reader.set_skip_empty_lines( true ); // This is crucial
     std::vector< std::string > comment_identifiers;

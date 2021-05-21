@@ -50,7 +50,7 @@ void ReflectionList::push_back( const MillerIndices & miller_indices, const doub
     F_squared_.push_back( F_squared );
     d_spacings_.push_back( d_spacing );
     multiplicity_.push_back( multiplicity );
-    sorted_map_.push_back( size() - 1 );
+    sorted_map_.push_back();
     sort_by_d_spacing();
 }
 

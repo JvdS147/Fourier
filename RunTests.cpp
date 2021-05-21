@@ -45,6 +45,7 @@ void run_tests()
         test_crystal_structure( test_suite );
         test_file_name( test_suite );
         test_fraction( test_suite );
+        test_Mapping( test_suite );
         test_matrix3D( test_suite );
         test_maths( test_suite );
         test_ModelBuilding( test_suite );

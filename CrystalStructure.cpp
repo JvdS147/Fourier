@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "3DCalculations.h"
 #include "ChemicalFormula.h"
 #include "ConnectivityTable.h"
+#include "Mapping.h"
 #include "MathFunctions.h"
 #include "PhysicalConstants.h"
 #include "PointGroup.h"
@@ -56,6 +57,16 @@ Atom CrystalStructure::atom( const size_t i ) const
 
 // ********************************************************************************
 
+ChemicalFormula CrystalStructure::chemical_formula() const
+{
+    ChemicalFormula result;
+    for ( size_t i( 0 ); i != natoms(); ++i )
+        result.add_element( atoms_[i].element() );
+    return result;
+}
+
+// ********************************************************************************
+
 void CrystalStructure::add_atom( const Atom & atom )
 {
     atoms_.push_back( atom );
@@ -72,6 +83,19 @@ void CrystalStructure::add_atoms( const std::vector< Atom > & atoms )
     for ( size_t i( 0 ); i != atoms.size(); ++i )
         suppressed_.push_back( false );
     basic_checks();
+}
+
+// ********************************************************************************
+
+void CrystalStructure::remove_H_and_D()
+{
+    std::vector< Atom > new_atoms;
+    for ( size_t i( 0 ); i != natoms(); ++i )
+    {
+        if ( ! atom( i ).element().is_H_or_D() )
+            new_atoms.push_back( atom( i ) );
+    }
+    atoms_ = new_atoms;
 }
 
 // ********************************************************************************
@@ -197,9 +221,42 @@ void CrystalStructure::apply_space_group_symmetry()
 
 // ********************************************************************************
 
-void CrystalStructure::perceive_molecules()
+//void CrystalStructure::move_atoms_to_form_molecules()
+//{
+//    if ( natoms() == 0 )
+//        return;
+//    std::vector< bool > has_been_moved( natoms(), false );
+//    has_been_moved[0] = true;
+//    for ( size_t i( 0 ); i != natoms(); ++i )
+//    {
+//        Atom iAtom = atom( i );
+//        if ( ! has_been_moved[i] )
+//            continue;
+//        for ( size_t j( i+1 ); j != natoms(); ++j )
+//        {
+//            if ( has_been_moved[j] )
+//                continue;
+//            Atom jAtom = atom( j );                
+//            double distance2 = crystal_lattice_.shortest_distance2( iAtom.position(), jAtom.position() );
+//            if ( are_bonded( iAtom.element(), jAtom.element(), distance2 ) )
+//            {
+//                // Move atom j so that it really bonds to atom i
+//                double distance;
+//                Vector3D difference_vector;
+//                crystal_lattice_.shortest_distance( iAtom.position(), jAtom.position(), distance, difference_vector );
+//                jAtom.set_position( iAtom.position() + difference_vector );
+//                set_atom( j, jAtom );
+//            }
+//        }
+//    }
+//}
+
+// ********************************************************************************
+
+void CrystalStructure::perceive_molecules( const bool I_know_Zprime_is_one )
 {
-    // The following two commands are absolutely necessary to avoid a number of difficult complications
+    // In crystals with a floating axis, mapping two crystals requires a shift over the c.o.m. of the molecule.
+    // The following two commands are absolutely necessary to avoid a number of difficult complications.
     // 1. .cif files saved by Mercury probably have molecules on special positions expanded into full molecules.
     // So we cannot rely on the cif only containing the asymmetric unit, but we cannot rely on the cif containing
     // expanded molecules either.
@@ -207,8 +264,11 @@ void CrystalStructure::perceive_molecules()
     // (we could add some kind of loop counter, or a test to see if an atom we are about to add is in fact a translationally
     // equivalent atom of an atom that is already part of the molecule).
     // The following two commands guarantee that our list of atoms consists of exactly the atoms that fill one unit cell.
-    reduce_to_asymmetric_unit();
-    apply_space_group_symmetry();
+    if ( ! I_know_Zprime_is_one )
+    {
+        reduce_to_asymmetric_unit();
+        apply_space_group_symmetry();
+    }
     ConnectivityTable connectivity_table( natoms() );
     for ( size_t i( 0 ); i != natoms(); ++i )
     {
@@ -217,6 +277,7 @@ void CrystalStructure::perceive_molecules()
         {
             Atom jAtom = atom( j );
             double distance2 = crystal_lattice_.shortest_distance2( iAtom.position(), jAtom.position() );
+            // @@ Are we now doing this time and time again because we do not keep track if an atom had already been moved or not???
             if ( are_bonded( iAtom.element(), jAtom.element(), distance2 ) )
             {
                 // Add this one to the connectivity table.
@@ -422,9 +483,26 @@ void CrystalStructure::transform( const Matrix3D & transformation_matrix )
     }
     atoms_ = new_atoms;
     space_group_.apply_similarity_transformation( SymmetryOperator( transformation_matrix_inverse_transpose, Vector3D() ) );
-//    Vector3D shift( -0.25, -0.25, -0.5 );
-//    space_group_.apply_similarity_transformation( SymmetryOperator( transformation_matrix_inverse_transpose, shift ) );
     crystal_lattice_ = new_lattice;
+}
+
+// ********************************************************************************
+
+void CrystalStructure::transform( const SymmetryOperator & symmetry_operator, const std::vector< int > & integer_shifts )
+{
+        Matrix3D rotation = symmetry_operator.rotation();
+        Vector3D shift = symmetry_operator.translation();
+        shift.set_x( shift.x() + integer_shifts[0] );
+        shift.set_y( shift.y() + integer_shifts[1] );
+        shift.set_z( shift.z() + integer_shifts[2] );
+        for ( size_t i( 0 ); i != this->natoms(); ++i )
+        {
+            Atom new_atom( this->atom( i ) );
+            new_atom.set_position( ( rotation * this->atom( i ).position() ) + shift );
+            if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+                new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_lattice_) );
+            this->set_atom( i, new_atom );
+        }
 }
 
 // ********************************************************************************
@@ -907,10 +985,9 @@ void CrystalStructure::save_cif( const FileName & file_name ) const
     text_file_writer.write_line( "_cell_angle_gamma " + double2string( crystal_lattice_.gamma().value_in_degrees(), 5 ) );
     text_file_writer.write_line( "_cell_volume      " + double2string( crystal_lattice_.volume(), 5 ) );
     text_file_writer.write_line( "loop_" );
-    text_file_writer.write_line( "_symmetry_equiv_pos_site_id" );
     text_file_writer.write_line( "_symmetry_equiv_pos_as_xyz" );
     for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
-        text_file_writer.write_line( size_t2string( i+1 ) + " " + space_group_.symmetry_operator( i ).to_string() );
+        text_file_writer.write_line( space_group_.symmetry_operator( i ).to_string() );
     bool at_least_one_atom_has_anisotropic_ADPs( false );
     for ( size_t i( 0 ); i != atoms_.size(); ++i )
     {
@@ -1147,8 +1224,8 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
     {
         double smallest_distance( 10000.0 );
         Vector3D best_match;
-        size_t best_symmetry_operator;
-        size_t best_shift;
+  //      size_t best_symmetry_operator;
+  //      size_t best_shift;
         size_t matching_index = natoms + 1;
         // Loop over atoms.
         for ( size_t j( 0 ); j != natoms; ++j )
@@ -1173,8 +1250,8 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
                         smallest_distance = shortest_distance;
                         matching_index = j;
                         best_match = lhs.atom( i ).position() + difference_vector;
-                        best_symmetry_operator = k;
-                        best_shift = m;
+                //        best_symmetry_operator = k;
+               //         best_shift = m;
                     }
                 }
             }
@@ -1377,3 +1454,401 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
 }
 
 // ********************************************************************************
+
+void CrystalStructure::match( const CrystalStructure & rhs, const size_t shift_steps, const bool allow_inversion, const bool correct_floating_axes )
+{
+    // Hydrogen / Deuterium is ignored
+    // Some simple checks:
+    size_t natoms = rhs.natoms();
+    if ( natoms != this->natoms() )
+        throw std::runtime_error( "CrystalStructure::match(): numbers of atoms are not the same." );        
+    CrystalLattice average_lattice = average( crystal_lattice_, rhs.crystal_lattice() );
+    if ( natoms == 0 )
+        return;
+    // Find closest match
+    std::vector< bool > done( natoms, false );
+    // In principle, the two structures could have different space groups,
+    // but for the moment they must have the same space group.
+    if ( ! same_symmetry_operators( space_group_, rhs.space_group() ) )
+        std::cout << "CrystalStructure::match(): WARNING: Space groups are different, this will give non-sensical results." << std::endl;
+    SpaceGroup space_group = space_group_;
+    // First find all floating axes; @@ these are a problem if there is more than one residue in the asymmetric unit,
+    // but we cannot detect that at the moment.
+    // @@ There is also a bug here for floating axes along a diagonal as found in cubic space groups.
+    Vector3D floating_axes_correction;
+    if ( correct_floating_axes )
+    {
+        Matrix3D sum( 0.0 );
+        for ( size_t k( 0 ); k != space_group.nsymmetry_operators(); ++k )
+            sum += space_group.symmetry_operator( k ).rotation();
+        Vector3D com_lhs = centre_of_mass(); // Fractional coordinates
+        Vector3D com_rhs = rhs.centre_of_mass();
+        for ( size_t i( 0 ); i != 3; ++i )
+        {
+            if ( ! nearly_zero( sum.value( i, i ) ) )
+            {
+                std::cout << "Floating axis found " << i << std::endl;
+                floating_axes_correction.set_value( i, com_lhs.value(i)-com_rhs.value(i) );
+            }
+        }
+    }
+    if ( allow_inversion && ( ! space_group.has_inversion_at_origin() ) )
+        space_group.add_inversion_at_origin();
+    // Add all combinations of shifts of 1/shift_steps along a, b and c.
+    std::vector< Vector3D > shifts;
+    if ( ( shift_steps == 0 ) || ( shift_steps == 1 ) )
+        shifts.push_back( floating_axes_correction );
+    else
+    {
+        shifts.reserve( shift_steps*shift_steps*shift_steps );
+        for ( size_t i1( 0 ); i1 != shift_steps; ++i1 )
+        {
+            for ( size_t i2( 0 ); i2 != shift_steps; ++i2 )
+            {
+                for ( size_t i3( 0 ); i3 != shift_steps; ++i3 )
+                {
+                    shifts.push_back( floating_axes_correction + Vector3D( static_cast<double>(i1)/static_cast<double>(shift_steps), static_cast<double>(i2)/static_cast<double>(shift_steps), static_cast<double>(i3)/static_cast<double>(shift_steps) ) );
+                }
+            }
+        }
+    }
+    std::vector< size_t > symmetry_operators_frequencies( space_group.nsymmetry_operators(), 0 );
+    std::vector< size_t > shifts_frequencies( shifts.size(), 0 );
+    for ( size_t i( 0 ); i != natoms; ++i )
+    {
+        if ( atom( i ).element().is_H_or_D() )
+            continue;
+        double smallest_distance( 10000.0 );
+        Vector3D best_match;
+        size_t best_symmetry_operator( 0 ); // Stupid initialisation to silence compiler warnings
+        size_t best_shift( 0 ); // Stupid initialisation to silence compiler warnings
+        size_t matching_index = natoms + 1;
+        // Loop over atoms.
+        for ( size_t j( 0 ); j != natoms; ++j )
+        {
+            // Check if element the same.
+            if ( atom( i ).element() != rhs.atom( j ).element() )
+                continue;
+            // Loop over symmetry operators.
+            for ( size_t k( 0 ); k != space_group.nsymmetry_operators(); ++k )
+            {
+                // Loop over shifts.
+                for ( size_t m( 0 ); m != shifts.size(); ++m )
+                {
+                    // Fractional coordinates.
+                    Vector3D current_position = space_group.symmetry_operator( k ) * ( atom( i ).position() + shifts[m] );
+                    // Adjust for translations and convert to Cartesian coordinates.
+                    double shortest_distance;
+                    Vector3D difference_vector; // Fractional coordinates.
+                    average_lattice.shortest_distance( rhs.atom( j ).position(), current_position, shortest_distance, difference_vector );
+                    if ( shortest_distance < smallest_distance )
+                    {
+                        smallest_distance = shortest_distance;
+                        matching_index = j;
+                        best_symmetry_operator = k;
+                        best_shift = m;
+                    }
+                }
+            }
+        }
+        std::cout << atom( i ).element().symbol() << " smallest distance = " << smallest_distance << std::endl;
+        if ( done[ matching_index ] && ( ! atom( i ).element().is_H_or_D() ) )
+        {
+            std::cout << "CrystalStructure::match(): an atom has two matches." << std::endl;
+          //  throw std::runtime_error( "find_match(): an atom has two matches." );
+        }
+        done[ matching_index ] = true;
+        std::cout << "Symmetry operator = " << best_symmetry_operator << std::endl;
+        std::cout << "Shift = " << best_shift << std::endl;
+        ++symmetry_operators_frequencies[best_symmetry_operator];
+        ++shifts_frequencies[best_shift];
+    }
+    // Check if there is one and only one symmetry operator that has the greatest frequency
+    size_t most_common_space_group_index = symmetry_operators_frequencies.size();
+    size_t most_common_space_group_frequency = 0;
+    for ( size_t i( 0 ); i != symmetry_operators_frequencies.size(); ++i )
+    {
+        if ( symmetry_operators_frequencies[i] > most_common_space_group_frequency )
+        {
+            most_common_space_group_frequency = symmetry_operators_frequencies[i];
+            most_common_space_group_index = i;
+        }
+    }
+    // Check if any other symmetry operators are ever found.
+    for ( size_t i( 0 ); i != symmetry_operators_frequencies.size(); ++i )
+    {
+        if ( i == most_common_space_group_index )
+            continue;
+        if ( symmetry_operators_frequencies[i] != 0 )
+            std::cout << "symmetry_operators_frequencies[" << i << "] = " << symmetry_operators_frequencies[i] << " " << space_group.symmetry_operator( i ).to_string() << std::endl;
+    }
+    // Check if there is one and only one shift that has the greatest frequency.
+    size_t most_common_shift_index = shifts_frequencies.size();
+    size_t most_common_shift_frequency = 0;
+    for ( size_t i( 0 ); i != shifts_frequencies.size(); ++i )
+    {
+        if ( shifts_frequencies[i] > most_common_shift_frequency )
+        {
+            most_common_shift_frequency = shifts_frequencies[i];
+            most_common_shift_index = i;
+        }
+    }
+    // Check if any other shifts are ever found.
+    for ( size_t i( 0 ); i != shifts_frequencies.size(); ++i )
+    {
+        if ( i == most_common_shift_index )
+            continue;
+        if ( shifts_frequencies[i] != 0 )
+            std::cout << "shifts_frequencies[" << i << "] = " << shifts_frequencies[i] << " " << shifts[i].to_string() << std::endl;
+    }
+    std::cout << "The most common symmetry operator, with " << most_common_space_group_frequency << " occurrences, is:" << std::endl;
+    std::cout << space_group.symmetry_operator( most_common_space_group_index ).to_string() << std::endl;
+    std::cout << "The most common shift, with " << most_common_shift_frequency << " occurrences, is:" << std::endl;
+    shifts[ most_common_shift_index ].show();
+    // Now apply the transformation to *this.
+    rhs.centre_of_mass().show();
+    centre_of_mass().show();
+  //  com_diff.show();
+    for ( size_t i( 0 ); i != natoms; ++i )
+    {
+        Atom new_atom( atom( i ) );
+        new_atom.set_position( space_group.symmetry_operator( most_common_space_group_index ) * ( atom( i ).position() + shifts[most_common_shift_index] ) );
+        if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+            new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), space_group.symmetry_operator( most_common_space_group_index ).rotation(), crystal_lattice_ ) );
+        set_atom( i, new_atom );
+    }
+    // We now only have the integer translations left.
+    Vector3D com_diff = rhs.centre_of_mass() - centre_of_mass();
+    rhs.centre_of_mass().show();
+    centre_of_mass().show();
+    com_diff.show();
+    com_diff.set_x( round_to_int( com_diff.x() ) );
+    com_diff.set_y( round_to_int( com_diff.y() ) );
+    com_diff.set_z( round_to_int( com_diff.z() ) );
+    for ( size_t i( 0 ); i != natoms; ++i )
+    {
+        Atom new_atom( atom( i ) );
+        new_atom.set_position( atom( i ).position() + com_diff );
+        set_atom( i, new_atom );
+    }
+}
+
+// ********************************************************************************
+
+// Hydrogen / Deuterium is ignored
+void map( const CrystalStructure & to_be_changed, const CrystalStructure & target, const size_t shift_steps, std::vector< size_t > & mapping, SymmetryOperator & symmetry_operator, std::vector< Vector3D > & translations, const bool allow_inversion, const bool correct_floating_axes )
+{
+    bool debug_output( false );
+    // In principle, the two structures could have different space groups,
+    // but for the moment they must have the same space group.
+    if ( ! same_symmetry_operators( to_be_changed.space_group(), target.space_group() ) )
+        std::cout << "map( CrystalStructure, CrystalStructure ): WARNING: Space groups are different, this will give non-sensical results." << std::endl;
+    SpaceGroup space_group = to_be_changed.space_group();
+    // Some simple checks:
+    size_t natoms = target.natoms();
+    if ( natoms != to_be_changed.natoms() )
+        throw std::runtime_error( "map( CrystalStructure, CrystalStructure ): numbers of atoms are not the same." );
+    CrystalLattice average_lattice = average( to_be_changed.crystal_lattice(), target.crystal_lattice() );
+    // @@ The following is wrong because it fails if an H in one corresponds to a D in the other.
+    if ( to_be_changed.chemical_formula().to_string() != target.chemical_formula().to_string() )
+        throw std::runtime_error( "map( CrystalStructure, CrystalStructure ): chemical formulae are not the same." );
+    if ( natoms == 0 )
+        return;
+    mapping.clear();
+    translations.clear();
+    // Find closest match
+    std::vector< bool > done( natoms, false );
+    // First find all floating axes; @@ these are a problem if there is more than one residue in the asymmetric unit,
+    // but we cannot detect that at the moment.
+    // @@ There is also a bug here for floating axes along a diagonal as found in cubic space groups.
+    Vector3D floating_axes_correction;
+    if ( correct_floating_axes )
+    {
+        Matrix3D sum( 0.0 );
+        for ( size_t k( 0 ); k != space_group.nsymmetry_operators(); ++k )
+            sum += space_group.symmetry_operator( k ).rotation();
+        Vector3D com_lhs = to_be_changed.centre_of_mass(); // Fractional coordinates
+        Vector3D com_rhs = target.centre_of_mass();
+        for ( size_t i( 0 ); i != 3; ++i )
+        {
+            if ( ! nearly_zero( sum.value( i, i ) ) )
+            {
+                if ( debug_output )
+                {
+                    std::cout << "Floating axis found " << i << std::endl;
+                    std::cout << "com_lhs.value(i) = " << com_lhs.value(i) << std::endl;
+                    std::cout << "com_rhs.value(i) = " << com_rhs.value(i) << std::endl;
+                }
+                floating_axes_correction.set_value( i, com_rhs.value(i)-com_lhs.value(i) );
+            }
+        }
+    }
+    if ( allow_inversion && ( ! space_group.has_inversion_at_origin() ) )
+        space_group.add_inversion_at_origin();
+    // Add all combinations of shifts of 1/shift_steps along a, b and c.
+    // If the space group contains centring vectors, do not add shifts that duplicate the centring vectors
+    // I checked that this should not upset any floating origin corrections
+    std::vector< Vector3D > centring_vectors = space_group.centring_vectors();
+    std::vector< Vector3D > shifts;
+    if ( ( shift_steps == 0 ) || ( shift_steps == 1 ) )
+        shifts.push_back( floating_axes_correction );
+    else
+    {
+        shifts.reserve( shift_steps*shift_steps*shift_steps );
+        for ( size_t i1( 0 ); i1 != shift_steps; ++i1 )
+        {
+            for ( size_t i2( 0 ); i2 != shift_steps; ++i2 )
+            {
+                for ( size_t i3( 0 ); i3 != shift_steps; ++i3 )
+                {
+                    Vector3D shift( static_cast<double>(i1)/static_cast<double>(shift_steps), static_cast<double>(i2)/static_cast<double>(shift_steps), static_cast<double>(i3)/static_cast<double>(shift_steps) );
+                    bool centring_vector_found( false );
+                    for ( size_t k( 0 ); k != centring_vectors.size(); ++k )
+                    {
+                        if ( nearly_equal( shift, centring_vectors[k] ) )
+                        {
+                            centring_vector_found = true;
+                            break;
+                        }
+                        
+                    }
+                    if ( ! centring_vector_found )
+                        shifts.push_back( floating_axes_correction + shift );
+                }
+            }
+        }
+    }
+    std::vector< size_t > symmetry_operators_frequencies( space_group.nsymmetry_operators(), 0 );
+    std::vector< size_t > shifts_frequencies( shifts.size(), 0 );
+    for ( size_t i( 0 ); i != natoms; ++i )
+    {
+        if ( to_be_changed.atom( i ).element().is_H_or_D() )
+            continue;
+        double smallest_distance( 10000.0 );
+        Vector3D best_match;
+        size_t best_symmetry_operator( 0 ); // Stupid initialisation to silence compiler warnings
+        size_t best_shift( 0 ); // Stupid initialisation to silence compiler warnings
+        size_t matching_index = natoms + 1;
+        // Loop over atoms.
+        for ( size_t j( 0 ); j != natoms; ++j )
+        {
+            // Check if element the same.
+            if ( to_be_changed.atom( i ).element() != target.atom( j ).element() )
+                continue;
+            // Loop over symmetry operators.
+            for ( size_t k( 0 ); k != space_group.nsymmetry_operators(); ++k )
+            {
+                // Loop over shifts.
+                for ( size_t m( 0 ); m != shifts.size(); ++m )
+                {
+                    // Fractional coordinates.
+                    Vector3D current_position = space_group.symmetry_operator( k ) * ( to_be_changed.atom( i ).position() + shifts[m] );
+                    // Adjust for translations and convert to Cartesian coordinates.
+                    double shortest_distance;
+                    Vector3D difference_vector; // Fractional coordinates.
+                    average_lattice.shortest_distance( target.atom( j ).position(), current_position, shortest_distance, difference_vector );
+                    if ( shortest_distance < smallest_distance )
+                    {
+                        smallest_distance = shortest_distance;
+                        matching_index = j;
+                        best_symmetry_operator = k;
+                        best_shift = m;
+                    }
+                }
+            }
+        }
+        if ( debug_output )
+            std::cout << to_be_changed.atom( i ).element().symbol() << " smallest distance = " << smallest_distance << std::endl;
+        if ( matching_index == natoms + 1 ) // This is impossible at the moment because we check via the chemical formula that the same elements are found in both structures
+            throw std::runtime_error( "map( CrystalStructure, CrystalStructure ): an atom could not be matched." );
+        if ( done[ matching_index ] )
+        {
+            std::cout << "map( CrystalStructure, CrystalStructure ): an atom has two matches." << std::endl;
+          //  throw std::runtime_error( "map( CrystalStructure, CrystalStructure ): an atom has two matches." );
+        }
+        done[ matching_index ] = true;
+        ++symmetry_operators_frequencies[best_symmetry_operator];
+        ++shifts_frequencies[best_shift];
+        mapping.push_back( matching_index );
+    }
+    // Check if there is one and only one symmetry operator that has the greatest frequency
+    size_t most_common_symmetry_operator_index = symmetry_operators_frequencies.size();
+    size_t most_common_symmetry_operator_frequency = 0;
+    for ( size_t i( 0 ); i != symmetry_operators_frequencies.size(); ++i )
+    {
+        if ( symmetry_operators_frequencies[i] > most_common_symmetry_operator_frequency )
+        {
+            most_common_symmetry_operator_frequency = symmetry_operators_frequencies[i];
+            most_common_symmetry_operator_index = i;
+        }
+    }
+    symmetry_operator = space_group.symmetry_operator( most_common_symmetry_operator_index );
+    // Check if any other symmetry operators are ever found.
+    for ( size_t i( 0 ); i != symmetry_operators_frequencies.size(); ++i )
+    {
+        if ( i == most_common_symmetry_operator_index )
+            continue;
+        if ( symmetry_operators_frequencies[i] != 0 )
+            std::cout << "symmetry_operators_frequencies[" << i << "] = " << symmetry_operators_frequencies[i] << " " << space_group.symmetry_operator( i ).to_string() << std::endl;
+    }
+    // Check if there is one and only one shift that has the greatest frequency.
+    size_t most_common_shift_index = shifts_frequencies.size();
+    size_t most_common_shift_frequency = 0;
+    for ( size_t i( 0 ); i != shifts_frequencies.size(); ++i )
+    {
+        if ( shifts_frequencies[i] > most_common_shift_frequency )
+        {
+            most_common_shift_frequency = shifts_frequencies[i];
+            most_common_shift_index = i;
+        }
+    }
+    // Check if any other shifts are ever found.
+    for ( size_t i( 0 ); i != shifts_frequencies.size(); ++i )
+    {
+        if ( i == most_common_shift_index )
+            continue;
+        if ( shifts_frequencies[i] != 0 )
+            std::cout << "shifts_frequencies[" << i << "] = " << shifts_frequencies[i] << " " << shifts[i].to_string() << std::endl;
+    }
+    if ( debug_output )
+    {
+        std::cout << "The most common symmetry operator, with " << most_common_symmetry_operator_frequency << " occurrences, is:" << std::endl;
+        std::cout << symmetry_operator.to_string() << std::endl;
+        std::cout << "The most common shift, with " << most_common_shift_frequency << " occurrences, is:" << std::endl;
+        shifts[ most_common_shift_index ].show();
+    }
+    for ( size_t i( 0 ); i != natoms; ++i )
+    {
+        // Fractional coordinates.
+        Vector3D current_position = symmetry_operator * ( to_be_changed.atom( i ).position() + shifts[most_common_shift_index] );
+        // Adjust for translations and convert to Cartesian coordinates.
+        double shortest_distance;
+        Vector3D difference_vector; // Fractional coordinates.
+        average_lattice.shortest_distance( current_position, target.atom( mapping[ i ] ).position() , shortest_distance, difference_vector );
+        // difference_vector is now the shortest distance (vector) with all integer translations factored out.
+        // We also know the actual difference vector. The difference between the two is the integer translations.
+        Vector3D integer_translations = target.atom( mapping[ i ] ).position() - difference_vector - current_position;
+        translations.push_back( shifts[most_common_shift_index] + inverse( symmetry_operator.rotation() ) * integer_translations );
+    }
+    mapping = invert_mapping( mapping );
+}
+
+// ********************************************************************************
+
+void CrystalStructure::apply_map( const std::vector< size_t > & mapping, const SymmetryOperator & symmetry_operator, const std::vector< Vector3D > & translations )
+{
+    std::vector< Atom > new_atoms;
+    new_atoms.reserve( natoms() );
+    for ( size_t i( 0 ); i != natoms(); ++i )
+    {
+        Atom new_atom( atom( mapping[ i ] ) );
+        new_atom.set_position( symmetry_operator * ( new_atom.position() + translations[ mapping[ i ] ] ) );
+        if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+            new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), symmetry_operator.rotation(), crystal_lattice_ ) );
+        new_atoms.push_back( new_atom );
+    }
+    atoms_ = new_atoms;
+}
+
+// ********************************************************************************
+

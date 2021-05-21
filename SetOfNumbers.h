@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "Mapping.h"
+
 #include <cstddef> // For definition of size_t
 #include <vector>
 
@@ -125,7 +127,7 @@ public:
 
 private:
     std::vector< size_t > values_;
-    mutable std::vector< size_t > sorted_map_;
+    mutable Mapping sorted_map_;
     DuplicatesPolicy duplicates_policy_;
     bool empty_is_allowed_;
     mutable bool is_sorted_;

@@ -25,77 +25,79 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "LabelsAndShieldings.h"
-#include "TextFileWriter.h"
+#include "Mapping.h"
 #include "Utilities.h"
 
-#include <algorithm>
-
-namespace {
-
-class Compare
-{
-public:
-
-    Compare( const std::vector< Element > & elements, const std::vector< double > & shieldings ): elements_(elements), shieldings_(shieldings)
-    {
-    }
-
-    bool operator()( const size_t lhs, const size_t rhs )
-    {
-        if ( elements_[rhs] < elements_[lhs] )
-            return true;
-        if ( elements_[lhs] < elements_[rhs] )
-            return false;
-        return shieldings_[rhs] < shieldings_[lhs];
-    }
-
-private:
-    const std::vector< Element > & elements_;
-    const std::vector< double > & shieldings_;
-};
-
-} // namespace
+#include <stdexcept>
 
 // ********************************************************************************
 
-void LabelsAndShieldings::push_back( const std::string & label, const double shielding )
+Mapping::Mapping()
 {
-    labels_.push_back( label );
-    std::string element_string;
-    if ( label.size() == 1 )
-        element_string = label;
+}
+
+// ********************************************************************************
+
+Mapping::Mapping( const size_t nvalues )
+{
+    mapping_ = initialise_with_sequential_values( nvalues );
+}
+
+// ********************************************************************************
+
+Mapping::Mapping( const std::vector< size_t > & values ):
+mapping_(values)
+{
+    check_consistency();
+}
+
+// ********************************************************************************
+
+void Mapping::swap( const size_t i, const size_t j )
+{
+    if ( ( i < mapping_.size() ) && ( j < mapping_.size() ) )
+        std::swap( mapping_[i], mapping_[j] );
     else
+        throw std::runtime_error( "Mapping::swap(): error: index out of range." );
+}
+
+// ********************************************************************************
+
+void Mapping::push_back()
+{
+    mapping_.push_back( size() - 1 );
+}
+
+// ********************************************************************************
+
+size_t Mapping::map( const size_t i ) const
+{
+    if ( i < mapping_.size() )
+        return mapping_[i];
+    throw std::runtime_error( "Mapping::map(): error: index out of range." );
+}
+
+// ********************************************************************************
+
+void Mapping::invert()
+{
+    std::vector< size_t > new_mapping( mapping_.size() );
+    for ( size_t i( 0 ); i != mapping_.size(); ++i )
+        new_mapping[ mapping_[i] ] = i;
+    mapping_ = new_mapping;
+}
+
+// ********************************************************************************
+
+void Mapping::check_consistency() const
+{
+    std::vector< bool > done( mapping_.size(), false );
+    for ( size_t i( 0 ); i != mapping_.size(); ++i )
     {
-        if ( isalpha(label[1]) )
-            element_string = label.substr( 0, 2 );
-        else
-            element_string = label.substr( 0, 1 );
+        if ( done[ mapping_[i] ] )
+            throw std::runtime_error( "Mapping::check_consistency(): error: value found more than once." );
+        done[ mapping_[i] ] = true;
     }
-    elements_.push_back( Element( element_string ) );
-    shieldings_.push_back( shielding );
-    sorted_map_.push_back();
-}
-
-// ********************************************************************************
-
-void LabelsAndShieldings::sort() const
-{
-    // We don't actually sort the lists, but create a sorted map
-    // We use std::sort() with a functor
-    std::vector< size_t > sorted_map = initialise_with_sequential_values( size() );
-    std::sort( sorted_map.begin(), sorted_map.end(), Compare( elements_, shieldings_ ) );
-    sorted_map_ = Mapping( sorted_map );
-}
-
-// ********************************************************************************
-
-void LabelsAndShieldings::save( const FileName & output_file_name ) const
-{
-    sort();
-    TextFileWriter text_file_writer( output_file_name );
-    for ( size_t i( 0 ); i != size(); ++i )
-        text_file_writer.write_line( label(i) + " " + double2string( shielding(i) ) );
 }
 
 // ********************************************************************************

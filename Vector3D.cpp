@@ -63,16 +63,16 @@ void Vector3D::set_length( const double value )
 
 // ********************************************************************************
 
-bool Vector3D::is_zero_vector( const double tolerance ) const
+bool Vector3D::nearly_zero( const double tolerance ) const
 {
-    return ( norm2() < tolerance );
+    return ( ::nearly_zero( x(), tolerance ) && ::nearly_zero( y(), tolerance ) && ::nearly_zero( z(), tolerance ) );
 }
 
 // ********************************************************************************
 
 void Vector3D::throw_if_zero_vector( const double tolerance ) const
 {
-    if ( is_zero_vector( tolerance ) )
+    if ( nearly_zero( tolerance ) )
         throw std::runtime_error( "Vector3D::throw_if_zero_vector()." );
 }
 
@@ -184,6 +184,13 @@ std::ostream & operator<<( std::ostream & os, const Vector3D & vector3d )
 bool nearly_equal( const Vector3D & lhs, const Vector3D & rhs, const double tolerance )
 {
     return ( nearly_equal( lhs.x(), rhs.x(), tolerance ) && nearly_equal( lhs.y(), rhs.y(), tolerance ) && nearly_equal( lhs.z(), rhs.z(), tolerance ) );
+}
+
+// ********************************************************************************
+
+bool nearly_zero( const Vector3D & lhs, const double tolerance )
+{
+    return ( nearly_zero( lhs.x(), tolerance ) && nearly_zero( lhs.y(), tolerance ) && nearly_zero( lhs.z(), tolerance ) );
 }
 
 // ********************************************************************************

@@ -252,7 +252,7 @@ double CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D &
 
 // ********************************************************************************
 
-// Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
+// Finds shortest distance, in Angstrom^2, between two positions given in fractional coordinates.
 double CrystalLattice::shortest_distance2( const Vector3D & lhs, const Vector3D & rhs ) const
 {
     Vector3D difference_vector = adjust_for_translations( rhs - lhs ); // In fractional coordinates
@@ -300,24 +300,24 @@ void CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & r
     bool shortest_distance_changed( false );
     do
     {
-         shortest_distance_changed = false;
-         for ( int i( -1 ); i != 2; ++i )
-         {
-             for ( int j( -1 ); j != 2; ++j )
-             {
-                 for ( int k( -1 ); k != 2; ++k )
-                 {
-                     Vector3D new_difference_vector = difference_vector + Vector3D( i, j, k );
-                     double distance = fractional_to_orthogonal( new_difference_vector ).norm2();
-                     if ( distance < shortest_distance )
-                     {
-                         difference_vector = new_difference_vector;
-                         shortest_distance = distance;
-                         shortest_distance_changed = true;
-                     }
-                 }
-             }
-         }
+        shortest_distance_changed = false;
+        for ( int i( -1 ); i != 2; ++i )
+        {
+            for ( int j( -1 ); j != 2; ++j )
+            {
+                for ( int k( -1 ); k != 2; ++k )
+                {
+                    Vector3D new_difference_vector = difference_vector + Vector3D( i, j, k );
+                    double distance = fractional_to_orthogonal( new_difference_vector ).norm2();
+                    if ( distance < shortest_distance )
+                    {
+                        difference_vector = new_difference_vector;
+                        shortest_distance = distance;
+                        shortest_distance_changed = true;
+                    }
+                }
+            }
+        }
     }
     while ( shortest_distance_changed );
     output_distance = sqrt( shortest_distance );
@@ -463,6 +463,22 @@ CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs )
                            ( lhs.alpha() + rhs.alpha() ) / 2.0,
                            ( lhs.beta()  + rhs.beta()  ) / 2.0,
                            ( lhs.gamma() + rhs.gamma() ) / 2.0 );
+}
+
+// ********************************************************************************
+
+CrystalLattice average( const CrystalLattice & cl_1, const CrystalLattice & cl_2, const CrystalLattice & cl_3 )
+{
+    if ( ! ( nearly_equal( cl_1, cl_2 ) &&
+             nearly_equal( cl_1, cl_3 ) &&
+             nearly_equal( cl_2, cl_3 ) ) )
+        std::cout << "average( CrystalLattice, CrystalLattice ): warning: lattices differ."<< std::endl;
+    return CrystalLattice( ( cl_1.a() + cl_2.a() + cl_3.a() ) / 3.0,
+                           ( cl_1.b() + cl_2.b() + cl_3.b() ) / 3.0,
+                           ( cl_1.c() + cl_2.c() + cl_3.c() ) / 3.0,
+                           ( cl_1.alpha() + cl_2.alpha() + cl_3.alpha() ) / 3.0,
+                           ( cl_1.beta()  + cl_2.beta()  + cl_3.beta()  ) / 3.0,
+                           ( cl_1.gamma() + cl_2.gamma() + cl_3.gamma() ) / 3.0 );
 }
 
 // ********************************************************************************

@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class ChemicalFormula;
+
 #include "Atom.h"
 #include "CrystalLattice.h"
 #include "FileName.h"
@@ -69,11 +71,15 @@ public:
 
     // This is an expensive method...
     std::vector< Atom > atoms() const { return atoms_; }
+    
+    ChemicalFormula chemical_formula() const;
 
     void reserve_natoms( const size_t value ) { atoms_.reserve( value ); suppressed_.reserve( value ); }
     void add_atom( const Atom & atom );
     void add_atoms( const std::vector< Atom > & atoms );
-    
+
+    void remove_H_and_D();
+
     // Replaces an existing atom, enables making changes to atoms in the crystal
     // The alternative would have been to make atom(size_t) return a reference.
     // To keep all other attributes of the atom use something like:
@@ -128,7 +134,13 @@ public:
     // @@ Should this be made such that it can only be applied once? (I.e. is ignored when called again after first call.)
     void apply_space_group_symmetry();
 
-    void perceive_molecules();
+    // Moves atoms, currently only using integer translations, but symmetry operators
+    // should also be included, so that the atoms form connected molecules.
+    // This is important when dealing with floating axes.
+    // If a molecule is on a special position, this function does NOT generate the second half.
+//    void move_atoms_to_form_molecules();
+
+    void perceive_molecules( const bool I_know_Zprime_is_one = false );
 
     // @@ This requires that you run the molecule preception method first
     void remove_symmetry_related_molecules();
@@ -155,6 +167,10 @@ public:
 
     // Unit cell, atomic coordinates, ADPs and space group
     void transform( const Matrix3D & transformation_matrix );
+
+    // Only atomic coordinates and ADPs.
+    // Takes output from find_match();
+    void transform( const SymmetryOperator & symmetry_operator, const std::vector< int > & integer_shifts );
 
     // Atoms with coordinates like 0.999999: keep at 0.999999 or move to 0.0 or move to -0.000001?
     void position_all_atoms_within_unit_cell();
@@ -234,6 +250,13 @@ public:
 
     void calculate_topological_attributes();
 
+    // Change *this to correspond to the other crystal structure (supplied as argument).
+    void match( const CrystalStructure & rhs, const size_t shift_steps, const bool allow_inversion, const bool correct_floating_axes );
+
+    // The matching is becoming a bit of a mess.
+    // Applies result of map() to *this.
+    void apply_map( const std::vector< size_t > & mapping, const SymmetryOperator & symmetry_operator, const std::vector< Vector3D > & translations );
+
 private:
     SpaceGroup space_group_;
     CrystalLattice crystal_lattice_;
@@ -252,12 +275,21 @@ private:
 // If space group has been applied, it should have been applied to both.
 double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, const CrystalStructure & rhs, const bool include_hydrogens );
 
+// This really should not be used any more, use find_match() followed by root_mean_square_Cartesian_displacement();
 double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const size_t shift_steps, const bool include_hydrogens );
 
 // Hydrogen / Deuterium is ignored
 // What is returned is not necessarily a symmetry operator, it is a combination of a rotation matrix and a translation vector that may or may not correspond to a symmetry operator.
-// Note that symmetry operators are canonicalised and the translational part must always be [0,1>. integer_shifts carries the remainder and is in fractional coordinates.
+// Note that symmetry operators are canonicalised and the translational part must always be [0,1>. integer_shifts carries the remainder and is a vector of dimension three in fractional coordinates.
+// To go from rhs to lhs, so rhs is changed and lhs is the target
+// @@ Should also incorporate transformation of the unit cell
+// @@ Should probably be a class
+// @@ currently the result is returned in two variables, perhaps better to simply return the matching crystal structure.
 SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructure & rhs, const size_t shift_steps, std::vector< int > & integer_shifts, const bool add_inversion, const bool correct_floating_axes );
+
+// Hydrogen and deuterium are ignored
+// Maybe this should be a class
+void map( const CrystalStructure & to_be_changed, const CrystalStructure & target, const size_t shift_steps, std::vector< size_t > & mapping, SymmetryOperator & symmetry_operator, std::vector< Vector3D > & translations, const bool allow_inversion, const bool correct_floating_axes );
 
 #endif // CRYSTALSTRUCTURE_H
 

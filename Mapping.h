@@ -1,5 +1,5 @@
-#ifndef LABELSANDSHIELDINGS_H
-#define LABELSANDSHIELDINGS_H
+#ifndef MAPPING_H
+#define MAPPING_H
 
 /* *********************************************
 Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
@@ -28,47 +28,39 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-class FileName;
-
-#include "Element.h"
-#include "Mapping.h"
-
+#include <cstddef> // For definition of size_t
 #include <vector>
-#include <string>
 
-class LabelsAndShieldings
+/*
+    Must be a one-to-one mapping.
+*/
+class Mapping
 {
 public:
 
-    LabelsAndShieldings() {}
+    // Default constructor
+    Mapping();
 
-    // Invalidates the sorting of the list
-    void push_back( const std::string & label, const double shielding );
+    explicit Mapping( const size_t nvalues );
 
-    size_t size() const { return labels_.size(); }
+    explicit Mapping( const std::vector< size_t > & values );
 
-    // The index is zero-based
-    // We don't actually sort the lists, but create a sorted map
-    std::string label(     const size_t i ) const { return labels_[ sorted_map_.map( i ) ]; }
-    double      shielding( const size_t i ) const { return shieldings_[ sorted_map_.map( i ) ]; }
+    size_t size() const { return mapping_.size(); }
 
+    void swap( const size_t i, const size_t j );
+    
+    // Increments size by one. Can of course only push back a mapping to itself.
+    void push_back();
 
-    // For debugging
-    void show() const;
-
-    void save( const FileName & file_name ) const;
+    size_t map( const size_t i ) const;
+    
+    void invert();
 
 private:
-    std::vector< std::string > labels_;
-    std::vector< Element > elements_;
-    std::vector< double > shieldings_;
-    // We don't actually sort the lists, but create a sorted map
-    mutable Mapping sorted_map_;
-
-    // We don't actually sort the lists, but create a sorted map
-    // We sort first by element, then by shieldings in descending order
-    void sort() const;
+    std::vector< size_t > mapping_;
+    
+    void check_consistency() const;
 };
 
-#endif // LABELSANDSHIELDINGS_H
+#endif // MAPPING_H
 

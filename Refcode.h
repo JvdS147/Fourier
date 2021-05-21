@@ -42,6 +42,8 @@ public:
     // Throws if format incorrect
     Refcode( const std::string & refcode );
 
+    std::string value() const { return refcode_; }
+
     // Strips digits and returns first six alphabetical characters
     std::string family() const;
 
@@ -54,7 +56,6 @@ private:
     std::string refcode_;
 
 };
-
 
 #endif // REFCODE_H
 
