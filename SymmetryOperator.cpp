@@ -320,6 +320,6 @@ Vector3D operator*( const SymmetryOperator & symmetry_operator, const Vector3D &
 {
     return ( symmetry_operator.rotation() * vector3D ) + symmetry_operator.translation();
 }
-         
+
 // ********************************************************************************
 

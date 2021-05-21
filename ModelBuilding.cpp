@@ -333,7 +333,7 @@ void normalise_C_F_bonds( CrystalStructure & crystal_structure )
         if ( ! nearly_equal( distance, smallest_distance ) )
             throw std::runtime_error( "normalise_C_F_bonds() : distances differ." );
         Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.40 );
+        double target_bond_length( 1.38 );
         difference_cart *= target_bond_length / distance;
         difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
         Vector3D F_atom_frac = crystal_structure.atom( smallest_distance_index ).position() + difference_frac;
