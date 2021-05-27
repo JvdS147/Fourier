@@ -36,7 +36,7 @@ void test_Mapping( TestSuite & test_suite )
     std::cout << "Now running tests for Mapping." << std::endl;
 
     {
-    Mapping dummy();
+    Mapping dummy;
 //    test_suite.test_equality( dummy, , "Mapping()" );
     }
     {
