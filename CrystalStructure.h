@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 class ChemicalFormula;
+class Mapping;
 
 #include "Atom.h"
 #include "CrystalLattice.h"
@@ -150,8 +151,8 @@ public:
 
     void set_molecule_in_crystal( const size_t i, const MoleculeInCrystal & molecule_in_crystal ) { molecules_[i] = molecule_in_crystal; }
 
-    // point is in fractional coordinates
-    // Tolerance is in Angstrom
+    // point is in fractional coordinates.
+    // Tolerance is in Angstrom.
     PointGroup point_is_on_special_position( Vector3D & point, const double tolerance = 0.01 ) const;
     
     bool molecule_is_on_special_position( const size_t i ) const;
@@ -165,7 +166,7 @@ public:
     // @@ Atom labels are currently not updated. But uniqueness of atom labels is not enforced anyway (probably should be)
     void supercell( const size_t u, const size_t v, const size_t w );
 
-    // Unit cell, atomic coordinates, ADPs and space group
+    // Unit cell, atomic coordinates, ADPs and space group.
     void transform( const Matrix3D & transformation_matrix );
 
     // Only atomic coordinates and ADPs.
@@ -175,7 +176,7 @@ public:
     // Atoms with coordinates like 0.999999: keep at 0.999999 or move to 0.0 or move to -0.000001?
     void position_all_atoms_within_unit_cell();
 
-    // Fractional coordinates
+    // Fractional coordinates.
     Vector3D centre_of_mass() const;
 
     // Unit: eA
@@ -255,7 +256,7 @@ public:
 
     // The matching is becoming a bit of a mess.
     // Applies result of map() to *this.
-    void apply_map( const std::vector< size_t > & mapping, const SymmetryOperator & symmetry_operator, const std::vector< Vector3D > & translations );
+    void apply_map( const Mapping & mapping, const SymmetryOperator & symmetry_operator, const std::vector< Vector3D > & translations );
 
 private:
     SpaceGroup space_group_;
@@ -289,7 +290,7 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
 
 // Hydrogen and deuterium are ignored
 // Maybe this should be a class
-void map( const CrystalStructure & to_be_changed, const CrystalStructure & target, const size_t shift_steps, std::vector< size_t > & mapping, SymmetryOperator & symmetry_operator, std::vector< Vector3D > & translations, const bool allow_inversion, const bool correct_floating_axes );
+void map( const CrystalStructure & to_be_changed, const CrystalStructure & target, const size_t shift_steps, Mapping & mapping, SymmetryOperator & symmetry_operator, std::vector< Vector3D > & translations, const bool allow_inversion, const bool correct_floating_axes );
 
 #endif // CRYSTALSTRUCTURE_H
 

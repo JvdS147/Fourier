@@ -206,8 +206,10 @@ public:
         double U13 = string2double( words[U13_index_] );
         double U23 = string2double( words[U23_index_] );
         SymmetricMatrix3D U_cif( U11, U22, U33, U12, U13, U23 );
-        SymmetricMatrix3D U_cart = U_cif_2_U_cart( U_cif, crystal_structure.crystal_lattice() );
-        AnisotropicDisplacementParameters adps = AnisotropicDisplacementParameters( U_cart );
+    //    crystal_structure.crystal_lattice().print();
+    //    SymmetricMatrix3D U_cart = U_cif_2_U_cart( U_cif, crystal_structure.crystal_lattice() );
+    // @@ Quick and dirty hack: we store Ucif here (should be Ucart) because we do not have the lattice yet. We do the transformation later.
+        AnisotropicDisplacementParameters adps = AnisotropicDisplacementParameters( U_cif );
         size_t i = crystal_structure.find_label( words[label_index_] );
         if ( i == crystal_structure.natoms() )
             throw std::runtime_error( "read_cif(): atom not found." );
@@ -517,6 +519,18 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
         throw std::runtime_error( "read_cif(): not all cell parameters found." );
     CrystalLattice crystal_lattice( a, b, c, alpha, beta, gamma );
     crystal_structure.set_crystal_lattice( crystal_lattice );
+    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    {
+        Atom new_atom = crystal_structure.atom( i );
+        if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+        {
+            // Because we did not have the crystal lattice available while we read the aniso lines,
+            // we stored Ucif there. Now we convert Ucif to Ucart.
+            SymmetricMatrix3D U_cif = new_atom.anisotropic_displacement_parameters().U_cart();
+            new_atom.set_anisotropic_displacement_parameters( U_cif_2_U_cart( U_cif, crystal_lattice ) );
+            crystal_structure.set_atom( i, new_atom );
+        }
+    }
     crystal_structure.set_name( name );
     if ( space_group_str != "" )
     {
