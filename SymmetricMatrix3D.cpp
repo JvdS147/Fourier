@@ -71,6 +71,8 @@ double SymmetricMatrix3D::value( size_t i, size_t j ) const
 {
     if ( i < j )
         std::swap( i, j );
+    if ( i > 2 )
+        throw std::runtime_error( "SymmetricMatrix3D::value(): out of bounds." );
     return data_[ ((i*(i+1))/2) + j ];
 }
 
@@ -80,6 +82,8 @@ void SymmetricMatrix3D::set_value( size_t i, size_t j, const double value )
 {
     if ( i < j )
         std::swap( i, j );
+    if ( i > 2 )
+        throw std::runtime_error( "SymmetricMatrix3D::set_value(): out of bounds." );
     data_[ ((i*(i+1))/2) + j ] = value;
 }
 
@@ -89,7 +93,7 @@ void SymmetricMatrix3D::invert()
 {
     double D = determinant();
     if ( fabs( D ) < 0.000001 )
-        std::runtime_error( "SymmetricMatrix3D::invert(): determinant = 0" );
+        throw std::runtime_error( "SymmetricMatrix3D::invert(): determinant = 0." );
     transpose();
     SymmetricMatrix3D adjoint;
     adjoint.data_[0] = +minor_matrix_determinant(0,0);

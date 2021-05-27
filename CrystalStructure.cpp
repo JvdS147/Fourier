@@ -457,37 +457,32 @@ void CrystalStructure::supercell( const size_t u, const size_t v, const size_t w
 
 // ********************************************************************************
 
+// Unit cell, atomic coordinates, ADPs and space group.
 void CrystalStructure::transform( const Matrix3D & transformation_matrix )
 {
     if ( ! nearly_equal( transformation_matrix.determinant(), 1.0 ) )
         std::cout << "Warning: CrystalStructure::transform(): the determinant of the transformation matrix is not 1." << std::endl;
-    std::vector< Atom > new_atoms;
-    new_atoms.reserve( atoms_.size() );
     Matrix3D transformation_matrix_inverse_transpose( transformation_matrix );
     transformation_matrix_inverse_transpose.invert();
     transformation_matrix_inverse_transpose.transpose();
     CrystalLattice new_lattice( crystal_lattice_ );
     new_lattice.transform( transformation_matrix );
-    for ( size_t i( 0 ); i != atoms_.size(); ++i )
+    for ( size_t i( 0 ); i != this->natoms(); ++i )
     {
         Atom new_atom( atoms_[i] );
-        new_atom.set_position( transformation_matrix_inverse_transpose * atoms_[i].position() );
-        if ( atoms_[i].ADPs_type() == Atom::ANISOTROPIC )
-        {
-            SymmetricMatrix3D old_ADPs_Ucif = atoms_[i].anisotropic_displacement_parameters().U_cif( crystal_lattice_ );
-            SymmetricMatrix3D new_ADPs_Ucif = transform_adps( old_ADPs_Ucif, transformation_matrix, crystal_lattice_ );
-            SymmetricMatrix3D new_ADPs_Ucart = U_cif_2_U_cart( new_ADPs_Ucif, new_lattice );
-            new_atom.set_anisotropic_displacement_parameters( new_ADPs_Ucart );
-        }
-        new_atoms.push_back( new_atom );
+        new_atom.set_position( transformation_matrix_inverse_transpose * new_atom.position() );
+        if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+            new_atom.set_anisotropic_displacement_parameters( transform_adps( new_atom.anisotropic_displacement_parameters(), transformation_matrix, crystal_lattice_ ) );
+        this->set_atom( i, new_atom );
     }
-    atoms_ = new_atoms;
     space_group_.apply_similarity_transformation( SymmetryOperator( transformation_matrix_inverse_transpose, Vector3D() ) );
     crystal_lattice_ = new_lattice;
 }
 
 // ********************************************************************************
 
+// Only atomic coordinates and ADPs.
+// Takes output from find_match();
 void CrystalStructure::transform( const SymmetryOperator & symmetry_operator, const std::vector< int > & integer_shifts )
 {
         Matrix3D rotation = symmetry_operator.rotation();
@@ -498,9 +493,9 @@ void CrystalStructure::transform( const SymmetryOperator & symmetry_operator, co
         for ( size_t i( 0 ); i != this->natoms(); ++i )
         {
             Atom new_atom( this->atom( i ) );
-            new_atom.set_position( ( rotation * this->atom( i ).position() ) + shift );
+            new_atom.set_position( ( rotation * new_atom.position() ) + shift );
             if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
-                new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_lattice_) );
+                new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_lattice_ ) );
             this->set_atom( i, new_atom );
         }
 }
@@ -1064,9 +1059,9 @@ void CrystalStructure::save_cif( const FileName & file_name ) const
         text_file_writer.write_line( "_atom_site_aniso_U_11" );
         text_file_writer.write_line( "_atom_site_aniso_U_22" );
         text_file_writer.write_line( "_atom_site_aniso_U_33" );
-        text_file_writer.write_line( "_atom_site_aniso_U_12" );
+        text_file_writer.write_line( "_atom_site_aniso_U_23" ); // U32 U13 U12 is the normal order in .cif files.
         text_file_writer.write_line( "_atom_site_aniso_U_13" );
-        text_file_writer.write_line( "_atom_site_aniso_U_23" );
+        text_file_writer.write_line( "_atom_site_aniso_U_12" );
         for ( size_t i( 0 ); i != atoms_.size(); ++i )
         {
             if ( suppressed_[i] )
@@ -1083,9 +1078,9 @@ void CrystalStructure::save_cif( const FileName & file_name ) const
                                              double2string( Ucif.value( 0, 0 ) ) + " " +
                                              double2string( Ucif.value( 1, 1 ) ) + " " +
                                              double2string( Ucif.value( 2, 2 ) ) + " " +
-                                             double2string( Ucif.value( 0, 1 ) ) + " " +
+                                             double2string( Ucif.value( 1, 2 ) ) + " " +
                                              double2string( Ucif.value( 0, 2 ) ) + " " +
-                                             double2string( Ucif.value( 1, 2 ) ) );
+                                             double2string( Ucif.value( 0, 1 ) ) );
             }
         }
     }
@@ -1636,7 +1631,7 @@ void CrystalStructure::match( const CrystalStructure & rhs, const size_t shift_s
 // ********************************************************************************
 
 // Hydrogen / Deuterium is ignored
-void map( const CrystalStructure & to_be_changed, const CrystalStructure & target, const size_t shift_steps, std::vector< size_t > & mapping, SymmetryOperator & symmetry_operator, std::vector< Vector3D > & translations, const bool allow_inversion, const bool correct_floating_axes )
+void map( const CrystalStructure & to_be_changed, const CrystalStructure & target, const size_t shift_steps, Mapping & mapping, SymmetryOperator & symmetry_operator, std::vector< Vector3D > & translations, const bool allow_inversion, const bool correct_floating_axes )
 {
     bool debug_output( false );
     // In principle, the two structures could have different space groups,
@@ -1654,7 +1649,8 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
         throw std::runtime_error( "map( CrystalStructure, CrystalStructure ): chemical formulae are not the same." );
     if ( natoms == 0 )
         return;
-    mapping.clear();
+    std::vector< size_t > mapping_temp;
+ //   mapping.clear();
     translations.clear();
     // Find closest match
     std::vector< bool > done( natoms, false );
@@ -1769,7 +1765,7 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
         done[ matching_index ] = true;
         ++symmetry_operators_frequencies[best_symmetry_operator];
         ++shifts_frequencies[best_shift];
-        mapping.push_back( matching_index );
+        mapping_temp.push_back( matching_index );
     }
     // Check if there is one and only one symmetry operator that has the greatest frequency
     size_t most_common_symmetry_operator_index = symmetry_operators_frequencies.size();
@@ -1817,6 +1813,7 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
         std::cout << "The most common shift, with " << most_common_shift_frequency << " occurrences, is:" << std::endl;
         shifts[ most_common_shift_index ].show();
     }
+    mapping = Mapping( mapping_temp );
     for ( size_t i( 0 ); i != natoms; ++i )
     {
         // Fractional coordinates.
@@ -1824,25 +1821,25 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
         // Adjust for translations and convert to Cartesian coordinates.
         double shortest_distance;
         Vector3D difference_vector; // Fractional coordinates.
-        average_lattice.shortest_distance( current_position, target.atom( mapping[ i ] ).position() , shortest_distance, difference_vector );
+        average_lattice.shortest_distance( current_position, target.atom( mapping.map( i ) ).position() , shortest_distance, difference_vector );
         // difference_vector is now the shortest distance (vector) with all integer translations factored out.
         // We also know the actual difference vector. The difference between the two is the integer translations.
-        Vector3D integer_translations = target.atom( mapping[ i ] ).position() - difference_vector - current_position;
+        Vector3D integer_translations = target.atom( mapping.map( i ) ).position() - difference_vector - current_position;
         translations.push_back( shifts[most_common_shift_index] + inverse( symmetry_operator.rotation() ) * integer_translations );
     }
-    mapping = invert_mapping( mapping );
+    mapping.invert();
 }
 
 // ********************************************************************************
 
-void CrystalStructure::apply_map( const std::vector< size_t > & mapping, const SymmetryOperator & symmetry_operator, const std::vector< Vector3D > & translations )
+void CrystalStructure::apply_map( const Mapping & mapping, const SymmetryOperator & symmetry_operator, const std::vector< Vector3D > & translations )
 {
     std::vector< Atom > new_atoms;
     new_atoms.reserve( natoms() );
     for ( size_t i( 0 ); i != natoms(); ++i )
     {
-        Atom new_atom( atom( mapping[ i ] ) );
-        new_atom.set_position( symmetry_operator * ( new_atom.position() + translations[ mapping[ i ] ] ) );
+        Atom new_atom( atom( mapping.map( i ) ) );
+        new_atom.set_position( symmetry_operator * ( new_atom.position() + translations[ mapping.map( i ) ] ) );
         if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
             new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), symmetry_operator.rotation(), crystal_lattice_ ) );
         new_atoms.push_back( new_atom );

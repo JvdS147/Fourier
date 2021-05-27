@@ -51,7 +51,12 @@ void test_3D_calculations( TestSuite & test_suite )
     }
 
     {
-        SymmetricMatrix3D U_cif( 0.04682, 0.02399, 0.05938, 0.00258, -0.00735, -0.00165 );
+    //    SymmetricMatrix3D U_cif( 0.04682, 0.02399, 0.05938, 0.00258, -0.00735, -0.00165 );
+    //    SymmetricMatrix3D U_cif( 0.04682, 0.02399, 0.05938, -0.00165, -0.00735, 0.00258 );
+
+//       U11        U22        U33        U23        U13       U12
+// O14 0.0467(10) 0.0231(8) 0.0602(11) -0.0017(7) -0.0077(8) 0.0025(7)
+        SymmetricMatrix3D U_cif( 0.0467, 0.0231, 0.0602, 0.0025, -0.0077, -0.0017 );
 
         Matrix3D transformation_matrix(  1.0,  0.0,  0.0,
                                          0.0, -1.0,  0.0,
@@ -63,14 +68,19 @@ void test_3D_calculations( TestSuite & test_suite )
                                         Angle::from_degrees( 90.0 ),
                                         Angle::from_degrees( 92.0014 ),
                                         Angle::from_degrees( 90.0 ) );
+        AnisotropicDisplacementParameters adps( U_cif_2_U_cart( U_cif, crystal_lattice ) );
 
-        SymmetricMatrix3D U_cif_new = transform_adps( U_cif, transformation_matrix, crystal_lattice );
+        AnisotropicDisplacementParameters adps_new = transform_adps( adps, transformation_matrix, crystal_lattice );
+        crystal_lattice.transform( transformation_matrix );
+        SymmetricMatrix3D U_cif_new = adps_new.U_cif( crystal_lattice );
+        //std::cout << U_cif_new.value( 0, 0 ) << " = " << 0.06219 << std::endl;
+        U_cif_new.show();
         test_suite.test_equality_double( U_cif_new.value( 0, 0 ),  0.06219, "transform_adps() element 0 0", 0.00001 );
         test_suite.test_equality_double( U_cif_new.value( 1, 1 ),  0.02399, "transform_adps() element 1 1", 0.00001 );
         test_suite.test_equality_double( U_cif_new.value( 2, 2 ),  0.05938, "transform_adps() element 2 2", 0.00001 );
-        test_suite.test_equality_double( U_cif_new.value( 0, 1 ), -0.00306, "transform_adps() element 0 1", 0.00001 );
+        test_suite.test_equality_double( U_cif_new.value( 1, 2 ), -0.00306, "transform_adps() element 1 2", 0.00001 );
         test_suite.test_equality_double( U_cif_new.value( 0, 2 ),  0.04677, "transform_adps() element 0 2", 0.00001 );
-        test_suite.test_equality_double( U_cif_new.value( 1, 2 ), -0.00165, "transform_adps() element 1 2", 0.00001 );
+        test_suite.test_equality_double( U_cif_new.value( 0, 1 ), -0.00165, "transform_adps() element 0 1", 0.00001 );
     }
 
 }

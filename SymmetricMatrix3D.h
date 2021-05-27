@@ -45,7 +45,7 @@ public:
     // Constructs a scalar matrix
     explicit SymmetricMatrix3D( const double scalar );
 
-    // Same order as u11 etc. in .cif file
+    // N.B. order in cif file is U23 U13 U12
     SymmetricMatrix3D( const double a00, const double a11, const double a22,
                        const double a01, const double a02, const double a12 );
 

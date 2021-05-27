@@ -107,23 +107,6 @@ void AnisotropicDisplacementParameters::show() const
 
 // ********************************************************************************
 
-// The following is what is needed to transform the ADPs when the unit cell is transformed with a transformation matrix
-// The output is in U_cif format.
-SymmetricMatrix3D transform_adps( const SymmetricMatrix3D & U_cif, Matrix3D transformation, CrystalLattice crystal_lattice )
-{
-    // We must convert U_cif to U_star
-    SymmetricMatrix3D U_star = U_cif_2_U_star( U_cif, crystal_lattice );
-    crystal_lattice.transform( transformation );
-    transformation.invert();
-    transformation.transpose();
-    // The actual transformation of the ADPs
-    U_star = Matrix3D2SymmetricMatrix3D( transformation * U_star * transpose( transformation ) );
-    // Now convert the new U_star back to new U_cif
-    return U_star_2_U_cif( U_star, crystal_lattice );
-}
-
-// ********************************************************************************
-
 AnisotropicDisplacementParameters transform_adps( const AnisotropicDisplacementParameters & ADPs, Matrix3D transformation, CrystalLattice crystal_lattice )
 {
     SymmetricMatrix3D U_star = ADPs.U_star( crystal_lattice );

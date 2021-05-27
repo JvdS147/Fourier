@@ -156,5 +156,12 @@ Angle angle( const Plane & lhs, const Plane & rhs );
 // The order of the points determines the sign of the torsion.
 Angle signed_torsion( const Vector3D & r1, const Vector3D & r2, const Vector3D & r3, const Vector3D & r4 );
 
+Matrix3D A_centred_to_primitive();
+Matrix3D B_centred_to_primitive();
+Matrix3D C_centred_to_primitive();
+Matrix3D I_centred_to_primitive();
+Matrix3D F_centred_to_primitive();
+Matrix3D R_centred_to_primitive();
+
 #endif // DCALCULATIONS_H
 
