@@ -52,8 +52,9 @@ public:
     // Increments size by one. Can of course only push back a mapping to itself.
     void push_back();
 
-    size_t map( const size_t i ) const;
-    
+    // Note that this is all const, i.e. it is read-only
+    size_t operator[]( const size_t i ) const;
+
     void invert();
 
 private:

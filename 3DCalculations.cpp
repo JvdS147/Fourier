@@ -657,3 +657,10 @@ Matrix3D R_centred_to_primitive()
 
 // ********************************************************************************
 
+bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs )
+{
+    
+}
+
+// ********************************************************************************
+

@@ -103,7 +103,7 @@ size_t SetOfNumbers::value( const size_t index ) const
     if ( ! ( index < values_.size() ) )
         throw std::runtime_error( "SetOfNumbers::value(): index out of range." );
     sort();
-    return values_[ sorted_map_.map( index ) ];
+    return values_[ sorted_map_[ index ] ];
 }
 
 // ********************************************************************************
@@ -183,7 +183,7 @@ bool SetOfNumbers::contains_duplicates() const
     sort();
     for ( size_t i( 1 ); i < size(); ++i )
     {
-        if ( values_[ sorted_map_.map( i ) ] == values_[ sorted_map_.map( i-1 ) ] )
+        if ( values_[ sorted_map_[ i ] ] == values_[ sorted_map_[ i-1 ] ] )
             return true;
     }
     return false;
@@ -295,13 +295,13 @@ void SetOfNumbers::check_for_duplicates()
     sort();
     for ( size_t i( 1 ); i < size(); ++i )
     {
-        if ( values_[ sorted_map_.map( i ) ] == values_[ sorted_map_.map( i-1 ) ] )
+        if ( values_[ sorted_map_[ i ] ] == values_[ sorted_map_[ i-1 ] ] )
         {
             if ( duplicates_policy_ == THROW )
                 throw std::runtime_error( "SetOfNumbers: duplicates found." );
             else
             {
-                remove_position( sorted_map_.map( i ) );
+                remove_position( sorted_map_[ i ] );
                 check_for_duplicates();
                 return;
             }

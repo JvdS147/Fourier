@@ -49,9 +49,8 @@ public:
 
     // The index is zero-based
     // We don't actually sort the lists, but create a sorted map
-    std::string label(     const size_t i ) const { return labels_[ sorted_map_.map( i ) ]; }
-    double      shielding( const size_t i ) const { return shieldings_[ sorted_map_.map( i ) ]; }
-
+    std::string label(     const size_t i ) const { return labels_[ sorted_map_[ i ] ]; }
+    double      shielding( const size_t i ) const { return shieldings_[ sorted_map_[ i ] ]; }
 
     // For debugging
     void show() const;

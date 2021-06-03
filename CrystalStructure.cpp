@@ -1821,10 +1821,10 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
         // Adjust for translations and convert to Cartesian coordinates.
         double shortest_distance;
         Vector3D difference_vector; // Fractional coordinates.
-        average_lattice.shortest_distance( current_position, target.atom( mapping.map( i ) ).position() , shortest_distance, difference_vector );
+        average_lattice.shortest_distance( current_position, target.atom( mapping[ i ] ).position() , shortest_distance, difference_vector );
         // difference_vector is now the shortest distance (vector) with all integer translations factored out.
         // We also know the actual difference vector. The difference between the two is the integer translations.
-        Vector3D integer_translations = target.atom( mapping.map( i ) ).position() - difference_vector - current_position;
+        Vector3D integer_translations = target.atom( mapping[ i ] ).position() - difference_vector - current_position;
         translations.push_back( shifts[most_common_shift_index] + inverse( symmetry_operator.rotation() ) * integer_translations );
     }
     mapping.invert();
@@ -1838,8 +1838,8 @@ void CrystalStructure::apply_map( const Mapping & mapping, const SymmetryOperato
     new_atoms.reserve( natoms() );
     for ( size_t i( 0 ); i != natoms(); ++i )
     {
-        Atom new_atom( atom( mapping.map( i ) ) );
-        new_atom.set_position( symmetry_operator * ( new_atom.position() + translations[ mapping.map( i ) ] ) );
+        Atom new_atom( atom( mapping[ i ] ) );
+        new_atom.set_position( symmetry_operator * ( new_atom.position() + translations[ mapping[ i ] ] ) );
         if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
             new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), symmetry_operator.rotation(), crystal_lattice_ ) );
         new_atoms.push_back( new_atom );

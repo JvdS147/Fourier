@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstddef> // For definition of size_t
 
 /*
+@@ This class should have been called Permutations
     Given N numbers, generates k-in-N combinations.
 */
 class GenerateCombinations

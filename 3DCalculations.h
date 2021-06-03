@@ -28,9 +28,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+// A major reason for the existence of this file is that it collects all functions that combine
+// Matrix3D, SymmetricMatrix3D, NormalisedVector3D and Vector3D, so that those classes do not need to know about each other.
+
 class Angle;
 class CollectionOfPoints;
 class CrystalLattice;
+class CrystalStructure;
 class Matrix3D;
 class MillerIndices;
 class NormalisedVector3D;
@@ -59,9 +63,6 @@ void generate_basis_2( const NormalisedVector3D & basis_vector_1, const Normalis
 double root_mean_square_devation_from_mean_plane( const CollectionOfPoints & points, const Plane & plane );
 
 double root_mean_square_devation_from_mean_plane( const std::vector< Vector3D > & points, const Plane & plane );
-
-// A major reason for the existence of this file is that it collects all functions that combine
-// Matrix3D, SymmetricMatrix3D, NormalisedVector3D and Vector3D, so that those classes do not need to know about each other.
 
 // Easier: apply rotational part of symmetry operator to Ucif
 //AnisotropicDisplacementParameters operator*( const SymmetryOperator & lhs, const AnisotropicDisplacementParameters rhs );
@@ -162,6 +163,8 @@ Matrix3D C_centred_to_primitive();
 Matrix3D I_centred_to_primitive();
 Matrix3D F_centred_to_primitive();
 Matrix3D R_centred_to_primitive();
+
+bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs );
 
 #endif // DCALCULATIONS_H
 

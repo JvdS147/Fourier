@@ -70,11 +70,11 @@ void Mapping::push_back()
 
 // ********************************************************************************
 
-size_t Mapping::map( const size_t i ) const
+size_t Mapping::operator[]( const size_t i ) const
 {
     if ( i < mapping_.size() )
         return mapping_[i];
-    throw std::runtime_error( "Mapping::map(): error: index out of range." );
+    throw std::runtime_error( "Mapping::operator[]: error: index out of range." );
 }
 
 // ********************************************************************************
