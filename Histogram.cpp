@@ -26,22 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Histogram.h"
+#include "MathFunctions.h"
+#include "Utilities.h"
 
 #include <stdexcept>
 
 #include <iostream> // For debugging
-
-// ********************************************************************************
-
-namespace
-{
-
-size_t round_to_size_t( const double x )
-{
-    return ( x < 0.0 ) ? ( static_cast<size_t>( x - 0.5 ) ) : ( static_cast<size_t>( x + 0.5 ) );
-}
-
-} // namespace
 
 // ********************************************************************************
 
@@ -61,7 +51,7 @@ greater_than_finish_(0)
 
 // ********************************************************************************
 
-void Histogram::add_data( const std::vector<double> data )
+void Histogram::add_data( const std::vector< double > & data )
 {
     for ( size_t i( 0 ); i != data.size(); ++i )
         add_data( data[i] );
@@ -90,9 +80,25 @@ void Histogram::add_data( const double data )
 
 size_t Histogram::bin( const size_t i ) const
 {
-    if ( i >= number_of_bins_ )
-        throw std::runtime_error( "Histogram::bin(): index out of range." );
-    return data_[i];
+    if ( i < number_of_bins_ )
+        return data_[i];
+    throw std::runtime_error( "Histogram::bin(): index out of range." );
+}
+
+// ********************************************************************************
+
+size_t Histogram::maximum() const
+{
+    return calculate_maximum( data_ );
+}
+
+// ********************************************************************************
+
+void Histogram::plot() const
+{
+    double maximum = this->maximum();
+    for ( size_t i( 0 ); i != data_.size(); ++i )
+        std::cout << make_multiple( "#", round_to_int( ( static_cast<double>(data_[i]) / maximum ) * 80.0 ) ) << std::endl;
 }
 
 // ********************************************************************************

@@ -97,7 +97,7 @@ double calculate_average( const std::vector< double > & values )
 double calculate_minimum( const std::vector< double > & values )
 {
     if ( values.empty() )
-        throw std::runtime_error( "calculate_minimum(): empty" );
+        throw std::runtime_error( "calculate_minimum(double): empty" );
     double result = values[0];
     for ( size_t i( 1 ); i != values.size(); ++i )
         result = std::min( result, values[i] );
@@ -109,8 +109,32 @@ double calculate_minimum( const std::vector< double > & values )
 double calculate_maximum( const std::vector< double > & values )
 {
     if ( values.empty() )
-        throw std::runtime_error( "calculate_maximum(): empty" );
+        throw std::runtime_error( "calculate_maximum(double): empty" );
     double result = values[0];
+    for ( size_t i( 1 ); i != values.size(); ++i )
+        result = std::max( result, values[i] );
+    return result;
+}
+
+// ********************************************************************************
+
+size_t calculate_minimum( const std::vector< size_t > & values )
+{
+    if ( values.empty() )
+        throw std::runtime_error( "calculate_minimum(size_t): empty" );
+    size_t result = values[0];
+    for ( size_t i( 1 ); i != values.size(); ++i )
+        result = std::min( result, values[i] );
+    return result;
+}
+
+// ********************************************************************************
+
+size_t calculate_maximum( const std::vector< size_t > & values )
+{
+    if ( values.empty() )
+        throw std::runtime_error( "calculate_maximum(size_t): empty" );
+    size_t result = values[0];
     for ( size_t i( 1 ); i != values.size(); ++i )
         result = std::max( result, values[i] );
     return result;
@@ -132,18 +156,18 @@ int round_to_int( const double x )
 
 // ********************************************************************************
 
-double absolute_relative_difference( const double lhs, const double rhs )
-{
-    return std::abs( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
-}
-
-// ********************************************************************************
-
 size_t round_to_size_t( const double x )
 {
     if ( x < -0.5 )
         throw std::runtime_error( "round_to_size_t(): value is negative." );
     return static_cast<size_t>( x + 0.5 );
+}
+
+// ********************************************************************************
+
+double absolute_relative_difference( const double lhs, const double rhs )
+{
+    return std::abs( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
 }
 
 // ********************************************************************************
@@ -162,14 +186,14 @@ void sincos( Angle angle, double & sine, double & cosine )
     double C = -4.0/(CONSTANT_PI*CONSTANT_PI);
     double y = B * x + C * x * fabs(x);
     double P = 0.225;
-    sine = P * (y * fabs(y) - y) + y; // = Q * y + P * y * fabs(y), Q = 0.775 ( P + Q = 1.0 )
+    sine = P * ( y * fabs(y) - y ) + y; // = Q * y + P * y * fabs(y), Q = 0.775 ( P + Q = 1.0 )
 
 //    cosine = cos( x );
     x += CONSTANT_PI/2.0; // cos(x) = sin(x + pi/2)
     if ( x > CONSTANT_PI ) // Original x > pi/2
         x -= 2.0*CONSTANT_PI; // Wrap: cos(x) = cos(x - 2 pi)
     y = B * x + C * x * fabs(x);
-    cosine = P * (y * fabs(y) - y) + y; // = Q * y + P * y * fabs(y), Q = 0.775 ( P + Q = 1.0 )
+    cosine = P * ( y * fabs(y) - y ) + y; // = Q * y + P * y * fabs(y), Q = 0.775 ( P + Q = 1.0 )
 }
 
 // ********************************************************************************

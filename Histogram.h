@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstddef> // For definition of size_t
 #include <vector>
+
 /*
   A histogram.
   
@@ -62,13 +63,13 @@ public:
 
     Histogram( const double start, const double finish, const size_t number_of_bins );
 
-    void add_data( const std::vector<double> data );
-    
+    void add_data( const std::vector< double > & data );
+
     void add_data( const double data );
 
     // The index is zero-based
     size_t bin( const size_t i ) const;
-    
+
     size_t size() const { return number_of_bins_; }
     size_t number_of_bins() const { return number_of_bins_; }
 
@@ -77,12 +78,17 @@ public:
 
     size_t lower_than_start() const { return lower_than_start_; }
     size_t greater_than_finish() const { return greater_than_finish_; }
-    
+
+    size_t maximum() const;
+
+    // A quick and dirty ASCII histogram
+    void plot() const;
+
 private:
     double start_;
     double finish_;
     size_t number_of_bins_;
-    std::vector<size_t> data_;
+    std::vector< size_t > data_;
     size_t lower_than_start_;
     size_t greater_than_finish_;
 };
