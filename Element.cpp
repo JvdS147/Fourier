@@ -420,7 +420,7 @@ double Element::scattering_factor( const double sine_theta_over_lambda ) const
 
 // ********************************************************************************
 
-// The ususal order of elements: C, H, D, rest alphabetical
+// The ususal order of elements: C, H, D, rest alphabetical, B before Br
 bool elements_less( const Element & lhs, const Element & rhs )
 {
     if ( lhs == rhs )
@@ -437,7 +437,7 @@ bool elements_less( const Element & lhs, const Element & rhs )
         return true;
     if ( rhs.id() == 0 )
         return false;
-    return lhs.symbol() < rhs.symbol();
+    return ( lhs.symbol() < rhs.symbol() );
 }
 
 // ********************************************************************************

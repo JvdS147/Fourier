@@ -32,6 +32,7 @@ class TestSuite;
 
 void test_angle( TestSuite & test_suite );
 void test_Chebyshev_background( TestSuite & test_suite );
+void test_chemical_formula( TestSuite & test_suite );
 void test_Constraints( TestSuite & test_suite );
 void test_ConvexPolygon( TestSuite & test_suite );
 void test_correlation_matrix( TestSuite & test_suite );
@@ -39,7 +40,7 @@ void test_crystal_lattice( TestSuite & test_suite );
 void test_crystal_structure( TestSuite & test_suite );
 void test_file_name( TestSuite & test_suite );
 void test_fraction( TestSuite & test_suite );
-void test_Mapping( TestSuite & test_suite );
+void test_mapping( TestSuite & test_suite );
 void test_matrix3D( TestSuite & test_suite );
 void test_maths( TestSuite & test_suite );
 void test_ModelBuilding( TestSuite & test_suite );

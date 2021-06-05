@@ -25,45 +25,19 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "ChemicalFormula.h"
+
 #include "TestSuite.h"
-#include "RunTests.h"
 
 #include <iostream>
 
-void run_tests()
+void test_chemical_formula( TestSuite & test_suite )
 {
-    TestSuite test_suite;
-    try
+    std::cout << "Now running tests for ChemicalFormula." << std::endl;
+    
     {
-        test_angle( test_suite );
-        test_Chebyshev_background( test_suite );
-        test_chemical_formula( test_suite );
-        test_Constraints( test_suite );
-        test_ConvexPolygon( test_suite );
-        test_correlation_matrix( test_suite );
-        test_crystal_lattice( test_suite );
-        test_crystal_structure( test_suite );
-        test_file_name( test_suite );
-        test_fraction( test_suite );
-        test_mapping( test_suite );
-        test_matrix3D( test_suite );
-        test_maths( test_suite );
-        test_ModelBuilding( test_suite );
-        test_PowderMatchTable( test_suite );
-        test_quaternion( test_suite );
-        test_ReadCell( test_suite );
-        test_sort( test_suite );
-        test_TextFileReader_2( test_suite );
-        test_TLS_ADPs( test_suite );
-        test_utilities( test_suite );
-        test_3D_calculations( test_suite );
+        ChemicalFormula chemical_formula( "C10H10Br4B5" );
+        test_suite.test_equality( chemical_formula.to_string(), std::string( "C10H10B5Br4" ), "ChemicalFormula 01" );
     }
-    catch ( std::exception& e )
-    {
-        std::cout << "An exception was thrown" << std::endl;
-        std::cout << e.what() << std::endl;
-    }
-    test_suite.report();
-    std::cout << "Test suite done" << std::endl;
 }
 

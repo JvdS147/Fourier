@@ -28,8 +28,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class Fraction;
+
 #include "Element.h"
-#include "Fraction.h"
 
 #include <map>
 #include <string>
@@ -52,18 +53,8 @@ public:
     
     // Elements can be sorted by atomic number or in the "usual" order: C, H, D, rest alphabetical.
     // The default is: C, H, D, rest alphabetical.
-    
-// The Hill system (or Hill notation) is a system of writing empirical chemical formulas, molecular chemical formulas and components of a condensed formula such that the number of carbon atoms
-// in a molecule is indicated first, the number of hydrogen atoms next, and then the number of all other chemical elements subsequently, in alphabetical order of the chemical symbols. When the formula contains no carbon,
-// all the elements, including hydrogen, are listed alphabetically.
-// By sorting formulas according to the number of atoms of each element present in the formula according to these rules, with differences in earlier elements or numbers being treated as
-// more significant than differences in any later element or number--like sorting text strings into lexicographical order--it is possible to collate chemical formulas into what is known as Hill system order.
-// The Hill system was first published by Edwin A. Hill of the United States Patent and Trademark Office in 1900.[3] It is the most commonly used system
-// in chemical databases and printed indexes to sort lists of compounds.[4]
-// A list of formulas in Hill system order is arranged alphabetically, as above, with single-letter elements coming before
-// two-letter symbols when the symbols begin with the same letter (so "B" comes before "Be", which comes before "Br").
-
     bool sort_by_atomic_number() const { return sort_by_atomic_number_; }
+    
     void set_sort_by_atomic_number( const bool sort_by_atomic_number ) { sort_by_atomic_number_ = sort_by_atomic_number;}
 
     // Multiplies the chemical formula by an integer, e.g. to convert from an asymmetric unit to a whole molecule

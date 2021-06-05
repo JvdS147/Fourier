@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <iostream>
 
-void test_Mapping( TestSuite & test_suite )
+void test_mapping( TestSuite & test_suite )
 {
     std::cout << "Now running tests for Mapping." << std::endl;
 
