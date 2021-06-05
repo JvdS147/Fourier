@@ -28,10 +28,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "MathConstants.h"
-
 #include <cmath>
 #include <iosfwd>
+
+const double CONSTANT_PI = 4.0*atan(1.0);
 
 const double degrees2radians = CONSTANT_PI / 180.0;
 const double radians2degrees = 180.0 / CONSTANT_PI;

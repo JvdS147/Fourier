@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "RandomQuaternionGenerator.h"
-#include "MathConstants.h"
+#include "Angle.h"
 #include "Quaternion.h"
 
 #include <cmath>
