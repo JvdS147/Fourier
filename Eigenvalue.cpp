@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Eigenvalue.h"
 
 #include "3DCalculations.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 #include "Matrix3D.h"
 #include "NormalisedVector3D.h"
 #include "SymmetricMatrix3D.h"

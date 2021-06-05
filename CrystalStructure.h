@@ -29,11 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 class ChemicalFormula;
+class FileName;
 class Mapping;
 
 #include "Atom.h"
 #include "CrystalLattice.h"
-#include "FileName.h"
 #include "MoleculeInCrystal.h"
 #include "SpaceGroup.h"
 

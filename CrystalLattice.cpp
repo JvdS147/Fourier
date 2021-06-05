@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CrystalLattice.h"
 #include "3DCalculations.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 #include "Utilities.h"
 
 #include <iostream>

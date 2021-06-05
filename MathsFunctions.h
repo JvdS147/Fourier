@@ -1,5 +1,5 @@
-#ifndef MATHFUNCTIONS_H
-#define MATHFUNCTIONS_H
+#ifndef MATHSFUNCTIONS_H
+#define MATHSFUNCTIONS_H
 
 /* *********************************************
 Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
@@ -109,5 +109,5 @@ double calculate_sample_RMSD( const std::vector< double > & lhs, const std::vect
 
 double ln( const double x );
 
-#endif // MATHFUNCTIONS_H
+#endif // MATHSFUNCTIONS_H
 

@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PowderPattern.h"
 #include "FileName.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 #include "RunningAverageAndESD.h"
 #include "TextFileReader.h"
 #include "TextFileReader_2.h"

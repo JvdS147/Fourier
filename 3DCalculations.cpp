@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Angle.h"
 #include "CollectionOfPoints.h"
 #include "CrystalLattice.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 #include "Matrix3D.h"
 #include "MillerIndices.h"
 //#include "NormalisedVector3D.h"

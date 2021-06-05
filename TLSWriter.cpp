@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TLSWriter.h"
 #include "CopyTextFile.h"
 #include "CrystalStructure.h"
+#include "FileName.h"
 #include "ReadCif.h"
 #include "TextFileReader_2.h"
 #include "TextFileWriter.h"

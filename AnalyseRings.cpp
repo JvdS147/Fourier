@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //#include "CollectionOfPoints.h"
 #include "Angle.h"
 #include "CyclicInteger.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 #include "Plane.h"
 #include "Vector3D.h"
 #include "Sort.h"

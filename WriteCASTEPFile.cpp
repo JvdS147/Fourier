@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "WriteCASTEPFile.h"
+#include "FileName.h"
 #include "TextFileWriter.h"
 
 #include <stdexcept>

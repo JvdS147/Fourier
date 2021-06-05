@@ -26,8 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "CrystalLattice.h"
-//#include "Utilities.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 
 #include "TestSuite.h"
 

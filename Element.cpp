@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Element.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 #include "Utilities.h"
 
 #include <cmath>

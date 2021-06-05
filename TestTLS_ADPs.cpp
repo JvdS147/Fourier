@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "3DCalculations.h"
 #include "AnisotropicDisplacementParameters.h"
 #include "CrystalLattice.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 
 #include <iostream>
 

@@ -25,9 +25,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 #include "Angle.h" // This is bound to give circular references later on
-#include "MathConstants.h"
 #include "Sort.h"
 #include "Vector3D.h" // This is bound to give circular references later on
 

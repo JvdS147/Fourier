@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ReadCifOrCell.h"
 #include "CrystalStructure.h"
+#include "FileName.h"
 #include "ReadCell.h"
 #include "ReadCif.h"
 #include "Utilities.h"
