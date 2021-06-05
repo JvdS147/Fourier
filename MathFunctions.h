@@ -107,5 +107,7 @@ size_t Poisson_distribution_Gaussian_2( const double mean );
 
 double calculate_sample_RMSD( const std::vector< double > & lhs, const std::vector< double > & rhs );
 
+double ln( const double x );
+
 #endif // MATHFUNCTIONS_H
 

@@ -87,9 +87,25 @@ size_t Histogram::bin( const size_t i ) const
 
 // ********************************************************************************
 
+double Histogram::middle_of_bin( const size_t i ) const
+{
+    double bin_size = ( finish_ - start_ ) / static_cast<double>(number_of_bins_);
+    return start_ + ( bin_size * ( static_cast<double>(i) + 0.5 ) );
+}
+
+// ********************************************************************************
+
 size_t Histogram::maximum() const
 {
     return calculate_maximum( data_ );
+}
+
+// ********************************************************************************
+
+void Histogram::show() const
+{
+    for ( size_t i( 0 ); i != data_.size(); ++i )
+        std::cout << middle_of_bin( i ) << " " << data_[i] << std::endl;
 }
 
 // ********************************************************************************
@@ -98,7 +114,7 @@ void Histogram::plot() const
 {
     double maximum = this->maximum();
     for ( size_t i( 0 ); i != data_.size(); ++i )
-        std::cout << make_multiple( "#", round_to_int( ( static_cast<double>(data_[i]) / maximum ) * 80.0 ) ) << std::endl;
+        std::cout << "|" << make_multiple( "#", round_to_int( ( static_cast<double>(data_[i]) / maximum ) * 80.0 ) ) << std::endl;
 }
 
 // ********************************************************************************

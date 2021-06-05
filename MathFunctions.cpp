@@ -336,3 +336,12 @@ double calculate_sample_RMSD( const std::vector< double > & lhs, const std::vect
 
 // ********************************************************************************
 
+double ln( const double x )
+{
+    if ( nearly_zero( x ) )
+        return 1.0;
+    return log( x );
+}
+
+// ********************************************************************************
+

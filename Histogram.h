@@ -71,15 +71,21 @@ public:
     size_t bin( const size_t i ) const;
 
     size_t size() const { return number_of_bins_; }
+
     size_t number_of_bins() const { return number_of_bins_; }
+
+    double middle_of_bin( const size_t i ) const;
 
 // Sum of all bins + lower_than_start + greater_than_finish
 //    size_t number_of_data_points() const;
 
     size_t lower_than_start() const { return lower_than_start_; }
+
     size_t greater_than_finish() const { return greater_than_finish_; }
 
     size_t maximum() const;
+
+    void show() const;
 
     // A quick and dirty ASCII histogram
     void plot() const;
