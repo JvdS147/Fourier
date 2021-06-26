@@ -57,8 +57,6 @@ void show( const std::vector< T > & values )
         std::cout << values[i] << std::endl;
 }
 
-std::vector< size_t > invert_mapping( const std::vector< size_t > & mapping );
-
 // Outputs between 0 and max_size (inclusive) number of c characters, proportional to value.
 // Basically generates a quick and dirty ASCII histogram (rotated by 90 degrees).
 std::string ASCII_histogram( const double min, const double max, const double value, const size_t max_size, const char c );
