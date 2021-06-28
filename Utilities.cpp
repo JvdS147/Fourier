@@ -640,7 +640,7 @@ double string2double_2( const std::string & input, const bool float_allowed )
             exponent = string2double_2( input.substr( iPos ), false );
             break;
         }
-        if ( ( input[iPos] >= '0' ) && ( input[iPos] <= '9' ) )
+        if ( is_digit( input[iPos] ) )
         {
             at_least_one_digit_found = true;
             double value = double( int( input[iPos] ) - int( '0' ) );
