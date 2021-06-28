@@ -34,17 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdexcept>
 #include <string.h> // For strlen()
 
-
-// ********************************************************************************
-
-std::vector< size_t > invert_mapping( const std::vector< size_t > & mapping )
-{
-    std::vector< size_t > result( mapping.size() );
-    for ( size_t i( 0 ); i != mapping.size(); ++i )
-        result[ mapping[i] ] = i;
-    return result;
-}
-
 // ********************************************************************************
 
 std::string ASCII_histogram( const double min, const double max, const double value, const size_t max_size, const char c )
