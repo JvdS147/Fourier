@@ -282,25 +282,48 @@ void PowderPattern::read_xrdml( const FileName & file_name )
 {
     *this = PowderPattern();
     TextFileReader_2 text_file_reader( file_name );
-	size_t iPos = text_file_reader.find( "<positions axis=\"2Theta\" unit=\"deg\">" );
-	if ( iPos == std::string::npos )
+    size_t iPos = text_file_reader.find( "<positions axis=\"2Theta\" unit=\"deg\">" );
+    if ( iPos == std::string::npos )
         throw std::runtime_error( "PowderPattern::read_xrdml(): 2theta not found." );
     std::string two_theta_start_str = extract_delimited_text( text_file_reader.line( iPos + 1 ), "<startPosition>", "</startPosition>");
     std::string two_theta_end_str   = extract_delimited_text( text_file_reader.line( iPos + 2 ), "<endPosition>", "</endPosition>" );
     Angle two_theta_start = Angle::from_degrees( string2double( two_theta_start_str ) );
     Angle two_theta_end   = Angle::from_degrees( string2double( two_theta_end_str   ) );
-	iPos = text_file_reader.find( "<intensities unit=\"counts\">" );
-	if ( iPos == std::string::npos )
-        throw std::runtime_error( "PowderPattern::read_xrdml(): Counts not found." );
-    std::vector< std::string > counts = split( extract_delimited_text( text_file_reader.line( iPos ), "<intensities unit=\"counts\">", "</intensities>" ) );
+    std::vector< std::string > divergence_corrections;
+    iPos = text_file_reader.find( "<divergenceCorrections>" );
+    if ( iPos != std::string::npos )
+         divergence_corrections = split( extract_delimited_text( text_file_reader.line( iPos ), "<divergenceCorrections>", "</divergenceCorrections>" ) );
+    std::vector< std::string > counts;
+    iPos = text_file_reader.find( "<intensities unit=\"counts\">" );
+    if ( iPos != std::string::npos )
+         counts = split( extract_delimited_text( text_file_reader.line( iPos ), "<intensities unit=\"counts\">", "</intensities>" ) );
+    else
+    {
+        iPos = text_file_reader.find( "<counts unit=\"counts\">" );
+        if ( iPos != std::string::npos )
+            counts = split( extract_delimited_text( text_file_reader.line( iPos ), "<counts unit=\"counts\">", "</counts>" ) );
+        else
+            throw std::runtime_error( "PowderPattern::read_xrdml(): Counts not found." );
+    }
     if ( counts.empty() )
         throw std::runtime_error( "PowderPattern::read_xrdml(): no data points." );
     if ( counts.size() == 1 )
         throw std::runtime_error( "PowderPattern::read_xrdml(): only one data point." );
-    Angle two_theta_step = ( two_theta_end - two_theta_start ) / ( counts.size() - 1 );
     reserve( counts.size() );
-    for ( size_t i( 0 ); i != counts.size(); ++i )
-        push_back( ( i * two_theta_step ) + two_theta_start, string2double( counts[i] ) );
+    Angle two_theta_step = ( two_theta_end - two_theta_start ) / ( counts.size() - 1 );
+    if ( divergence_corrections.empty() )
+    {
+        for ( size_t i( 0 ); i != counts.size(); ++i )
+            push_back( ( i * two_theta_step ) + two_theta_start, string2double( counts[i] ) );
+    }
+    else
+    {
+        if ( divergence_corrections.size() != counts.size() )
+            throw std::runtime_error( "PowderPattern::read_xrdml(): number of counts and number of divergence corrections differ." );
+        std::cout << "Note that the .xrdml file contains divergence corrections, which will be applied to the counts." << std::endl;
+        for ( size_t i( 0 ); i != counts.size(); ++i )
+            push_back( ( i * two_theta_step ) + two_theta_start, string2double( divergence_corrections[i] ) * string2double( counts[i] ) );
+    }
 }
 
 // ********************************************************************************
