@@ -37,6 +37,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ********************************************************************************
 
+double Legendre_polynomial( const size_t order, const double cosine_theta )
+{
+    switch ( order )
+    {
+        case 0 : return 1.0;
+        case 1 : return cosine_theta;
+        case 2 : return (   3.0 * square( cosine_theta ) - 1.0 ) / 2.0;
+        case 3 : return (   5.0 * std::pow( cosine_theta, 3 ) -   3.0 * cosine_theta ) / 2.0;
+        case 4 : return (  35.0 * std::pow( cosine_theta, 4 ) -  30.0 * square( cosine_theta ) + 3.0 ) / 8.0;
+        case 5 : return (  63.0 * std::pow( cosine_theta, 5 ) -  70.0 * std::pow( cosine_theta, 3 ) + 15.0 * cosine_theta ) / 8.0;
+        case 6 : return ( 231.0 * std::pow( cosine_theta, 6 ) - 315.0 * std::pow( cosine_theta, 4 ) + 105.0 * square( cosine_theta ) - 5.0 ) / 16.0;
+        default : throw std::runtime_error( "Legendre_polynomial(): order not yet implemented." );
+    }
+}
+
+// ********************************************************************************
+
+// Must return size_t, because we use recursion
+// Simplistic algorithm, will overflow very quickly.
+size_t factorial( const size_t n )
+{
+    if ( n == 0 )
+        return 1;
+    return n * factorial( n-1 );
+}
+
+// ********************************************************************************
+
 // @@ Not sophisticated enough, but a start.
 // Two problems: should sort by magnitude (absolute value) and should use a better algorithm (adding pairwise, for example)
 double add_doubles( const std::vector< double > & values )

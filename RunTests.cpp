@@ -38,6 +38,7 @@ void run_tests()
         test_angle( test_suite );
         test_Chebyshev_background( test_suite );
         test_chemical_formula( test_suite );
+        test_Complex( test_suite );
         test_Constraints( test_suite );
         test_ConvexPolygon( test_suite );
         test_correlation_matrix( test_suite );
@@ -47,6 +48,7 @@ void run_tests()
         test_fraction( test_suite );
         test_mapping( test_suite );
         test_matrix3D( test_suite );
+        test_MatrixFraction3D( test_suite );
         test_maths( test_suite );
         test_ModelBuilding( test_suite );
         test_PowderMatchTable( test_suite );

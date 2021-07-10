@@ -58,7 +58,7 @@ Fraction::Fraction( const int integer_part, const int numerator, const int denom
 void Fraction::absolute()
 {
     if ( ( integer_part_ < 0 ) ||
-         ( numerator_   < 0 ) )
+         ( numerator_    < 0 ) )
         negate();
 }
 
@@ -79,7 +79,7 @@ void Fraction::square()
 {
     // Could potentially lead to overflows for temporary results.
     numerator_    = 2*integer_part_*numerator_*denominator_ + numerator_*numerator_;
-    denominator_ *= denominator_;
+    denominator_  *= denominator_;
     integer_part_ *= integer_part_;
     clean_up();
 }
@@ -125,8 +125,8 @@ Fraction & Fraction::operator+=( const Fraction & rhs )
 {
     // Could potentially lead to overflows for temporary results.
     integer_part_ += rhs.integer_part_;
-    numerator_    = rhs.denominator_*numerator_ + denominator_*rhs.numerator_;
-    denominator_ *= rhs.denominator_;
+    numerator_     = rhs.denominator_*numerator_ + denominator_*rhs.numerator_;
+    denominator_  *= rhs.denominator_;
     clean_up();
     return *this;
 }
@@ -137,8 +137,8 @@ Fraction & Fraction::operator-=( const Fraction & rhs )
 {
     // Could potentially lead to overflows for temporary results.
     integer_part_ -= rhs.integer_part_;
-    numerator_    = rhs.denominator_*numerator_ - denominator_*rhs.numerator_;
-    denominator_ *= rhs.denominator_;
+    numerator_     = rhs.denominator_*numerator_ - denominator_*rhs.numerator_;
+    denominator_  *= rhs.denominator_;
     clean_up();
     return *this;
 }
@@ -148,8 +148,8 @@ Fraction & Fraction::operator-=( const Fraction & rhs )
 Fraction & Fraction::operator*=( const Fraction & rhs )
 {
     // Could potentially lead to overflows for temporary results.
-    numerator_    = integer_part_*rhs.numerator_*denominator_ + rhs.integer_part_*numerator_*rhs.denominator_ + numerator_*rhs.numerator_;
-    denominator_ *= rhs.denominator_;
+    numerator_     = integer_part_*rhs.numerator_*denominator_ + rhs.integer_part_*numerator_*rhs.denominator_ + numerator_*rhs.numerator_;
+    denominator_  *= rhs.denominator_;
     integer_part_ *= rhs.integer_part_;
     clean_up();
     return *this;
@@ -160,8 +160,8 @@ Fraction & Fraction::operator*=( const Fraction & rhs )
 Fraction & Fraction::operator/=( const Fraction & rhs )
 {
     // Could potentially lead to overflows for temporary results.
-    numerator_   = integer_part_*denominator_*rhs.denominator_     + numerator_*rhs.denominator_;
-    denominator_ = rhs.integer_part_*denominator_*rhs.denominator_ + rhs.numerator_*denominator_;
+    numerator_    = integer_part_*denominator_*rhs.denominator_     + numerator_*rhs.denominator_;
+    denominator_  = rhs.integer_part_*denominator_*rhs.denominator_ + rhs.numerator_*denominator_;
     integer_part_ = 0;
     clean_up();
     return *this;
@@ -244,7 +244,7 @@ std::string Fraction::to_string() const
     if ( ! is_pure_fraction() )
         o << integer_part_;
     if ( ( ! is_pure_fraction() ) &&
-         ( ! is_integer()      ) )
+         ( ! is_integer()       ) )
         o << " + ";
     if ( ! is_integer() )
         o << numerator_ << "/" << denominator_;
@@ -278,19 +278,28 @@ void Fraction::clean_up()
     // Because the integer part is always numerically greater than the fraction part when we are here,
     // we must always adjust the fraction part to have the same sign as the integer part.
     if ( ( integer_part_ < 0 ) &&
-         ( numerator_   > 0 ) )
+         ( numerator_    > 0 ) )
     {
         numerator_ -= denominator_;
         ++integer_part_;
         clean_up();
     }
     if ( ( integer_part_ > 0 ) &&
-         ( numerator_   < 0 ) )
+         ( numerator_    < 0 ) )
     {
         numerator_ += denominator_;
         --integer_part_;
         clean_up();
     }
+}
+
+// ********************************************************************************
+
+Fraction absolute( const Fraction & fraction )
+{
+    Fraction result( fraction );
+    result.absolute();
+    return result;
 }
 
 // ********************************************************************************
@@ -541,11 +550,9 @@ Fraction double2fraction( const double target, const Fraction & smallest_unit )
 
 Fraction Farey( double target, const int maximum_denominator )
 {
-    
     if ( maximum_denominator < 1 )
         throw std::runtime_error( "Farey(): maximum_denominator must be greater than 0." );
-//    if ( maximum_denominator == 1 )
-//        return ( target < 0.5 ) ? 
+
     bool is_negative = false;
     if ( target < 0.0 )
     {
@@ -554,6 +561,7 @@ Fraction Farey( double target, const int maximum_denominator )
     }
     double integer_part;
     target = modf( target, &integer_part );
+    
     Fraction lower_limit( 0, 1 );
     Fraction upper_limit( 1, 1 ); // Note that this is stored as Fraction( 1, 0, 1 )
     Fraction mediant( 1, 2 );
@@ -565,29 +573,30 @@ Fraction Farey( double target, const int maximum_denominator )
         else
             upper_limit = mediant;
     }
-    Fraction result;
-    if ( std::abs( lower_limit.to_double() - target ) < std::abs( upper_limit.to_double() - target ) )
-        result = lower_limit;
-    else
-        result = upper_limit;
+    Fraction result = ( std::abs( lower_limit.to_double() - target ) < std::abs( upper_limit.to_double() - target ) ) ? lower_limit : upper_limit;
+
     result += Fraction( round_to_int( integer_part ) );
     if ( is_negative )
-        result = -result;    
+        result = -result;
+        
     return result;
 }
 
 // ********************************************************************************
 
-Fraction Farey_terminate_on_error( double target, const double epsilon )
+// Implementation is elegant but inefficient: every call to Farey() extracts the integer part
+// and tests if the target is negative, which later get added back in again. Especially the first
+// call, Farey( target, 1 ), which can only return 0 or 1, is ludicrously inefficient.
+Fraction Farey_terminate_on_error( const double target, const double epsilon )
 {
     size_t i( 1 );
-    while ( true )
+    Fraction result = Farey( target, i );
+    while ( ! ( std::abs( result.to_double() - target ) < epsilon ) )
     {
-        Fraction result = Farey( target, i );
-        if ( std::abs( result.to_double() - target ) < epsilon )
-            return result;
-        ++i;   
+        ++i;
+        result = Farey( target, i );
     }
+    return result;
 }
 
 // ********************************************************************************

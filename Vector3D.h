@@ -56,10 +56,14 @@ public:
 
     void set_length( const double value );
 
+    // This could either test if each of the three components is close to 0.0
+    // or it could test if length() or norm2() is close to 0.0. I have decided to do the
+    // first.
     bool nearly_zero( const double tolerance = 0.000001 ) const;
 
-    // Checks if norm2() is smaller than tolerance
-    // (To avoid the sqrt of length() .)
+    // This could either test if each of the three components is close to 0.0
+    // or it could test if length() or norm2() is close to 0.0. I have decided to do the
+    // first.
     void throw_if_zero_vector( const double tolerance = 0.000001 ) const;
 
     Vector3D & operator+=( const Vector3D & rhs );

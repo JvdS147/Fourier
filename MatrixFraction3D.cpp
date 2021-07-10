@@ -25,29 +25,27 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "Matrix3D.h"
-#include "Utilities.h"
+#include "MatrixFraction3D.h"
 
-#include <cmath>
 #include <stdexcept>
 #include <iostream>
 
 // ********************************************************************************
 
 // Constructs a scalar matrix
-Matrix3D::Matrix3D( const double scalar )
+MatrixFraction3D::MatrixFraction3D( const Fraction & scalar )
 {
-    data_[0][0] = scalar; data_[0][1] = 0.0   ; data_[0][2] = 0.0   ;
-    data_[1][0] = 0.0   ; data_[1][1] = scalar; data_[1][2] = 0.0   ;
-    data_[2][0] = 0.0   ; data_[2][1] = 0.0   ; data_[2][2] = scalar;
+    data_[0][0] = scalar       ; data_[0][1] = Fraction( 0 ); data_[0][2] = Fraction( 0 );
+    data_[1][0] = Fraction( 0 ); data_[1][1] = scalar       ; data_[1][2] = Fraction( 0 );
+    data_[2][0] = Fraction( 0 ); data_[2][1] = Fraction( 0 ); data_[2][2] = scalar       ;
 }
 
 // ********************************************************************************
 
-Matrix3D::Matrix3D( const double a00, const double a01, const double a02,
-                    const double a10, const double a11, const double a12,
-                    const double a20, const double a21, const double a22
-                  )
+MatrixFraction3D::MatrixFraction3D( const Fraction & a00, const Fraction & a01, const Fraction & a02,
+                                    const Fraction & a10, const Fraction & a11, const Fraction & a12,
+                                    const Fraction & a20, const Fraction & a21, const Fraction & a22
+                                  )
 {
     data_[0][0] = a00; data_[0][1] = a01; data_[0][2] = a02;
     data_[1][0] = a10; data_[1][1] = a11; data_[1][2] = a12;
@@ -56,27 +54,29 @@ Matrix3D::Matrix3D( const double a00, const double a01, const double a02,
 
 // ********************************************************************************
 
-double Matrix3D::sum_of_elements() const
+Fraction MatrixFraction3D::sum_of_elements() const
 {
     return data_[0][0] + data_[0][1] + data_[0][2] + data_[1][0] + data_[1][1] + data_[1][2] + data_[2][0] + data_[2][1] + data_[2][2];
 }
 
 // ********************************************************************************
 
-double Matrix3D::sum_of_absolute_elements() const
+Fraction MatrixFraction3D::sum_of_absolute_elements() const
 {
-    return std::abs( data_[0][0] ) + std::abs( data_[0][1] ) + std::abs( data_[0][2] ) + std::abs( data_[1][0] ) + std::abs( data_[1][1] ) + std::abs( data_[1][2] ) + std::abs( data_[2][0] ) + std::abs( data_[2][1] ) + std::abs( data_[2][2] );
+    return absolute( data_[0][0] ) + absolute( data_[0][1] ) + absolute( data_[0][2] ) +
+           absolute( data_[1][0] ) + absolute( data_[1][1] ) + absolute( data_[1][2] ) +
+           absolute( data_[2][0] ) + absolute( data_[2][1] ) + absolute( data_[2][2] );
 }
 
 // ********************************************************************************
 
-void Matrix3D::invert()
+void MatrixFraction3D::invert()
 {
-    double D = determinant();
-    if ( nearly_zero( D ) )
-        std::runtime_error( "Matrix3D::invert(): determinant = 0" );
+    Fraction D = determinant();
+    if ( D.is_zero() )
+        std::runtime_error( "MatrixFraction3D::invert(): determinant = 0" );
     transpose();
-    Matrix3D adjoint;
+    MatrixFraction3D adjoint;
     adjoint.data_[0][0] = +minor_matrix_determinant(0,0); adjoint.data_[0][1] = -minor_matrix_determinant(0,1); adjoint.data_[0][2] = +minor_matrix_determinant(0,2);
     adjoint.data_[1][0] = -minor_matrix_determinant(1,0); adjoint.data_[1][1] = +minor_matrix_determinant(1,1); adjoint.data_[1][2] = -minor_matrix_determinant(1,2);
     adjoint.data_[2][0] = +minor_matrix_determinant(2,0); adjoint.data_[2][1] = -minor_matrix_determinant(2,1); adjoint.data_[2][2] = +minor_matrix_determinant(2,2);
@@ -86,7 +86,7 @@ void Matrix3D::invert()
 
 // ********************************************************************************
 
-void Matrix3D::transpose()
+void MatrixFraction3D::transpose()
 {
     std::swap( data_[1][0], data_[0][1] );
     std::swap( data_[2][0], data_[0][2] );
@@ -95,7 +95,7 @@ void Matrix3D::transpose()
 
 // ********************************************************************************
 
-double Matrix3D::determinant() const
+Fraction MatrixFraction3D::determinant() const
 {
     return data_[0][0] * minor_matrix_determinant(0,0) -
            data_[0][1] * minor_matrix_determinant(0,1) +
@@ -104,14 +104,14 @@ double Matrix3D::determinant() const
 
 // ********************************************************************************
 
-double Matrix3D::trace() const
+Fraction MatrixFraction3D::trace() const
 {
     return data_[0][0] + data_[1][1] + data_[2][2];
 }
 
 // ********************************************************************************
 
-void Matrix3D::swap_rows( const size_t i, const size_t j )
+void MatrixFraction3D::swap_rows( const size_t i, const size_t j )
 {
     std::swap( data_[i][0], data_[j][0] );
     std::swap( data_[i][1], data_[j][1] );
@@ -120,7 +120,7 @@ void Matrix3D::swap_rows( const size_t i, const size_t j )
 
 // ********************************************************************************
 
-void Matrix3D::swap_columns( const size_t i, const size_t j )
+void MatrixFraction3D::swap_columns( const size_t i, const size_t j )
 {
     std::swap( data_[0][i], data_[0][j] );
     std::swap( data_[1][i], data_[1][j] );
@@ -129,32 +129,32 @@ void Matrix3D::swap_columns( const size_t i, const size_t j )
 
 // ********************************************************************************
 
-double Matrix3D::maximum_absolute_value_in_row( const size_t i ) const
+Fraction MatrixFraction3D::maximum_absolute_value_in_row( const size_t i ) const
 {
-    return std::max( std::abs( data_[i][0] ), std::max( std::abs( data_[i][1] ), std::abs( data_[i][2] ) ) );
+    return std::max( absolute( data_[i][0] ), std::max( absolute( data_[i][1] ), absolute( data_[i][2] ) ) );
 }
 
 // ********************************************************************************
 
-double Matrix3D::maximum_absolute_value_in_column( const size_t i ) const
+Fraction MatrixFraction3D::maximum_absolute_value_in_column( const size_t i ) const
 {
-    return std::max( std::abs( data_[0][i] ), std::max( std::abs( data_[1][i] ), std::abs( data_[2][i] ) ) );    
+    return std::max( absolute( data_[0][i] ), std::max( absolute( data_[1][i] ), absolute( data_[2][i] ) ) );    
 }
 
 // ********************************************************************************
 
-bool Matrix3D::is_diagonal() const
+bool MatrixFraction3D::is_diagonal() const
 {
-    return ( nearly_zero( data_[0][1] ) && nearly_zero( data_[0][2] ) && 
-             nearly_zero( data_[1][0] ) && nearly_zero( data_[1][2] ) && 
-             nearly_zero( data_[2][0] ) && nearly_zero( data_[2][1] ) );
+    return ( data_[0][1].is_zero() && data_[0][2].is_zero() && 
+             data_[1][0].is_zero() && data_[1][2].is_zero() && 
+             data_[2][0].is_zero() && data_[2][1].is_zero() );
 }
 
 // ********************************************************************************
 
-double Matrix3D::minor_matrix_determinant( const size_t row, const size_t col ) const
+Fraction MatrixFraction3D::minor_matrix_determinant( const size_t row, const size_t col ) const
 {
-    double minor_matrix[2][2];
+    Fraction minor_matrix[2][2];
     size_t minor_row( 0 );
     size_t minor_col( 0 );
     for ( size_t i( 0 ); i != 3; ++i )
@@ -176,9 +176,9 @@ double Matrix3D::minor_matrix_determinant( const size_t row, const size_t col ) 
 
 // ********************************************************************************
 
-void Matrix3D::convert_to_row_echelon_form( Matrix3D & T )
+void MatrixFraction3D::convert_to_row_echelon_form( MatrixFraction3D & T )
 {
-    T = Matrix3D();
+    T = MatrixFraction3D();
     size_t iRow( 0 );
     size_t iCol( 0 );
     while ( ( iRow < 2 ) && ( iCol < 3 ) )
@@ -187,18 +187,18 @@ void Matrix3D::convert_to_row_echelon_form( Matrix3D & T )
         size_t iMax( iRow );
         for ( size_t i( iRow + 1 ); i != 3; ++i )
         {
-            if ( std::abs( data_[i][iCol] ) > std::abs( data_[iMax][iCol] ) )
+            if ( absolute( data_[i][iCol] ) > absolute( data_[iMax][iCol] ) )
                 iMax = i;
         }
-        if ( ! nearly_zero( data_[iMax][iCol] ) )
+        if ( ! data_[iMax][iCol].is_zero() )
         {
             swap_rows( iRow, iMax );
             T.swap_rows( iRow, iMax );
             // Do for all rows below pivot.
             for ( size_t i( iRow + 1 ); i != 3; ++i )
             {
-                double factor = -1.0 * ( data_[i][iCol] / data_[iRow][iCol] );
-                data_[i][iCol] = 0.0;
+                Fraction factor = -1 * ( data_[i][iCol] / data_[iRow][iCol] );
+                data_[i][iCol] = Fraction::zero();
                 for ( size_t j( iCol + 1 ); j != 3; ++j )
                 {
                     data_[i][j] += factor * data_[iRow][j];
@@ -213,12 +213,12 @@ void Matrix3D::convert_to_row_echelon_form( Matrix3D & T )
 
 // ********************************************************************************
 
-size_t Matrix3D::number_of_zero_rows( const double tolerance ) const
+size_t MatrixFraction3D::number_of_zero_rows() const
 {
     size_t result( 0 );
     for ( size_t i( 0 ); i != 3; ++i )
     {
-        if ( nearly_zero( data_[i][0], tolerance ) && nearly_zero( data_[i][1], tolerance ) && nearly_zero( data_[i][2], tolerance ) )
+        if ( data_[i][0].is_zero() && data_[i][1].is_zero() && data_[i][2].is_zero() )
             ++result;
     }
     return result;
@@ -226,38 +226,39 @@ size_t Matrix3D::number_of_zero_rows( const double tolerance ) const
 
 // ********************************************************************************
 
-bool Matrix3D::is_nearly_the_identity( const double tolerance ) const
+bool MatrixFraction3D::is_the_identity() const
 {
-    return ( nearly_equal( value( 0, 0 ), 1.0, tolerance ) && nearly_zero( value( 0, 1 ), tolerance ) && nearly_zero( value( 0, 2 ), tolerance ) &&
-             nearly_zero( value( 1, 0 ), tolerance ) && nearly_equal( value( 1, 1 ), 1.0, tolerance ) && nearly_zero( value( 1, 2 ), tolerance ) &&
-             nearly_zero( value( 2, 0 ), tolerance ) && nearly_zero( value( 2, 1 ), tolerance ) && nearly_equal( value( 2, 2 ), 1.0, tolerance ) );
+    return ( is_diagonal() &&
+            ( value( 0, 0 ) == Fraction::one() ) &&
+            ( value( 1, 1 ) == Fraction::one() ) &&
+            ( value( 2, 2 ) == Fraction::one() ) );
 }
 
 // ********************************************************************************
 
-Matrix3D & Matrix3D::operator+=( const Matrix3D & rhs )
+MatrixFraction3D & MatrixFraction3D::operator+=( const MatrixFraction3D & rhs )
 {
-    *this = Matrix3D( value( 0, 0 ) + rhs.value( 0, 0 ), value( 0, 1 ) + rhs.value( 0, 1 ), value( 0, 2 ) + rhs.value( 0, 2 ),
-                      value( 1, 0 ) + rhs.value( 1, 0 ), value( 1, 1 ) + rhs.value( 1, 1 ), value( 1, 2 ) + rhs.value( 1, 2 ),
-                      value( 2, 0 ) + rhs.value( 2, 0 ), value( 2, 1 ) + rhs.value( 2, 1 ), value( 2, 2 ) + rhs.value( 2, 2 )
-                    );
+    *this = MatrixFraction3D( value( 0, 0 ) + rhs.value( 0, 0 ), value( 0, 1 ) + rhs.value( 0, 1 ), value( 0, 2 ) + rhs.value( 0, 2 ),
+                              value( 1, 0 ) + rhs.value( 1, 0 ), value( 1, 1 ) + rhs.value( 1, 1 ), value( 1, 2 ) + rhs.value( 1, 2 ),
+                              value( 2, 0 ) + rhs.value( 2, 0 ), value( 2, 1 ) + rhs.value( 2, 1 ), value( 2, 2 ) + rhs.value( 2, 2 )
+                            );
     return *this;
 }
 
 // ********************************************************************************
 
-Matrix3D & Matrix3D::operator-=( const Matrix3D & rhs )
+MatrixFraction3D & MatrixFraction3D::operator-=( const MatrixFraction3D & rhs )
 {
-    *this = Matrix3D( value( 0, 0 ) - rhs.value( 0, 0 ), value( 0, 1 ) - rhs.value( 0, 1 ), value( 0, 2 ) - rhs.value( 0, 2 ),
-                      value( 1, 0 ) - rhs.value( 1, 0 ), value( 1, 1 ) - rhs.value( 1, 1 ), value( 1, 2 ) - rhs.value( 1, 2 ),
-                      value( 2, 0 ) - rhs.value( 2, 0 ), value( 2, 1 ) - rhs.value( 2, 1 ), value( 2, 2 ) - rhs.value( 2, 2 )
-                    );
+    *this = MatrixFraction3D( value( 0, 0 ) - rhs.value( 0, 0 ), value( 0, 1 ) - rhs.value( 0, 1 ), value( 0, 2 ) - rhs.value( 0, 2 ),
+                              value( 1, 0 ) - rhs.value( 1, 0 ), value( 1, 1 ) - rhs.value( 1, 1 ), value( 1, 2 ) - rhs.value( 1, 2 ),
+                              value( 2, 0 ) - rhs.value( 2, 0 ), value( 2, 1 ) - rhs.value( 2, 1 ), value( 2, 2 ) - rhs.value( 2, 2 )
+                            );
     return *this;
 }
 
 // ********************************************************************************
 
-Matrix3D & Matrix3D::operator/=( const double value )
+MatrixFraction3D & MatrixFraction3D::operator/=( const Fraction value )
 {
     data_[0][0] /= value; data_[0][1] /= value; data_[0][2] /= value;
     data_[1][0] /= value; data_[1][1] /= value; data_[1][2] /= value;
@@ -267,7 +268,16 @@ Matrix3D & Matrix3D::operator/=( const double value )
 
 // ********************************************************************************
 
-void Matrix3D::show() const
+bool MatrixFraction3D::operator==( const MatrixFraction3D & rhs ) const
+{
+    return ( ( value( 0, 0 ) == rhs.value( 0, 0 ) ) && ( value( 0, 1 ) == rhs.value( 0, 1 ) ) && ( value( 0, 2 ) == rhs.value( 0, 2 ) ) &&
+             ( value( 1, 0 ) == rhs.value( 1, 0 ) ) && ( value( 1, 1 ) == rhs.value( 1, 1 ) ) && ( value( 1, 2 ) == rhs.value( 1, 2 ) ) &&
+             ( value( 2, 0 ) == rhs.value( 2, 0 ) ) && ( value( 2, 1 ) == rhs.value( 2, 1 ) ) && ( value( 2, 2 ) == rhs.value( 2, 2 ) ) );
+}
+
+// ********************************************************************************
+
+void MatrixFraction3D::show() const
 {
     std::cout << "| " << data_[0][0] << " " << data_[0][1] << " " << data_[0][2] << " |" << std::endl;
     std::cout << "| " << data_[1][0] << " " << data_[1][1] << " " << data_[1][2] << " |" << std::endl;
@@ -276,7 +286,7 @@ void Matrix3D::show() const
 
 // ********************************************************************************
 
-std::ostream & operator<<( std::ostream & os, const Matrix3D & matrix3d )
+std::ostream & operator<<( std::ostream & os, const MatrixFraction3D & matrix3d )
 {
     os << "| " << matrix3d.value( 0, 0 ) << " " << matrix3d.value( 0, 1 ) << " " << matrix3d.value( 0, 2 ) << " |" << std::endl;
     os << "| " << matrix3d.value( 1, 0 ) << " " << matrix3d.value( 1, 1 ) << " " << matrix3d.value( 1, 2 ) << " |" << std::endl;
@@ -286,38 +296,29 @@ std::ostream & operator<<( std::ostream & os, const Matrix3D & matrix3d )
 
 // ********************************************************************************
 
-bool nearly_equal( const Matrix3D & lhs, const Matrix3D & rhs, const double tolerance )
+MatrixFraction3D operator+( const MatrixFraction3D & lhs, const MatrixFraction3D & rhs )
 {
-    return ( nearly_equal( lhs.value( 0, 0 ), rhs.value( 0, 0 ), tolerance ) && nearly_equal( lhs.value( 0, 1 ), rhs.value( 0, 1 ), tolerance ) && nearly_equal( lhs.value( 0, 2 ), rhs.value( 0, 2 ), tolerance ) &&
-             nearly_equal( lhs.value( 1, 0 ), rhs.value( 1, 0 ), tolerance ) && nearly_equal( lhs.value( 1, 1 ), rhs.value( 1, 1 ), tolerance ) && nearly_equal( lhs.value( 1, 2 ), rhs.value( 1, 2 ), tolerance ) &&
-             nearly_equal( lhs.value( 2, 0 ), rhs.value( 2, 0 ), tolerance ) && nearly_equal( lhs.value( 2, 1 ), rhs.value( 2, 1 ), tolerance ) && nearly_equal( lhs.value( 2, 2 ), rhs.value( 2, 2 ), tolerance ) );
+    return MatrixFraction3D( lhs.value( 0, 0 ) + rhs.value( 0, 0 ), lhs.value( 0, 1 ) + rhs.value( 0, 1 ), lhs.value( 0, 2 ) + rhs.value( 0, 2 ),
+                             lhs.value( 1, 0 ) + rhs.value( 1, 0 ), lhs.value( 1, 1 ) + rhs.value( 1, 1 ), lhs.value( 1, 2 ) + rhs.value( 1, 2 ),
+                             lhs.value( 2, 0 ) + rhs.value( 2, 0 ), lhs.value( 2, 1 ) + rhs.value( 2, 1 ), lhs.value( 2, 2 ) + rhs.value( 2, 2 )
+                           );
 }
 
 // ********************************************************************************
 
-Matrix3D operator+( const Matrix3D & lhs, const Matrix3D & rhs )
+MatrixFraction3D operator-( const MatrixFraction3D & lhs, const MatrixFraction3D & rhs )
 {
-    return Matrix3D( lhs.value( 0, 0 ) + rhs.value( 0, 0 ), lhs.value( 0, 1 ) + rhs.value( 0, 1 ), lhs.value( 0, 2 ) + rhs.value( 0, 2 ),
-                     lhs.value( 1, 0 ) + rhs.value( 1, 0 ), lhs.value( 1, 1 ) + rhs.value( 1, 1 ), lhs.value( 1, 2 ) + rhs.value( 1, 2 ),
-                     lhs.value( 2, 0 ) + rhs.value( 2, 0 ), lhs.value( 2, 1 ) + rhs.value( 2, 1 ), lhs.value( 2, 2 ) + rhs.value( 2, 2 )
-                   );
+    return MatrixFraction3D( lhs.value( 0, 0 ) - rhs.value( 0, 0 ), lhs.value( 0, 1 ) - rhs.value( 0, 1 ), lhs.value( 0, 2 ) - rhs.value( 0, 2 ),
+                             lhs.value( 1, 0 ) - rhs.value( 1, 0 ), lhs.value( 1, 1 ) - rhs.value( 1, 1 ), lhs.value( 1, 2 ) - rhs.value( 1, 2 ),
+                             lhs.value( 2, 0 ) - rhs.value( 2, 0 ), lhs.value( 2, 1 ) - rhs.value( 2, 1 ), lhs.value( 2, 2 ) - rhs.value( 2, 2 )
+                           );
 }
 
 // ********************************************************************************
 
-Matrix3D operator-( const Matrix3D & lhs, const Matrix3D & rhs )
+MatrixFraction3D operator*( const MatrixFraction3D & lhs, const MatrixFraction3D & rhs )
 {
-    return Matrix3D( lhs.value( 0, 0 ) - rhs.value( 0, 0 ), lhs.value( 0, 1 ) - rhs.value( 0, 1 ), lhs.value( 0, 2 ) - rhs.value( 0, 2 ),
-                     lhs.value( 1, 0 ) - rhs.value( 1, 0 ), lhs.value( 1, 1 ) - rhs.value( 1, 1 ), lhs.value( 1, 2 ) - rhs.value( 1, 2 ),
-                     lhs.value( 2, 0 ) - rhs.value( 2, 0 ), lhs.value( 2, 1 ) - rhs.value( 2, 1 ), lhs.value( 2, 2 ) - rhs.value( 2, 2 )
-                   );
-}
-
-// ********************************************************************************
-
-Matrix3D operator*( const Matrix3D & lhs, const Matrix3D & rhs )
-{
-    Matrix3D result;
+    MatrixFraction3D result;
     result.set_value( 0, 0, lhs.value(0,0) * rhs.value(0,0) + lhs.value(0,1) * rhs.value(1,0) + lhs.value(0,2) * rhs.value(2,0) );
     result.set_value( 0, 1, lhs.value(0,0) * rhs.value(0,1) + lhs.value(0,1) * rhs.value(1,1) + lhs.value(0,2) * rhs.value(2,1) );
     result.set_value( 0, 2, lhs.value(0,0) * rhs.value(0,2) + lhs.value(0,1) * rhs.value(1,2) + lhs.value(0,2) * rhs.value(2,2) );
@@ -332,42 +333,42 @@ Matrix3D operator*( const Matrix3D & lhs, const Matrix3D & rhs )
 
 // ********************************************************************************
 
-Matrix3D operator*( const double lhs, const Matrix3D & rhs )
+MatrixFraction3D operator*( const Fraction & lhs, const MatrixFraction3D & rhs )
 {
-    return Matrix3D( lhs * rhs.value( 0, 0 ), lhs * rhs.value( 0, 1 ), lhs * rhs.value( 0, 2 ),
-                     lhs * rhs.value( 1, 0 ), lhs * rhs.value( 1, 1 ), lhs * rhs.value( 1, 2 ),
-                     lhs * rhs.value( 2, 0 ), lhs * rhs.value( 2, 1 ), lhs * rhs.value( 2, 2 ) );
+    return MatrixFraction3D( lhs * rhs.value( 0, 0 ), lhs * rhs.value( 0, 1 ), lhs * rhs.value( 0, 2 ),
+                             lhs * rhs.value( 1, 0 ), lhs * rhs.value( 1, 1 ), lhs * rhs.value( 1, 2 ),
+                             lhs * rhs.value( 2, 0 ), lhs * rhs.value( 2, 1 ), lhs * rhs.value( 2, 2 ) );
 }
+
 // ********************************************************************************
 
-Matrix3D operator*( const Matrix3D & lhs, const double rhs )
+MatrixFraction3D operator*( const MatrixFraction3D & lhs, const Fraction & rhs )
 {
     return rhs * lhs;
 }
 
 // ********************************************************************************
 
-Matrix3D operator/( const Matrix3D & lhs, const double rhs )
+MatrixFraction3D operator/( const MatrixFraction3D & lhs, Fraction rhs )
 {
-    return Matrix3D( lhs.value( 0, 0 ) / rhs, lhs.value( 0, 1 ) / rhs, lhs.value( 0, 2 ) / rhs,
-                     lhs.value( 1, 0 ) / rhs, lhs.value( 1, 1 ) / rhs, lhs.value( 1, 2 ) / rhs,
-                     lhs.value( 2, 0 ) / rhs, lhs.value( 2, 1 ) / rhs, lhs.value( 2, 2 ) / rhs );
+    rhs.reciprocal();
+    return lhs * rhs;
 }
 
 // ********************************************************************************
 
-Matrix3D inverse( const Matrix3D & matrix3d )
+MatrixFraction3D inverse( const MatrixFraction3D & matrix3d )
 {
-    Matrix3D result( matrix3d );
+    MatrixFraction3D result( matrix3d );
     result.invert();
     return result;
 }
 
 // ********************************************************************************
 
-Matrix3D transpose( const Matrix3D & matrix3d )
+MatrixFraction3D transpose( const MatrixFraction3D & matrix3d )
 {
-    Matrix3D result( matrix3d );
+    MatrixFraction3D result( matrix3d );
     result.transpose();
     return result;
 }

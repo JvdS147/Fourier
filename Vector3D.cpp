@@ -190,7 +190,7 @@ bool nearly_equal( const Vector3D & lhs, const Vector3D & rhs, const double tole
 
 bool nearly_zero( const Vector3D & lhs, const double tolerance )
 {
-    return ( nearly_zero( lhs.x(), tolerance ) && nearly_zero( lhs.y(), tolerance ) && nearly_zero( lhs.z(), tolerance ) );
+    return lhs.nearly_zero( tolerance );
 }
 
 // ********************************************************************************

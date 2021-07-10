@@ -156,7 +156,7 @@ inline Angle operator*( const double lhs, const Angle rhs ) { return Angle::from
 
 inline Angle ATAN2( const double y, const double x ) { return Angle::from_radians( atan2( y, x ) ); }
 
-inline bool nearly_equal( const Angle lhs, const Angle rhs, const Angle tolerance = Angle::from_radians( 0.0000001 ) )
+inline bool nearly_equal( const Angle lhs, const Angle rhs, const Angle tolerance = Angle::from_radians( 0.000001 ) )
 {
     return ( absolute( rhs - lhs ) < tolerance );
 }

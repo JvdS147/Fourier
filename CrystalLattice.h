@@ -166,6 +166,9 @@ CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs )
 
 CrystalLattice average( const CrystalLattice & cl_1, const CrystalLattice & cl_2, const CrystalLattice & cl_3 );
 
+// This would be an alternative solution. The main question is: does the weight more naturally apply to lhs or to rhs?
+// CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs, const double weight = 1.0 );
+
 // Length tolerance is relative, angle tolerance is absolute
 bool nearly_equal( const CrystalLattice & lhs, const CrystalLattice & rhs, double length_tolerance_percentage = 10.0, const Angle angle_tolerance = Angle::from_degrees( 10.0 ) );
 

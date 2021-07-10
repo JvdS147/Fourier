@@ -66,7 +66,8 @@ public:
     void add_inversion_at_origin();
 
     // Allows quick building of space groups
-    void add_centring_vector( std::vector< Vector3D > & centring_vector );
+    // Should not include [ 0, 0, 0 ].
+    void add_centring_vectors( const std::vector< Vector3D > & centring_vectors );
 
     size_t nsymmetry_operators() const { return symmetry_operators_.size(); }
 

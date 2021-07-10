@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //#include "NormalisedVector3D.h"
 #include "Plane.h"
 #include "Utilities.h"
+#include "SpaceGroup.h"
 #include "SymmetricMatrix3D.h"
 #include "Vector3DCalculations.h"
 
@@ -641,6 +642,7 @@ Matrix3D I_centred_to_primitive()
 
 Matrix3D F_centred_to_primitive()
 {
+    // Why not 0.0 on the diagonal? That involves two row swaps, so coordinate frame should still be right-handed? 
     return Matrix3D(  0.5,  0.0,  0.5,
                       0.5,  0.5,  0.0,
                       0.0,  0.5,  0.5 );
@@ -659,7 +661,62 @@ Matrix3D R_centred_to_primitive()
 
 bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs )
 {
-    
+    return true;
+}
+
+// ********************************************************************************
+
+bool nearly_integer( const double value, const double tolerance )
+{
+    return nearly_equal( value, round_to_int( value ), tolerance );
+}
+
+// ********************************************************************************
+
+void add_centring_to_space_group_after_transformation( Matrix3D tranformation_matrix, SpaceGroup & space_group )
+{
+    double d = tranformation_matrix.determinant();
+    if ( ! nearly_integer( d ) )
+        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : determinant is not an integer." );
+    int D = round_to_int( tranformation_matrix.determinant() );
+    if ( D == 1 )
+        return;
+    if ( D < 1 )
+        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : D < 1." );
+    // I have not been able to find a smart way to extract the possible additional lattice points
+    // from the transformation matrix, so we simply try many.
+    // We want to find the points [ f/D, g/D, h/D ], with D the determinant, that lie within the unit cell
+    // but that is not one of the current lattice points. So f/D, g/D and h/D are not allowed all to be integers at once.
+    // f/D must be in the range [ 0, 1 >. 
+    tranformation_matrix.transpose();
+    // tranformation_matrix /= d;
+    std::vector< Vector3D > centring_vectors;
+    for ( size_t f( 0 ); f != D; ++f )
+    {
+        for ( size_t g( 0 ); g != D; ++g )
+        {
+            for ( size_t h( 0 ); h != D; ++h )
+            {
+                if ( ( f == 0 ) && ( g == 0 ) && ( h == 0 ) )
+                    continue;
+                Vector3D trial_vector( f/d, g/d, h/d );
+                // I guess it would be more efficient to divide the transformation matrix by d and
+                // to construct the trial vector as [ f, g, h ].
+                Vector3D lp = tranformation_matrix * trial_vector; // lp = (trial) lattice point in the old coordinate frame.
+                if ( ! nearly_integer( lp.x() ) )
+                    continue;
+                if ( ! nearly_integer( lp.y() ) )
+                    continue;
+                if ( ! nearly_integer( lp.z() ) )
+                    continue;
+                centring_vectors.push_back( trial_vector );
+            }
+        }
+    }
+    // The identity has not been added, and shouldn't have been
+    if ( centring_vectors.size() != D-1 )
+        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : centring_vectors.size() != D." );
+    space_group.add_centring_vectors( centring_vectors );
 }
 
 // ********************************************************************************

@@ -94,7 +94,8 @@ double AnisotropicDisplacementParameters::U_iso() const
 
 double AnisotropicDisplacementParameters::average_displacement_squared( const Vector3D & v, const CrystalLattice & crystal_lattice )
 {
-    return ( v * ( transpose( crystal_lattice.Downs_G() ) * U_star( crystal_lattice ) * crystal_lattice.Downs_G() ) * v ) / ( v * crystal_lattice.Downs_G() * v );
+    return ( v * ( transpose( crystal_lattice.Downs_G() ) * U_star( crystal_lattice ) * crystal_lattice.Downs_G() ) * v ) /
+        ( v * crystal_lattice.Downs_G() * v );
 }
 
 // ********************************************************************************

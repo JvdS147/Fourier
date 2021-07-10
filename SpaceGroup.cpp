@@ -87,7 +87,7 @@ void SpaceGroup::add_inversion_at_origin()
     if ( has_inversion_at_origin_ )
         return;
     if ( has_inversion_ )
-        std::cout << "SpaceGroup::add_inversion_at_origin(): warning you are adding an inversion to a space group that already has an inversion" << std::endl;
+        std::cout << "SpaceGroup::add_inversion_at_origin(): warning you are adding an inversion to a space group that already has an inversion." << std::endl;
     std::vector< SymmetryOperator > symmetry_operators;
     symmetry_operators.reserve( symmetry_operators_.size() * 2 );
     SymmetryOperator inversion( Matrix3D( -1.0 ), Vector3D() );
@@ -102,9 +102,43 @@ void SpaceGroup::add_inversion_at_origin()
 
 // ********************************************************************************
 
-void SpaceGroup::add_centring_vector( std::vector< Vector3D > & centring_vector )
+void SpaceGroup::add_centring_vectors( const std::vector< Vector3D > & centring_vectors )
 {
-    throw std::runtime_error( "SpaceGroup::add_centring_vector(): not yet implemented." );
+    if ( centring_vectors.empty() )
+    {
+        std::cout << "SpaceGroup::add_centring_vectors(): warning you are adding zero centring vectors." << std::endl;
+        return;
+    }
+    // Check if any of the centring vectors that is to be added is [ 0, 0, 0 ]
+    for ( size_t j( 0 ); j != centring_vectors.size(); ++j )
+    {
+        if ( centring_vectors[j].nearly_zero() )
+            throw std::runtime_error( "SpaceGroup::add_centring_vectors(): the zero vector cannot be added." );
+    }
+    if ( ! centring_vectors_.empty() )
+    {
+        std::cout << "SpaceGroup::add_centring_vectors(): warning you are adding centring vectors to a space group that already has centring vectors." << std::endl;
+        for ( size_t i( 0 ); i != centring_vectors.size(); ++i )
+        {
+            for ( size_t j( 0 ); j != centring_vectors_.size(); ++j )
+            {
+                if ( nearly_equal( centring_vectors[i], centring_vectors_[j] ) )
+                    throw std::runtime_error( "SpaceGroup::add_centring_vectors(): the centring vector you re adding is already present." );
+            }
+        }
+    }
+    std::vector< SymmetryOperator > symmetry_operators;
+    symmetry_operators.reserve( symmetry_operators_.size() * centring_vectors.size() );
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+    {
+        for ( size_t j( 0 ); j != centring_vectors.size(); ++j )
+        {
+            symmetry_operators.push_back( symmetry_operators_[i] );
+            symmetry_operators.push_back( SymmetryOperator( Matrix3D(), centring_vectors[j] ) * symmetry_operators_[i] );
+        }
+    }
+    symmetry_operators_ = symmetry_operators;
+    decompose();
 }
 
 // ********************************************************************************
@@ -243,9 +277,7 @@ void SpaceGroup::print_multiplication_table() const
                 }
             }
             if ( ! found )
-            {
                 throw std::runtime_error( "SpaceGroup::print_multiplication_table(): operator not found." );
-            }
         }
         std::cout << std::endl;
     }

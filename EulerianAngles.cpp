@@ -1,6 +1,3 @@
-#ifndef RUNTESTS_H
-#define RUNTESTS_H
-
 /* *********************************************
 Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -28,34 +25,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-class TestSuite;
+#include "EulerianAngles.h"
 
-void test_angle( TestSuite & test_suite );
-void test_Chebyshev_background( TestSuite & test_suite );
-void test_chemical_formula( TestSuite & test_suite );
-void test_Complex( TestSuite & test_suite );
-void test_Constraints( TestSuite & test_suite );
-void test_ConvexPolygon( TestSuite & test_suite );
-void test_correlation_matrix( TestSuite & test_suite );
-void test_crystal_lattice( TestSuite & test_suite );
-void test_crystal_structure( TestSuite & test_suite );
-void test_file_name( TestSuite & test_suite );
-void test_fraction( TestSuite & test_suite );
-void test_mapping( TestSuite & test_suite );
-void test_matrix3D( TestSuite & test_suite );
-void test_MatrixFraction3D( TestSuite & test_suite );
-void test_maths( TestSuite & test_suite );
-void test_ModelBuilding( TestSuite & test_suite );
-void test_PowderMatchTable( TestSuite & test_suite );
-void test_quaternion( TestSuite & test_suite );
-void test_ReadCell( TestSuite & test_suite );
-void test_sort( TestSuite & test_suite );
-void test_TextFileReader_2( TestSuite & test_suite );
-void test_TLS_ADPs( TestSuite & test_suite );
-void test_utilities( TestSuite & test_suite );
-void test_3D_calculations( TestSuite & test_suite );
+// ********************************************************************************
 
-void run_tests();
+EulerianAngles::EulerianAngles()
+{
+}
 
-#endif // RUNTESTS_H
+// ********************************************************************************
 

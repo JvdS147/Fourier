@@ -34,6 +34,12 @@ class Angle;
 #include <cstddef> // For definition of size_t
 #include <vector>
 
+double Legendre_polynomial( const size_t order, const double cosine_theta );
+
+// Must return size_t, because we use recursion
+// Simplistic algorithm, will overflow very quickly.
+size_t factorial( const size_t n );
+
 // Adds a list of doubles trying to avoid adding very small to very large numbers
 double add_doubles( const std::vector< double > & values );
 

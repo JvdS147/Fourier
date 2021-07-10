@@ -57,9 +57,7 @@ class Fraction
 {
 public:
 
-    Fraction() : integer_part_(0), numerator_(0), denominator_(1) {}
-
-    explicit Fraction( const int integer_part ) : integer_part_(integer_part), numerator_(0), denominator_(1) {}
+    explicit Fraction( const int integer_part = 0 ) : integer_part_(integer_part), numerator_(0), denominator_(1) {}
 
     // Must be of the type "1+4/5", "-1-4/5". "-1-4/-5" or "-1-4/+5" works but is discouraged.
     // Adding this constructor would make it necessary to add Utilities.h to Fraction.cpp
@@ -77,6 +75,9 @@ public:
     // Fraction(-7,4,4) is constructed as "-6 + (0/1)"
     // Fraction(-7,2,-4) is constructed as "-7 + (-1/2)"
     Fraction( const int integer_part, const int numerator, const int denominator );
+
+    static Fraction zero()  { return Fraction( 0 ); }
+    static Fraction one() { return Fraction( 1 ); }
 
     inline int integer_part() const { return integer_part_; }
     inline Fraction fractional_part() const { Fraction result; result.numerator_ = this->numerator_; result.denominator_ = this->denominator_; return result; }
@@ -152,6 +153,8 @@ private:
     int denominator_; // Always positive. Always greater than numerator_. Always 1 when numerator_ is 0.
 };
 
+Fraction absolute( const Fraction & fraction );
+
 std::ostream & operator<<( std::ostream & os, const Fraction fraction );
 
 // We could remove all the overloads taking one double argument and either make it the
@@ -196,7 +199,7 @@ Fraction double2fraction( const double target, const Fraction & smallest_unit );
 // denominator is smaller than or equal to maximum_denominator
 Fraction Farey( double target, const int maximum_denominator );
 
-Fraction Farey_terminate_on_error( double target, const double epsilon );
+Fraction Farey_terminate_on_error( const double target, const double epsilon );
 
 #endif // FRACTION_H
 

@@ -165,7 +165,7 @@ void add_class( const std::string & class_name )
     test_file_writer.write_line( "    std::cout << \"Now running tests for " + class_name + ".\" << std::endl;" );
     test_file_writer.write_line();
     test_file_writer.write_line( "    {" );
-    test_file_writer.write_line( "    " + class_name + " dummy();" );
+    test_file_writer.write_line( "    " + class_name + " dummy;" );
     test_file_writer.write_line( "    test_suite.test_equality( dummy, , \"" + class_name + "()\" );" );
     test_file_writer.write_line( "    }" );
     test_file_writer.write_line();

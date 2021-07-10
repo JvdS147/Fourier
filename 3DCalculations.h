@@ -39,6 +39,7 @@ class Matrix3D;
 class MillerIndices;
 class NormalisedVector3D;
 class Plane;
+class SpaceGroup;
 class SymmetricMatrix3D;
 class Vector3D;
 
@@ -165,6 +166,14 @@ Matrix3D F_centred_to_primitive();
 Matrix3D R_centred_to_primitive();
 
 bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs );
+
+// This has to be here because it uses functions defined in Utilities.h and in MathsFunctions.h
+// and otherwise there would be circular references. Well, that is why we started the current file.
+bool nearly_integer( const double value, const double tolerance = 0.000001 );
+
+// The transformation has already been applied to the space group.
+// If e.g. the transformation matrix codes P-1 to I-1, it adds [ 1/2, 1/2, 1/2 ] to the symmetry operators.
+void add_centring_to_space_group_after_transformation( Matrix3D tranformation_matrix, SpaceGroup & space_group );
 
 #endif // DCALCULATIONS_H
 
