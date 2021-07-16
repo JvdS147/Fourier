@@ -28,11 +28,25 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-class Vector3D;
-class Angle;
+#include "BasicMathsFunctions.h"
 
+#include <cmath>
 #include <cstddef> // For definition of size_t
 #include <vector>
+
+typedef double (*Function)( const double x );
+
+double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance = TOLERANCE );
+
+double integral( const Function f, const double start, const double end, const double step_size );
+
+// Evaluates the integral by drawing random values for x
+// This has a minor advantage that you if you want to double the number of sampling points
+// to improve the accuracy, you can simply call the function twice with the same number
+// of points and average the results. If you do that with integral(), you would
+// recalculate everything you have done before or you would need
+// sophisticated bookkeeping of what you have and have not yet done
+double integral_Monte_Carlo( const Function f, const double start, const double end, const size_t npoints );
 
 double Legendre_polynomial( const size_t order, const double cosine_theta );
 
@@ -55,45 +69,22 @@ double calculate_maximum( const std::vector< double > & values );
 size_t calculate_minimum( const std::vector< size_t > & values );
 size_t calculate_maximum( const std::vector< size_t > & values );
 
-int greatest_common_divisor( const int lhs, const int rhs );
-
-int round_to_int( const double x );
-
-size_t round_to_size_t( const double x );
-
-// ********************************************************************************
-
-double absolute_relative_difference( const double lhs, const double rhs );
-
-// It is more efficient to calculate sine and cosine of the same angle simultaneously
-// The algorithm that is used is an APPROXIMATION
-void sincos( Angle angle, double & sine, double & cosine );
-
 // Calculates sqrt( x^2 + y^2 ) trying to prevent underflow or overflow
 double hypothenuse( const double x, const double y );
 
-inline double square( const double x )
-{
-    return ( x * x );
-}
+// Centered around 0.0, area normalised to 1.0.
+// For pseudo-Voigt
+double Lorentzian( const double x, const double FWHM );
 
-// returns 0 if x = 0.0
-inline int sign( const double x )
-{
-    return ( 0.0 < x ) - ( x < 0.0 );
-}
+// Centered around 0.0, area normalised to 1.0.
+// For pseudo-Voigt
+double Gaussian( const double x, const double FWHM );
 
-inline bool is_even( const int i )
-{
-    return ( i % 2 ) == 0;
-}
-
-inline bool is_odd( const int i )
-{
-    return ! is_even( i );
-}
-
-Vector3D cylindrical2Cartesian( const double r, Angle phi, const double z );
+// Centered around 0.0, area normalised to 1.0.
+// Needs: FWHM (in degrees 2theta), eta, 2theta w.r.t. 0.0
+// eta should probably be 0.68 for the FWHM of the pseudo-Voigt to be the same as the
+// FWHM of the individual Lorentzian and Gaussian.
+double pseudo_Voigt( const double x, const double FWHM );
 
 // Returns a random number between 0.0 and 1.0, inclusive.
 double uniform_distribution_1();

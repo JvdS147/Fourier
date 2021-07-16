@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Wavelength.h"
-#include "Utilities.h"
+#include "BasicMathsFunctions.h"
 
 namespace
 {

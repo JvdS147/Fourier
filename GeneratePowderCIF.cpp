@@ -27,10 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "GeneratePowderCIF.h"
 #include "3DCalculations.h"
+#include "BasicMathsFunctions.h"
 #include "DoubleWithESD.h"
 #include "Element.h"
 #include "FileName.h"
-#include "MathsFunctions.h"
 #include "PhysicalConstants.h"
 #include "PowderPatternCalculator.h"
 #include "String2Fraction.h"

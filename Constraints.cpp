@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Constraints.h"
 #include "3DCalculations.h"
+#include "BasicMathsFunctions.h"
 #include "CrystalStructure.h"
 #include "Fraction.h"
 #include "PointGroup.h"

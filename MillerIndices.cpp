@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "MillerIndices.h"
-#include "MathsFunctions.h"
+#include "BasicMathsFunctions.h"
 #include "Utilities.h"
 
 #include <iostream>

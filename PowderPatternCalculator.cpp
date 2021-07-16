@@ -26,14 +26,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "PowderPatternCalculator.h"
+#include "3DCalculations.h"
 #include "Angle.h"
 #include "CrystalStructure.h"
 #include "MathsFunctions.h"
 #include "PointGroup.h"
 #include "PowderPattern.h"
 #include "ReflectionList.h"
-#include "Utilities.h"
-#include "3DCalculations.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -46,103 +45,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace
 {
 
-// ********************************************************************************
-
-// Centered around 0.0, area normalised to 1.0.
-double Lorentzian( const double FWHM, const double x )
-{
-    return (1.0/CONSTANT_PI) * ( ( 0.5*FWHM ) / ( square( x ) + square( 0.5*FWHM ) ) );
-}
-
-// ********************************************************************************
-
-// Centered around 0.0, area normalised to 1.0.
-double Gaussian( const double FWHM, const double x )
-{
-    double sigma = FWHM / 2.35482; // 2.35482 = 2*sqrt(2*ln(2))
-    return exp(-square(x)/(2.0*square(sigma))) / (sigma*sqrt(2.0*CONSTANT_PI));
-}
-
-// ********************************************************************************
-
-//double global_FWHM;
-
-// function pointer
-//typedef double (* PenaltyFunction)( const double );
-//
-//double bisection( const PenaltyFunction f, const double target_value, const double initial_value )
-//{
-//    double result = initial_value;
-//    double increment( 0.01 );
-//    double left_bracket = initial_value - increment;
-//    double right_bracket = initial_value + increment;
-//    // Following line guarantees that neither f( left_bracket ) nor f( right_bracket ) can be 0.0
-//    double f_left_bracket  = f( left_bracket );
-//    double f_right_bracket = f( right_bracket );
-//
-//    
-//    while ( sign( f( left_bracket ) - target_value ) * sign( f( right_bracket ) - target_value ) > 0 )
-//    {
-//        left_bracket  -= increment;
-//        right_bracket += increment;
-//        f_left_bracket  = f( left_bracket );
-//        f_right_bracket = f( right_bracket );
-//   //     increment *= 2.0;
-//    }
-//    // Following line guarantees that f( result ) - target_value cannot be 0.0 within the loop.
-//    // Since we only assign result to left_bracket and right_bracket,
-//    // this guarantees that neither f( left_bracket ) - target_value nor f( right_bracket ) - target_value can be 0.0.
-//    while ( fabs( f( result ) - target_value ) > 0.000001 )
-//    {
-//        if ( sign( f( result ) - target_value ) * sign( f( right_bracket ) - target_value ) < 0 )
-//            left_bracket = result;
-//        else
-//            right_bracket = result;
-//        result = ( right_bracket + left_bracket ) / 2.0;
-//    }
-//    std::cout << "result = " << result << std::endl;
-//    return result;
-//}
-//
-//// ********************************************************************************
-//
-//double pseudo_Voigt_2( const double x )
-//{
-//    double eta( 0.8 );
-//    return eta * Lorentzian( global_FWHM, x ) + (1.0-eta) * Gaussian( global_FWHM, x );
-//}
-//
-//// Calculates actual FWHM for a pseudo Voigt given eta and FWHM of the L and G
-//double calculate_FWHM( const double FWHM )
-//{
-//    global_FWHM = FWHM;
-//    double maximum = pseudo_Voigt_2( 0.0 );
-//    return bisection( &pseudo_Voigt_2, maximum / 2.0, 0.05 );
-//}
-
-//// ********************************************************************************
-//
-//// This is the target function for the bisection algorithm
-//double target_function( const double x )
-//{
-//    return ( calculate_FWHM( x ) );
-//}
-
-// ********************************************************************************
-
 // Centered around 0.0, area normalised to 1.0.
 // Needs: FWHM (in degrees 2theta), eta, 2theta w.r.t. 0.0
 // eta should probably be 0.68 for the FWHM of the pseudo-Voigt to be the same as the
 // FWHM of the individual Lorentzian and Gaussian.
-double pseudo_Voigt( const Angle two_theta, const double FWHM )
+double pseudo_Voigt_2( const double x )
 {
-    double eta( 0.9 );
+    double eta( 0.5 );
+    double FWHM( 0.2 );
 // For a *full* Voigt, when the FWHM is set to the same value for the Gaussian and the Lorentzian part, the FWHM of the
 // resulting full Voigt is also that same FWHM. This is no longer true for our pseudo Voigt, so we
 // must calculate the correct FWHM.
 //    FWHM = bisection( &calculate_FWHM, FWHM, FWHM );
 //    std::cout << "FWHM = " << FWHM << std::endl;
-    return eta * Lorentzian( FWHM, two_theta.value_in_degrees() ) + (1.0-eta) * Gaussian( FWHM, two_theta.value_in_degrees() );
+    return eta * Lorentzian( x, FWHM ) + (1.0-eta) * Gaussian( x, FWHM );
 }
 
 // ********************************************************************************
@@ -152,19 +68,19 @@ double pseudo_Voigt( const Angle two_theta, const double FWHM )
 // is not exactly at one of the i*2theta_step points, so there is a slight shift of
 // on average 1/4 of a 2theta_step
 // This approximation should be fine if 2theta_step is small, such as 0.01 or 0.02.
-std::vector<double> peak_shape( const Angle two_theta_step, const double FWHM )
+std::vector< double > peak_shape( const Angle two_theta_step, const double FWHM )
 {
     // Find number of points out to the right that need to be calculated to reach 0.1% of intensity at 0.0
     std::vector<double> values;
     values.reserve( 137 ); // 44 for 1% of intensity, but the value also depends on eta.
-    double I100 = pseudo_Voigt( Angle(), FWHM );
+    double I100 = pseudo_Voigt( 0.0, FWHM );
     values.push_back( I100 );
     size_t i( 0 );
     double value;
     do
     {
         ++i;
-        value = pseudo_Voigt( i * two_theta_step, FWHM );
+        value = pseudo_Voigt( i * two_theta_step.value_in_degrees(), FWHM );
         values.push_back( value );
     }
     while ( (I100/1000.0) < value );
@@ -180,6 +96,22 @@ std::vector<double> peak_shape( const Angle two_theta_step, const double FWHM )
 }
 
 } // namespace
+
+// ********************************************************************************
+
+void test_FWHM()
+{
+    double eta = 0.5;
+    double FWHM = 0.1;
+    // Calculate the FWHM. That requires first calculating the maximum, which is at x = 0.0.
+    double target_FWHM = 0.1;
+    double maximum = pseudo_Voigt_2( 0.0 );
+    std::cout << "maximum = " << maximum << std::endl;
+//double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance = 0.000001 );
+    double x_half_maximum = bisection( &pseudo_Voigt_2, maximum/2.0, 0.05 );
+    std::cout << "x_half_maximum = " << x_half_maximum << std::endl;
+    double actual_FWHM = 2.0 * x_half_maximum;
+}
 
 // ********************************************************************************
 

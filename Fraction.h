@@ -76,7 +76,7 @@ public:
     // Fraction(-7,2,-4) is constructed as "-7 + (-1/2)"
     Fraction( const int integer_part, const int numerator, const int denominator );
 
-    static Fraction zero()  { return Fraction( 0 ); }
+    static Fraction zero() { return Fraction( 0 ); }
     static Fraction one() { return Fraction( 1 ); }
 
     inline int integer_part() const { return integer_part_; }

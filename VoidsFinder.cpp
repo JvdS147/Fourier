@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "VoidsFinder.h"
 #include "3DCalculations.h"
 #include "CrystalStructure.h"
-#include "MathsFunctions.h"
+#include "BasicMathsFunctions.h"
 #include "Plane.h"
 #include "RandomNumberGenerator.h"
 

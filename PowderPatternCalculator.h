@@ -41,9 +41,9 @@ class PowderPatternCalculator
 {
 public:
 
-    PowderPatternCalculator( const CrystalStructure & crystal_structure );
+    explicit PowderPatternCalculator( const CrystalStructure & crystal_structure );
 
-    // @@@@ We now have a Wavelength class
+    // @@ We now have a Wavelength class
     double wavelength() const { return wavelength_; }
     void set_wavelength( const double wavelength ) { wavelength_ = wavelength; }
     Angle two_theta_start() const { return two_theta_start_; }
@@ -101,5 +101,7 @@ private:
     bool is_systematic_absence( const MillerIndices miller_indices ) const;
     std::set< MillerIndices > calculate_equivalent_reflections( const MillerIndices miller_indices ) const;
 };
+
+void test_FWHM();
 
 #endif // POWDERPATTERNCALCULATOR_H

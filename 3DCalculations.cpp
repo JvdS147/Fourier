@@ -27,14 +27,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "3DCalculations.h"
 #include "Angle.h"
+#include "BasicMathsFunctions.h"
 #include "CollectionOfPoints.h"
 #include "CrystalLattice.h"
-#include "MathsFunctions.h"
 #include "Matrix3D.h"
 #include "MillerIndices.h"
 //#include "NormalisedVector3D.h"
 #include "Plane.h"
-#include "Utilities.h"
 #include "SpaceGroup.h"
 #include "SymmetricMatrix3D.h"
 #include "Vector3DCalculations.h"
@@ -482,6 +481,13 @@ Vector3D rotate_point_about_axis( Vector3D point, const Vector3D & origin, const
 
 // ********************************************************************************
 
+Vector3D cylindrical2Cartesian( const double r, Angle phi, const double z )
+{
+    return Vector3D( r * phi.cosine(), r * phi.sine(), z );
+}
+
+// ********************************************************************************
+
 // Takes two fractional coordinates and determines if they are the same, taking into acccount translations
 bool are_translationally_equivalent( const double x, const double y  )
 {
@@ -662,13 +668,6 @@ Matrix3D R_centred_to_primitive()
 bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs )
 {
     return true;
-}
-
-// ********************************************************************************
-
-bool nearly_integer( const double value, const double tolerance )
-{
-    return nearly_equal( value, round_to_int( value ), tolerance );
 }
 
 // ********************************************************************************

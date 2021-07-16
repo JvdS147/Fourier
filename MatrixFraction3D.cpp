@@ -74,7 +74,7 @@ void MatrixFraction3D::invert()
 {
     Fraction D = determinant();
     if ( D.is_zero() )
-        std::runtime_error( "MatrixFraction3D::invert(): determinant = 0" );
+        throw std::runtime_error( "MatrixFraction3D::invert(): determinant = 0" );
     transpose();
     MatrixFraction3D adjoint;
     adjoint.data_[0][0] = +minor_matrix_determinant(0,0); adjoint.data_[0][1] = -minor_matrix_determinant(0,1); adjoint.data_[0][2] = +minor_matrix_determinant(0,2);

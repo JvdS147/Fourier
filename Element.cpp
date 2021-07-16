@@ -26,12 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Element.h"
-#include "MathsFunctions.h"
+#include "BasicMathsFunctions.h"
 #include "Utilities.h"
 
 #include <cmath>
 #include <stdexcept>
-
+#include <vector>
 #include <iostream> // For debugging
 
 // Index 0 is D, for all other elements the index is the atomic number

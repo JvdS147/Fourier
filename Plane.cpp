@@ -26,12 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Plane.h"
+#include "3DCalculations.h"
 #include "Eigenvalue.h"
 #include "SymmetricMatrix3D.h"
 #include "Utilities.h"
 #include "Vector3D.h"
 #include "Vector3DCalculations.h"
-#include "3DCalculations.h"
 
 #include <cmath>
 #include <iostream> // For debugging

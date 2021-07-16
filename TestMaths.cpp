@@ -33,9 +33,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string>
 
+double function_01( const double x )
+{
+    return 1.0;
+}
+
 void test_maths( TestSuite & test_suite )
 {
     std::cout << "Now running tests for Maths." << std::endl;
+    {
     double a = 6.884;
     double b = 9.569;
     double c = 7.093;
@@ -46,11 +52,15 @@ void test_maths( TestSuite & test_suite )
                                                 Angle::angle_90_degrees(),
                                                 arccotangent( beta.cotangent() + 2.0*c/( 3.0*a*beta.sine() ) ),
                                                 Angle::angle_90_degrees() );
-     test_suite.test_equality_double( crystal_lattice_non_reduced.a(), 16.6828, "test_maths() a", 0.0001 );
-     test_suite.test_equality_double( crystal_lattice_non_reduced.b(), 9.569, "test_maths() b", 0.0001 );
-     test_suite.test_equality_double( crystal_lattice_non_reduced.c(), 7.093, "test_maths() c", 0.0001 );
-     test_suite.test_equality_double( crystal_lattice_non_reduced.alpha().value_in_degrees(), 90.0, "test_maths() alpha" );
-     test_suite.test_equality_double( crystal_lattice_non_reduced.beta().value_in_degrees(),  83.5645, "test_maths() beta", 0.0001 );
-     test_suite.test_equality_double( crystal_lattice_non_reduced.gamma().value_in_degrees(), 90.0, "test_maths() gamma" );
+    test_suite.test_equality_double( crystal_lattice_non_reduced.a(), 16.6828, "test_maths() a", 0.0001 );
+    test_suite.test_equality_double( crystal_lattice_non_reduced.b(), 9.569, "test_maths() b", 0.0001 );
+    test_suite.test_equality_double( crystal_lattice_non_reduced.c(), 7.093, "test_maths() c", 0.0001 );
+    test_suite.test_equality_double( crystal_lattice_non_reduced.alpha().value_in_degrees(), 90.0, "test_maths() alpha" );
+    test_suite.test_equality_double( crystal_lattice_non_reduced.beta().value_in_degrees(),  83.5645, "test_maths() beta", 0.0001 );
+    test_suite.test_equality_double( crystal_lattice_non_reduced.gamma().value_in_degrees(), 90.0, "test_maths() gamma" );
+    }
+    {
+    test_suite.test_equality_double( integral( &function_01, -1.0, 5.0, 0.1 ), 6.0, "integral 01" );
+    }
 }
 

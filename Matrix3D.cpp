@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Matrix3D.h"
-#include "Utilities.h"
+#include "BasicMathsFunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -74,7 +74,7 @@ void Matrix3D::invert()
 {
     double D = determinant();
     if ( nearly_zero( D ) )
-        std::runtime_error( "Matrix3D::invert(): determinant = 0" );
+        throw std::runtime_error( "Matrix3D::invert(): determinant = 0" );
     transpose();
     Matrix3D adjoint;
     adjoint.data_[0][0] = +minor_matrix_determinant(0,0); adjoint.data_[0][1] = -minor_matrix_determinant(0,1); adjoint.data_[0][2] = +minor_matrix_determinant(0,2);

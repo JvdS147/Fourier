@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Fraction.h"
-#include "MathsFunctions.h"
+#include "BasicMathsFunctions.h"
 
 #include <stdexcept>
 #include <sstream>

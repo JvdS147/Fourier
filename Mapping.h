@@ -38,10 +38,7 @@ class Mapping
 {
 public:
 
-    // Default constructor
-    Mapping();
-
-    explicit Mapping( const size_t nvalues );
+    explicit Mapping( const size_t nvalues = 0 );
 
     explicit Mapping( const std::vector< size_t > & values );
 
@@ -54,6 +51,11 @@ public:
 
     // Note that this is all const, i.e. it is read-only
     size_t operator[]( const size_t i ) const;
+
+    std::vector< size_t >::iterator begin() { return mapping_.begin(); }
+    std::vector< size_t >::iterator end() { return mapping_.end(); }
+    std::vector< size_t >::const_iterator begin() const { return mapping_.begin(); }
+    std::vector< size_t >::const_iterator end() const { return mapping_.end(); }
 
     void invert();
 

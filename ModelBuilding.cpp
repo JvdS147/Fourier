@@ -27,10 +27,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ModelBuilding.h"
 #include "3DCalculations.h"
+#include "BasicMathsFunctions.h"
 #include "CrystalStructure.h"
 #include "NormalisedVector3D.h"
 #include "Plane.h"
-#include "Utilities.h"
 #include "Vector3D.h"
 
 #include <stdexcept>

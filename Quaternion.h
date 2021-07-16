@@ -32,6 +32,8 @@ class Matrix3D; // It would be cleaner if Quaternion did not have to know about 
                 // this Quaternion class is not really a general quaternion class but a rotation class,
                 // it makes sense to add the conversion to and from a rotation matrix in here.
 
+#include "BasicMathsFunctions.h"
+
 #include <string>
 
 /*
@@ -72,8 +74,6 @@ public:
     Quaternion & operator*=( const Quaternion & rhs );
     Quaternion & operator/=( const Quaternion & rhs );
 
-    bool operator==( const Quaternion & rhs ) const;
-    bool operator!=( const Quaternion & rhs ) const { return ! ( *this == rhs ); }
     bool operator< ( const Quaternion & rhs ) const;
     bool operator> ( const Quaternion & rhs ) const { return ( rhs < *this ); }
     bool operator>=( const Quaternion & rhs ) const { return ! ( *this < rhs ); }
@@ -93,7 +93,7 @@ private:
 
 };
 
-bool nearly_equal( const Quaternion lhs, const Quaternion rhs, const double tolerance = 0.000001 );
+bool nearly_equal( const Quaternion lhs, const Quaternion rhs, const double tolerance = TOLERANCE );
 
 #endif // QUATERNION_H
 

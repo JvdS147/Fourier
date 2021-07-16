@@ -89,13 +89,6 @@ public:
     Complex & operator--();    // Prefix
     Complex   operator--(int); // Postfix
 
-//    bool operator==( const Complex & rhs ) const;
-//    bool operator!=( const Complex & rhs ) const { return ! ( *this == rhs ); }
-//    bool operator< ( const Complex & rhs ) const;
-//    bool operator> ( const Complex & rhs ) const { return ( rhs < *this ); }
-//    bool operator>=( const Complex & rhs ) const { return ! ( *this < rhs ); }
-//    bool operator<=( const Complex & rhs ) const { return ! ( rhs < *this ); }
-
 private:
 
     double real_;

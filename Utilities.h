@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <vector>
 #include <string>
-#include <cmath>
 #include <iostream> // @@ Only necessary for show(), this is bad
 
 // We must have a separate StringFunctions.h
@@ -240,15 +239,6 @@ std::string size_t2string( const size_t input, const size_t padded_length = 0, c
 // the length of the input value is returned (so the value is never corrupted).
 std::string int2string( const int input, const size_t padded_length = 0, const char padding_character = '0' );
 
-inline bool nearly_equal( const double lhs, const double rhs, const double tolerance = 0.0000001 )
-{
-    return ( std::abs( rhs - lhs ) < tolerance );
-}
-
-inline bool nearly_zero( const double lhs, const double tolerance = 0.0000001 )
-{
-    return ( std::abs( lhs ) < tolerance );
-}
 
 // Checks is the string is correctly enquoted, i.e.:
 // There are no quotes at all.

@@ -25,73 +25,58 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "Mapping.h"
-#include "Utilities.h"
+#include "BasicMathsFunctions.h"
+#include "Angle.h"
+#include "Sort.h"
 
 #include <stdexcept>
+#include <cstdlib>
+#include <iostream> // For debugging
 
 // ********************************************************************************
 
-Mapping::Mapping( const size_t nvalues )
+double average( const double lhs, const double rhs, const double weight )
 {
-    mapping_ = initialise_with_sequential_values( nvalues );
+    if ( ! ( std::abs( weight - round_to_int( weight ) < 0.000001 ) ) )
+        std::cout << "average(): warning: weight is not an integer, is that intended?" << std::endl;
+    return ( lhs + weight * rhs ) / ( 1.0 + weight );
 }
 
 // ********************************************************************************
 
-Mapping::Mapping( const std::vector< size_t > & values ):
-mapping_(values)
+int greatest_common_divisor( const int lhs, const int rhs )
 {
-    check_consistency();
+    return ( ( rhs == 0 ) ? lhs : greatest_common_divisor( rhs, lhs % rhs ) );
 }
 
 // ********************************************************************************
 
-void Mapping::swap( const size_t i, const size_t j )
+int round_to_int( const double x )
 {
-    if ( ( i < mapping_.size() ) && ( j < mapping_.size() ) )
-        std::swap( mapping_[i], mapping_[j] );
-    else
-        throw std::runtime_error( "Mapping::swap(): error: index out of range." );
+    return ( x < 0 ) ? static_cast<int>( x - 0.5 ) : static_cast<int>( x + 0.5 );
 }
 
 // ********************************************************************************
 
-void Mapping::push_back()
+size_t round_to_size_t( const double x )
 {
-    mapping_.push_back( size() - 1 );
+    if ( x < -0.5 )
+        throw std::runtime_error( "round_to_size_t(): value is negative." );
+    return static_cast<size_t>( x + 0.5 );
 }
 
 // ********************************************************************************
 
-size_t Mapping::operator[]( const size_t i ) const
+bool nearly_integer( const double value, const double tolerance )
 {
-    if ( i < mapping_.size() )
-        return mapping_[i];
-    throw std::runtime_error( "Mapping::operator[]: error: index out of range." );
+    return nearly_equal( value, round_to_int( value ), tolerance );
 }
 
 // ********************************************************************************
 
-void Mapping::invert()
+double absolute_relative_difference( const double lhs, const double rhs )
 {
-    std::vector< size_t > new_mapping( mapping_.size() );
-    for ( size_t i( 0 ); i != mapping_.size(); ++i )
-        new_mapping[ mapping_[i] ] = i;
-    mapping_ = new_mapping;
-}
-
-// ********************************************************************************
-
-void Mapping::check_consistency() const
-{
-    std::vector< bool > done( mapping_.size(), false );
-    for ( size_t i( 0 ); i != mapping_.size(); ++i )
-    {
-        if ( done[ mapping_[i] ] )
-            throw std::runtime_error( "Mapping::check_consistency(): error: value found more than once." );
-        done[ mapping_[i] ] = true;
-    }
+    return std::abs( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
 }
 
 // ********************************************************************************
