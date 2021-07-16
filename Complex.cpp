@@ -27,9 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Complex.h"
 #include "BasicMathsFunctions.h"
-//#include "Utilities.h"
 
-//#include <cmath>
 #include <stdexcept>
 #include <iostream>
 
