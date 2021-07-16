@@ -58,7 +58,7 @@ std::string constraint_coordinate( const double x )
     // I have no idea if 1/24 is the correct value
     Fraction fraction = double2fraction( x, Fraction( 1, 24 ) );
     // This should really be close to exact, because x has already been moved to be exactly on the special position
-    if ( std::abs( fraction.to_double() - x ) > 0.000001 )
+    if ( ! nearly_equal( fraction.to_double(), x ) )
         std::cout << "constraint_coordinate():Warning: conversion to fraction introduces large error." << std::endl;
     if ( ! fraction.is_pure_fraction() )
         result += int2string( fraction.integer_part() ) + ".0";

@@ -107,7 +107,7 @@ void test_FWHM()
     double target_FWHM = 0.1;
     double maximum = pseudo_Voigt_2( 0.0 );
     std::cout << "maximum = " << maximum << std::endl;
-//double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance = 0.000001 );
+//double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance = TOLERANCE );
     double x_half_maximum = bisection( &pseudo_Voigt_2, maximum/2.0, 0.05 );
     std::cout << "x_half_maximum = " << x_half_maximum << std::endl;
     double actual_FWHM = 2.0 * x_half_maximum;
@@ -136,7 +136,7 @@ void PowderPatternCalculator::set_two_theta_step( const Angle two_theta_step )
 {
     two_theta_step_ = two_theta_step;
     // There is an approximation in the calculation of the power pattern that expects the 2theta step to be small
-    if ( two_theta_step_ < Angle::from_degrees( 0.000001 ) )
+    if ( two_theta_step_ < Angle::from_degrees( TOLERANCE ) )
          throw std::runtime_error( "PowderPatternCalculator::set_two_theta_step(): must be positive." );
     if ( two_theta_step_ > Angle::from_degrees( 0.05 ) )
         std::cout << "PowderPatternCalculator::set_two_theta_step(): Warning: because of an internal approximation, 2theta step is expected to be small." << std::endl;

@@ -601,7 +601,7 @@ Angle signed_torsion( const Vector3D & r1, const Vector3D & r2, const Vector3D &
     Angle torsion = angle( plane1.normal(), plane2.normal() );
     double d = plane1.signed_distance( r4 );
     double s;
-    if ( std::abs( d ) < 0.000001 ) // Our sign() function can return 0...
+    if ( nearly_zero( d ) ) // Our sign() function can return 0...
         s = 1.0;
     else
         s = -sign( d ); // The minus is to ensure we get the same results as Mercury

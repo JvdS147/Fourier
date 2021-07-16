@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "BasicMathsFunctions.h"
+
 #include <cmath>
 #include <stdexcept>
 #include <string>
@@ -54,7 +56,7 @@ public:
             error_messages_.push_back( error_message );
     }
 
-    void test_equality_double( const double lhs, const double rhs, const std::string & error_message, double tolerance = 0.000001 )
+    void test_equality_double( const double lhs, const double rhs, const std::string & error_message, double tolerance = TOLERANCE )
     {
         if ( fabs( lhs - rhs ) > tolerance )
             error_messages_.push_back( error_message );

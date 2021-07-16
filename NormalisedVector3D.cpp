@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "NormalisedVector3D.h"
+#include "BasicMathsFunctions.h"
 #include "Utilities.h"
 
 #include <cmath>
@@ -82,7 +83,7 @@ void NormalisedVector3D::show() const
 void NormalisedVector3D::normalise_2()
 {
     double l = data_[0]*data_[0] + data_[1]*data_[1] + data_[2]*data_[2];
-    if ( l < 0.000001 )
+    if ( l < TOLERANCE )
         throw std::runtime_error( "NormalisedVector3D::normalise_2(): zero vector" );
     l = sqrt( l );
     data_[0] /= l;

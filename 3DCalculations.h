@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // A major reason for the existence of this file is that it collects all functions that combine
 // Matrix3D, SymmetricMatrix3D, NormalisedVector3D and Vector3D, so that those classes do not need to know about each other.
 
+#include "BasicMathsFunctions.h"
+
 class Angle;
 class CollectionOfPoints;
 class CrystalLattice;
@@ -89,7 +91,7 @@ Matrix3D SymmetricMatrix3D2Matrix3D( const SymmetricMatrix3D & matrix );
 
 // Convert Matrix3D to a SymmetricMatrix3D.
 // Throws if the matrix was not symmetric within tolerance.
-SymmetricMatrix3D Matrix3D2SymmetricMatrix3D( const Matrix3D & matrix, const double tolerance = 1.0E-6 );
+SymmetricMatrix3D Matrix3D2SymmetricMatrix3D( const Matrix3D & matrix, const double tolerance = TOLERANCE );
 
 Vector3D operator*( const Matrix3D & matrix, const Vector3D & vector );
 Vector3D operator*( const SymmetricMatrix3D & matrix, const Vector3D & vector );

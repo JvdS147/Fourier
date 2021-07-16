@@ -80,7 +80,7 @@ public:
 
     void invert();
 
-    bool is_nearly_the_identity( const double tolerance = 0.000001 ) const;
+    bool is_nearly_the_identity( const double tolerance = TOLERANCE ) const;
 
     // cif format: "x,y,-z+1/2"
     std::string to_string() const;
@@ -94,7 +94,7 @@ private:
 
 std::ostream & operator<<( std::ostream & os, const SymmetryOperator & symmetry_operator );
 
-bool nearly_equal( const SymmetryOperator & lhs, const SymmetryOperator & rhs, const double tolerance = 0.0000001 );
+bool nearly_equal( const SymmetryOperator & lhs, const SymmetryOperator & rhs, const double tolerance = TOLERANCE );
 
 SymmetryOperator operator*( const SymmetryOperator & lhs, const SymmetryOperator & rhs );
 

@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "BasicMathsFunctions.h"
+
 #include <cstddef> // For definition of size_t
 #include <iosfwd>
 
@@ -79,9 +81,9 @@ public:
 
     void convert_to_row_echelon_form( Matrix3D & T );
 
-    size_t number_of_zero_rows( const double tolerance = 0.000001 ) const;
+    size_t number_of_zero_rows( const double tolerance = TOLERANCE ) const;
     
-    bool is_nearly_the_identity( const double tolerance = 0.000001 ) const;
+    bool is_nearly_the_identity( const double tolerance = TOLERANCE ) const;
 
     Matrix3D & operator+=( const Matrix3D & rhs );
     Matrix3D & operator-=( const Matrix3D & rhs );
@@ -95,7 +97,7 @@ private:
 
 std::ostream & operator<<( std::ostream & os, const Matrix3D & matrix3d );
 
-bool nearly_equal( const Matrix3D & lhs, const Matrix3D & rhs, const double tolerance = 0.0000001 );
+bool nearly_equal( const Matrix3D & lhs, const Matrix3D & rhs, const double tolerance = TOLERANCE );
 
 Matrix3D operator+( const Matrix3D & lhs, const Matrix3D & rhs );
 Matrix3D operator-( const Matrix3D & lhs, const Matrix3D & rhs );

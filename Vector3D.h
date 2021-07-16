@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "BasicMathsFunctions.h"
+
 #include <cstddef> // For definition of size_t
 #include <iosfwd>
 
@@ -59,12 +61,12 @@ public:
     // This could either test if each of the three components is close to 0.0
     // or it could test if length() or norm2() is close to 0.0. I have decided to do the
     // first.
-    bool nearly_zero( const double tolerance = 0.000001 ) const;
+    bool nearly_zero( const double tolerance = TOLERANCE ) const;
 
     // This could either test if each of the three components is close to 0.0
     // or it could test if length() or norm2() is close to 0.0. I have decided to do the
     // first.
-    void throw_if_zero_vector( const double tolerance = 0.000001 ) const;
+    void throw_if_zero_vector( const double tolerance = TOLERANCE ) const;
 
     Vector3D & operator+=( const Vector3D & rhs );
     Vector3D & operator-=( const Vector3D & rhs );
@@ -92,8 +94,8 @@ private:
 
 std::ostream & operator<<( std::ostream & os, const Vector3D & vector3d );
 
-bool nearly_equal( const Vector3D & lhs, const Vector3D & rhs, const double tolerance = 0.000001 );
-bool nearly_zero( const Vector3D & lhs, const double tolerance = 0.000001 );
+bool nearly_equal( const Vector3D & lhs, const Vector3D & rhs, const double tolerance = TOLERANCE );
+bool nearly_zero( const Vector3D & lhs, const double tolerance = TOLERANCE );
 
 Vector3D operator+( const Vector3D & lhs, const Vector3D & rhs );
 Vector3D operator-( const Vector3D & lhs, const Vector3D & rhs );

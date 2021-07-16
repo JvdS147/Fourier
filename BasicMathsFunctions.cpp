@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 double average( const double lhs, const double rhs, const double weight )
 {
-    if ( ! ( std::abs( weight - round_to_int( weight ) < 0.000001 ) ) )
+    if ( ! nearly_integer( weight ) )
         std::cout << "average(): warning: weight is not an integer, is that intended?" << std::endl;
     return ( lhs + weight * rhs ) / ( 1.0 + weight );
 }

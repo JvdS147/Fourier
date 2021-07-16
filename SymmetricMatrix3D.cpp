@@ -92,7 +92,7 @@ void SymmetricMatrix3D::set_value( size_t i, size_t j, const double value )
 void SymmetricMatrix3D::invert()
 {
     double D = determinant();
-    if ( fabs( D ) < 0.000001 )
+    if ( nearly_zero( D ) )
         throw std::runtime_error( "SymmetricMatrix3D::invert(): determinant = 0." );
     transpose();
     SymmetricMatrix3D adjoint;

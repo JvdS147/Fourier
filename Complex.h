@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "BasicMathsFunctions.h"
+
 /*
     Mainly a wrapper for std::complex< double > .
     
@@ -51,7 +53,7 @@ public:
     // This could either test if both the real and the imaginary part are close to 0.0
     // or it could test if norm() or norm2() is close to 0.0. I have decided to do the
     // first.
-    bool nearly_zero( const double tolerance = 0.000001 ) const;
+    bool nearly_zero( const double tolerance = TOLERANCE ) const;
     
     void reciprocal();
 
@@ -98,7 +100,7 @@ private:
 
 };
 
-bool nearly_equal( const Complex & lhs, const Complex & rhs, const double tolerance = 0.000001 );
+bool nearly_equal( const Complex & lhs, const Complex & rhs, const double tolerance = TOLERANCE );
 
 Complex operator+( const Complex & lhs, const Complex & rhs );
 Complex operator-( const Complex & lhs, const Complex & rhs );

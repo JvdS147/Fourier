@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "BasicMathsFunctions.h"
+
 #include <cstddef> // For definition of size_t
 #include <iosfwd>
 
@@ -82,7 +84,7 @@ private:
 
 std::ostream & operator<<( std::ostream & os, const SymmetricMatrix3D & matrix3d );
 
-bool nearly_equal( const SymmetricMatrix3D & lhs, const SymmetricMatrix3D & rhs, const double tolerance = 0.000001 );
+bool nearly_equal( const SymmetricMatrix3D & lhs, const SymmetricMatrix3D & rhs, const double tolerance = TOLERANCE );
 
 SymmetricMatrix3D operator+( const SymmetricMatrix3D & lhs, const SymmetricMatrix3D & rhs );
 SymmetricMatrix3D operator-( const SymmetricMatrix3D & lhs, const SymmetricMatrix3D & rhs );
