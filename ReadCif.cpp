@@ -38,6 +38,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream> // For debugging
 
 namespace {
+    
+bool contains_valid_value( const std::string & input )
+{
+    return ( input != ".") && ( input != "?");
+}
 
 class AtomLineInterpreter
 {
@@ -120,11 +125,11 @@ public:
             }
         }
         Atom new_atom( Element( element_string ), Vector3D( x, y, z ), label );
-        if ( charge_index_ != loop_items_size_ )
+        if ( ( charge_index_ != loop_items_size_ ) && contains_valid_value( words[charge_index_] ) )
             new_atom.set_charge( string2double( words[charge_index_] ) );
-        if ( Uiso_index_ != loop_items_size_ )
+        if ( ( Uiso_index_ != loop_items_size_ ) && contains_valid_value( words[Uiso_index_] ) )
             new_atom.set_Uiso( string2double( words[Uiso_index_] ) );
-        if ( occupancy_index_ != loop_items_size_ )
+        if ( ( occupancy_index_ != loop_items_size_ ) && contains_valid_value( words[occupancy_index_] ) )
             new_atom.set_occupancy( string2double( words[occupancy_index_] ) );
         crystal_structure.add_atom( new_atom );
     }
