@@ -123,12 +123,12 @@ void SpaceGroup::add_centring_vectors( const std::vector< Vector3D > & centring_
             for ( size_t j( 0 ); j != centring_vectors_.size(); ++j )
             {
                 if ( nearly_equal( centring_vectors[i], centring_vectors_[j] ) )
-                    throw std::runtime_error( "SpaceGroup::add_centring_vectors(): the centring vector you re adding is already present." );
+                    throw std::runtime_error( "SpaceGroup::add_centring_vectors(): the centring vector you are adding is already present." );
             }
         }
     }
     std::vector< SymmetryOperator > symmetry_operators;
-    symmetry_operators.reserve( symmetry_operators_.size() * centring_vectors.size() );
+    symmetry_operators.reserve( symmetry_operators_.size() * ( centring_vectors.size() + 1 ) );
     for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
     {
         for ( size_t j( 0 ); j != centring_vectors.size(); ++j )

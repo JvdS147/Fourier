@@ -74,7 +74,7 @@ void Matrix3D::invert()
 {
     double D = determinant();
     if ( nearly_zero( D ) )
-        std::runtime_error( "Matrix3D::invert(): determinant = 0" );
+        throw std::runtime_error( "Matrix3D::invert(): determinant = 0" );
     transpose();
     Matrix3D adjoint;
     adjoint.data_[0][0] = +minor_matrix_determinant(0,0); adjoint.data_[0][1] = -minor_matrix_determinant(0,1); adjoint.data_[0][2] = +minor_matrix_determinant(0,2);
@@ -113,6 +113,7 @@ double Matrix3D::trace() const
 
 void Matrix3D::swap_rows( const size_t i, const size_t j )
 {
+// @@ Should be range-checked
     std::swap( data_[i][0], data_[j][0] );
     std::swap( data_[i][1], data_[j][1] );
     std::swap( data_[i][2], data_[j][2] );
@@ -122,6 +123,7 @@ void Matrix3D::swap_rows( const size_t i, const size_t j )
 
 void Matrix3D::swap_columns( const size_t i, const size_t j )
 {
+// @@ Should be range-checked
     std::swap( data_[0][i], data_[0][j] );
     std::swap( data_[1][i], data_[1][j] );
     std::swap( data_[2][i], data_[2][j] );    
@@ -131,6 +133,7 @@ void Matrix3D::swap_columns( const size_t i, const size_t j )
 
 double Matrix3D::maximum_absolute_value_in_row( const size_t i ) const
 {
+// @@ Should be range-checked
     return std::max( std::abs( data_[i][0] ), std::max( std::abs( data_[i][1] ), std::abs( data_[i][2] ) ) );
 }
 
@@ -138,6 +141,7 @@ double Matrix3D::maximum_absolute_value_in_row( const size_t i ) const
 
 double Matrix3D::maximum_absolute_value_in_column( const size_t i ) const
 {
+// @@ Should be range-checked
     return std::max( std::abs( data_[0][i] ), std::max( std::abs( data_[1][i] ), std::abs( data_[2][i] ) ) );    
 }
 

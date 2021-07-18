@@ -684,7 +684,7 @@ void add_centring_to_space_group_after_transformation( Matrix3D tranformation_ma
     if ( D < 1 )
         throw std::runtime_error( "add_centring_to_space_group_after_transformation() : D < 1." );
     // I have not been able to find a smart way to extract the possible additional lattice points
-    // from the transformation matrix, so we simply try many.
+    // from the transformation matrix, so we simply try them all.
     // We want to find the points [ f/D, g/D, h/D ], with D the determinant, that lie within the unit cell
     // but that is not one of the current lattice points. So f/D, g/D and h/D are not allowed all to be integers at once.
     // f/D must be in the range [ 0, 1 >. 

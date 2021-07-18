@@ -74,7 +74,7 @@ void MatrixFraction3D::invert()
 {
     Fraction D = determinant();
     if ( D.is_zero() )
-        std::runtime_error( "MatrixFraction3D::invert(): determinant = 0" );
+        throw std::runtime_error( "MatrixFraction3D::invert(): determinant = 0" );
     transpose();
     MatrixFraction3D adjoint;
     adjoint.data_[0][0] = +minor_matrix_determinant(0,0); adjoint.data_[0][1] = -minor_matrix_determinant(0,1); adjoint.data_[0][2] = +minor_matrix_determinant(0,2);
@@ -113,6 +113,8 @@ Fraction MatrixFraction3D::trace() const
 
 void MatrixFraction3D::swap_rows( const size_t i, const size_t j )
 {
+    if ( ( 2 < i ) || ( 2 < j ) )
+        throw std::runtime_error( "MatrixFraction3D::swap_rows(): index out of bounds" );
     std::swap( data_[i][0], data_[j][0] );
     std::swap( data_[i][1], data_[j][1] );
     std::swap( data_[i][2], data_[j][2] );
@@ -122,6 +124,8 @@ void MatrixFraction3D::swap_rows( const size_t i, const size_t j )
 
 void MatrixFraction3D::swap_columns( const size_t i, const size_t j )
 {
+    if ( ( 2 < i ) || ( 2 < j ) )
+        throw std::runtime_error( "MatrixFraction3D::swap_columns(): index out of bounds" );
     std::swap( data_[0][i], data_[0][j] );
     std::swap( data_[1][i], data_[1][j] );
     std::swap( data_[2][i], data_[2][j] );    
@@ -131,6 +135,8 @@ void MatrixFraction3D::swap_columns( const size_t i, const size_t j )
 
 Fraction MatrixFraction3D::maximum_absolute_value_in_row( const size_t i ) const
 {
+    if ( 2 < i )
+        throw std::runtime_error( "MatrixFraction3D::maximum_absolute_value_in_row(): index out of bounds" );
     return std::max( absolute( data_[i][0] ), std::max( absolute( data_[i][1] ), absolute( data_[i][2] ) ) );
 }
 
@@ -138,6 +144,8 @@ Fraction MatrixFraction3D::maximum_absolute_value_in_row( const size_t i ) const
 
 Fraction MatrixFraction3D::maximum_absolute_value_in_column( const size_t i ) const
 {
+    if ( 2 < i )
+        throw std::runtime_error( "MatrixFraction3D::maximum_absolute_value_in_column(): index out of bounds" );
     return std::max( absolute( data_[0][i] ), std::max( absolute( data_[1][i] ), absolute( data_[2][i] ) ) );    
 }
 
