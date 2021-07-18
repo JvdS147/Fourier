@@ -27,14 +27,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "AnalyseRings.h"
 //#include "CollectionOfPoints.h"
-#include "Angle.h"
-#include "CyclicInteger.h"
-#include "MathsFunctions.h"
-#include "Plane.h"
-#include "Vector3D.h"
-#include "Sort.h"
-#include "Vector3DCalculations.h"
 #include "3DCalculations.h"
+#include "Angle.h"
+#include "BasicMathsFunctions.h"
+#include "CyclicInteger.h"
+#include "Plane.h"
+#include "Sort.h"
+#include "Vector3D.h"
+#include "Vector3DCalculations.h"
 
 #include <stdexcept>
 #include <iostream> // For testing only

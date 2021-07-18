@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Matrix3D.h"
-#include "Utilities.h"
+#include "BasicMathsFunctions.h"
 
 #include <cmath>
 #include <stdexcept>

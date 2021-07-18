@@ -26,10 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Complex.h"
-#include "MathsFunctions.h"
-#include "Utilities.h"
+#include "BasicMathsFunctions.h"
 
-//#include <cmath>
 #include <stdexcept>
 #include <iostream>
 
@@ -186,14 +184,6 @@ Complex  Complex::operator--(int) // Postfix
     --(*this);
     return old;
 }
-
-// ********************************************************************************
-
-//bool Complex::operator==( const Complex & rhs ) const
-//{
-//    return ( ( integer_part_ == rhs.integer_part_ ) &&
-//             ( denominator_  == rhs.denominator_  ) );
-//}
 
 // ********************************************************************************
 

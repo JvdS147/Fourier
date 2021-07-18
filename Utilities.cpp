@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Utilities.h"
-#include "MathsFunctions.h" // For round_to_int(), but this has got to lead to circular references sooner or later
+#include "BasicMathsFunctions.h" // For round_to_int(), but this has got to lead to circular references sooner or later
 
 #include <fstream>
 #include <iostream>

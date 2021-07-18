@@ -27,11 +27,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CrystalStructure.h"
 #include "3DCalculations.h"
+#include "BasicMathsFunctions.h"
 #include "ChemicalFormula.h"
 #include "ConnectivityTable.h"
 #include "FileName.h"
 #include "Mapping.h"
-#include "MathsFunctions.h"
 #include "PhysicalConstants.h"
 #include "PointGroup.h"
 #include "RunningAverageAndESD.h"

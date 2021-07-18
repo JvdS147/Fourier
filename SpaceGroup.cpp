@@ -27,9 +27,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "SpaceGroup.h"
 #include "3DCalculations.h"
+#include "BasicMathsFunctions.h"
 #include "PointGroup.h"
 #include "Utilities.h"
 
+#include <cmath>
 #include <stdexcept>
 
 #include <iostream> // for debugging

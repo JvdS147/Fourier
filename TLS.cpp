@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Angle.h"
 #include "3DCalculations.h"
 #include "AnisotropicDisplacementParameters.h"
-#include "MathsFunctions.h"
+#include "BasicMathsFunctions.h"
 
 #include <stdexcept>
 

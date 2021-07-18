@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // A major reason for the existence of this file is that it collects all functions that combine
 // Matrix3D, SymmetricMatrix3D, NormalisedVector3D and Vector3D, so that those classes do not need to know about each other.
 
+#include "BasicMathsFunctions.h"
+
 class Angle;
 class CollectionOfPoints;
 class CrystalLattice;
@@ -89,7 +91,7 @@ Matrix3D SymmetricMatrix3D2Matrix3D( const SymmetricMatrix3D & matrix );
 
 // Convert Matrix3D to a SymmetricMatrix3D.
 // Throws if the matrix was not symmetric within tolerance.
-SymmetricMatrix3D Matrix3D2SymmetricMatrix3D( const Matrix3D & matrix, const double tolerance = 1.0E-6 );
+SymmetricMatrix3D Matrix3D2SymmetricMatrix3D( const Matrix3D & matrix, const double tolerance = TOLERANCE );
 
 Vector3D operator*( const Matrix3D & matrix, const Vector3D & vector );
 Vector3D operator*( const SymmetricMatrix3D & matrix, const Vector3D & vector );
@@ -127,6 +129,8 @@ Matrix3D rotation_about_z( const Angle angle );
 
 // "origin" is a point on the axis, "n" is the direction of the axis.
 Vector3D rotate_point_about_axis( Vector3D point, const Vector3D & origin, const NormalisedVector3D & n, const Angle angle );
+
+Vector3D cylindrical2Cartesian( const double r, Angle phi, const double z );
 
 bool are_translationally_equivalent( const double x, const double y );
 
@@ -166,10 +170,6 @@ Matrix3D F_centred_to_primitive();
 Matrix3D R_centred_to_primitive();
 
 bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs );
-
-// This has to be here because it uses functions defined in Utilities.h and in MathsFunctions.h
-// and otherwise there would be circular references. Well, that is why we started the current file.
-bool nearly_integer( const double value, const double tolerance = 0.000001 );
 
 // The transformation has already been applied to the space group.
 // If e.g. the transformation matrix codes P-1 to I-1, it adds [ 1/2, 1/2, 1/2 ] to the symmetry operators.

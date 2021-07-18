@@ -32,12 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ********************************************************************************
 
-Mapping::Mapping()
-{
-}
-
-// ********************************************************************************
-
 Mapping::Mapping( const size_t nvalues )
 {
     mapping_ = initialise_with_sequential_values( nvalues );

@@ -25,77 +25,58 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "NormalisedVector3D.h"
 #include "BasicMathsFunctions.h"
-#include "Utilities.h"
+#include "Angle.h"
+#include "Sort.h"
 
-#include <cmath>
 #include <stdexcept>
+#include <cstdlib>
 #include <iostream> // For debugging
 
 // ********************************************************************************
-NormalisedVector3D::NormalisedVector3D()
-{
-    data_[0] = 1.0;
-    data_[1] = 0.0;
-    data_[2] = 0.0;
-}
-// ********************************************************************************
 
-NormalisedVector3D::NormalisedVector3D( const double x, const double y, const double z )
+double average( const double lhs, const double rhs, const double weight )
 {
-    data_[0] = x;
-    data_[1] = y;
-    data_[2] = z;
-    normalise_2();
+    if ( ! nearly_integer( weight ) )
+        std::cout << "average(): warning: weight is not an integer, is that intended?" << std::endl;
+    return ( lhs + weight * rhs ) / ( 1.0 + weight );
 }
 
 // ********************************************************************************
 
-NormalisedVector3D NormalisedVector3D::operator-() const
+int greatest_common_divisor( const int lhs, const int rhs )
 {
-    return NormalisedVector3D( -data_[0], -data_[1], -data_[2] );
+    return ( ( rhs == 0 ) ? lhs : greatest_common_divisor( rhs, lhs % rhs ) );
 }
 
 // ********************************************************************************
 
-NormalisedVector3D NormalisedVector3D::operator+() const
+int round_to_int( const double x )
 {
-    return NormalisedVector3D( data_[0], data_[1], data_[2] );
+    return ( x < 0 ) ? static_cast<int>( x - 0.5 ) : static_cast<int>( x + 0.5 );
 }
 
 // ********************************************************************************
 
-std::string NormalisedVector3D::to_string() const
+size_t round_to_size_t( const double x )
 {
-   return double2string( x() ) + " " + double2string( y() ) + " " + double2string( z() );
+    if ( x < -0.5 )
+        throw std::runtime_error( "round_to_size_t(): value is negative." );
+    return static_cast<size_t>( x + 0.5 );
 }
 
 // ********************************************************************************
 
-void NormalisedVector3D::show() const
+bool nearly_integer( const double value, const double tolerance )
 {
-    std::cout << "x = " << x() << ", y = " << y() << ", z = " << z() << std::endl;
+    return nearly_equal( value, round_to_int( value ), tolerance );
 }
 
 // ********************************************************************************
 
-void NormalisedVector3D::normalise_2()
+double absolute_relative_difference( const double lhs, const double rhs )
 {
-    double l = data_[0]*data_[0] + data_[1]*data_[1] + data_[2]*data_[2];
-    if ( l < TOLERANCE )
-        throw std::runtime_error( "NormalisedVector3D::normalise_2(): zero vector" );
-    l = sqrt( l );
-    data_[0] /= l;
-    data_[1] /= l;
-    data_[2] /= l;
-}
-
-// ********************************************************************************
-
-double operator*( const NormalisedVector3D& lhs, const NormalisedVector3D& rhs )
-{
-    return ( lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z() );
+    return std::abs( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
 }
 
 // ********************************************************************************

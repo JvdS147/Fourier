@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "PointGroup.h"
+#include "BasicMathsFunctions.h"
 #include "Utilities.h"
 
 #include <stdexcept>

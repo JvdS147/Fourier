@@ -27,8 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "SymmetryOperator.h"
 #include "3DCalculations.h"
+#include "BasicMathsFunctions.h"
 #include "Fraction.h"
-#include "MathsFunctions.h"
 #include "Utilities.h"
 
 #include <iostream>

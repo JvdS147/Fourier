@@ -28,6 +28,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "Mapping.h"
+
+#include <algorithm>
 #include <cstddef> // For definition of size_t
 #include <vector>
 
@@ -39,11 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // at the expense of some slight overhead in the form of a std::vector< size_t >
 // and the requirement that all elements in the original data structure must now be addressed as:
 // value = values[ sorted_map[i] ]; and values[ sorted_map[i] ] = value;
-
-#include "Mapping.h"
-#include "Utilities.h"
-
-#include <algorithm>
 
 template <class T>
 class Compare
@@ -70,9 +68,9 @@ Mapping sort( const std::vector< T > & values, const bool reverse_order = false 
 {
     // We don't actually sort the list, but create a sorted map
     // We use std::stable_sort() with a functor
-    std::vector< size_t > sorted_map = initialise_with_sequential_values( values.size() );
+    Mapping sorted_map( values.size() );
     std::stable_sort( sorted_map.begin(), sorted_map.end(), Compare<T>( values, reverse_order ) );
-    return Mapping( sorted_map );
+    return sorted_map;
 }
 
 // ********************************************************************************

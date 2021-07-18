@@ -30,7 +30,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TestSuite.h"
 
 #include <iostream>
-//#include <string>
 
 void test_TextFileReader_2( TestSuite & test_suite )
 {

@@ -42,3 +42,29 @@ std::ostream & operator<<( std::ostream & os, const Angle angle )
 
 // ********************************************************************************
 
+void sincos( Angle angle, double & sine, double & cosine )
+{
+//    sine = sin( x );
+
+// Sine
+    double x = angle.value_in_radians();
+    while ( x > CONSTANT_PI )
+        x -= 2.0*CONSTANT_PI;
+    while ( x < -CONSTANT_PI )
+        x += 2.0*CONSTANT_PI;
+    double B = 4.0/CONSTANT_PI;
+    double C = -4.0/(CONSTANT_PI*CONSTANT_PI);
+    double y = B * x + C * x * fabs(x);
+    double P = 0.225;
+    sine = P * ( y * fabs(y) - y ) + y; // = Q * y + P * y * fabs(y), Q = 0.775 ( P + Q = 1.0 )
+
+//    cosine = cos( x );
+    x += CONSTANT_PI/2.0; // cos(x) = sin(x + pi/2)
+    if ( x > CONSTANT_PI ) // Original x > pi/2
+        x -= 2.0*CONSTANT_PI; // Wrap: cos(x) = cos(x - 2 pi)
+    y = B * x + C * x * fabs(x);
+    cosine = P * ( y * fabs(y) - y ) + y; // = Q * y + P * y * fabs(y), Q = 0.775 ( P + Q = 1.0 )
+}
+
+// ********************************************************************************
+

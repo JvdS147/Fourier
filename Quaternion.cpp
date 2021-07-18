@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Matrix3D.h"
 #include "Utilities.h"
 
+#include <cmath>
 #include <iostream> // For debugging
 #include <stdexcept>
 
@@ -92,7 +93,7 @@ void Quaternion::power( const int n )
     }
     if ( n < 0 )
         reciprocal();
-    int abs_n = abs( n );
+    int abs_n = std::abs( n );
     if ( abs_n == 1 )
         return;
     if ( abs_n == 2 )
@@ -132,16 +133,6 @@ Quaternion & Quaternion::operator/=( const Quaternion & rhs )
 
 // ********************************************************************************
 
-bool Quaternion::operator==( const Quaternion & rhs ) const
-{
-    return ( ( a_ == rhs.a() ) &&
-             ( b_ == rhs.b() ) &&
-             ( c_ == rhs.c() ) &&
-             ( d_ == rhs.d() ) );
-}
-
-// ********************************************************************************
-
 bool Quaternion::operator<( const Quaternion & rhs ) const
 {
     if ( rhs.a() < a_ )
@@ -176,7 +167,7 @@ void Quaternion::show() const
 void Quaternion::normalise()
 {
     double l = a_*a_ + b_*b_ + c_*c_ + d_*d_;
-    if ( l < 0.000001 )
+    if ( l < TOLERANCE )
         throw std::runtime_error( "Quaternion::normalise(): zero vector" );
     l = sqrt( l );
     a_ /= l;
@@ -189,10 +180,10 @@ void Quaternion::normalise()
 
 bool nearly_equal( const Quaternion lhs, const Quaternion rhs, const double tolerance )
 {
-    return ( ( fabs( lhs.a() - rhs.a() ) < tolerance ) &&
-             ( fabs( lhs.b() - rhs.b() ) < tolerance ) &&
-             ( fabs( lhs.c() - rhs.c() ) < tolerance ) &&
-             ( fabs( lhs.d() - rhs.d() ) < tolerance ) );
+    return ( nearly_equal( lhs.a(), rhs.a(), tolerance ) &&
+             nearly_equal( lhs.b(), rhs.b(), tolerance ) &&
+             nearly_equal( lhs.c(), rhs.c(), tolerance ) &&
+             nearly_equal( lhs.d(), rhs.d(), tolerance ) );
 }
 
 // ********************************************************************************

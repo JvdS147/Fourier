@@ -47,11 +47,6 @@ namespace
         test_suite.test_equality( fraction.denominator(),  denominator,  error_message + " (denominator)" );
     }
 
-    int round_to_int( double x )
-    {
-        return ( x < 0 ) ? static_cast<int>( x - 0.5 ) : static_cast<int>( x + 0.5 );
-    }
-
 }
 
 void test_fraction( TestSuite & test_suite )

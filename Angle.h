@@ -147,6 +147,10 @@ std::ostream & operator<<( std::ostream & os, const Angle angle );
 inline Angle arcsine( const double value ) { return Angle::from_radians( asin( value ) ); }
 inline Angle arccosine( const double value ) { return Angle::from_radians( acos( value ) ); }
 
+// It is more efficient to calculate sine and cosine of the same angle simultaneously
+// The algorithm that is used is an APPROXIMATION
+void sincos( Angle angle, double & sine, double & cosine );
+
 inline Angle arctangent( const double x ) { return Angle::from_radians( atan( x ) ); }
 
 // cot-1(x) = pi/2 - tan-1(x) for any x

@@ -26,14 +26,71 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "MathsFunctions.h"
-#include "Angle.h" // This is bound to give circular references later on
+#include "Angle.h"
 #include "Sort.h"
-#include "Vector3D.h" // This is bound to give circular references later on
 
-#include <cmath>
 #include <stdexcept>
 #include <cstdlib>
 #include <iostream> // For debugging
+
+// ********************************************************************************
+
+double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance )
+{
+    double increment( 0.01 );
+    double left_bracket  = initial_x_value - increment;
+    double right_bracket = initial_x_value + increment;
+    while ( ! ( sign( f( left_bracket ) - target_y_value ) * sign( f( right_bracket ) - target_y_value ) < 0 ) )
+    {
+        left_bracket  -= increment;
+        right_bracket += increment;
+        //increment *= 2.0;
+    }
+    double result = initial_x_value;
+    while ( std::abs( f( result ) - target_y_value ) > tolerance )
+    {
+        if ( sign( f( result ) - target_y_value ) * sign( f( right_bracket ) - target_y_value ) < 0 )
+            left_bracket = result;
+        else
+            right_bracket = result;
+        result = ( right_bracket + left_bracket ) / 2.0;
+    }
+    return result;
+}
+
+// ********************************************************************************
+
+double integral( const Function f, const double start, const double end, const double step_size )
+{
+    double result( 0.0 );
+    size_t nintervals = round_to_int( ( end - start ) / step_size );
+    if ( nintervals == 0 )
+        throw std::runtime_error( "integral(): step_size too big." );
+    double interval = ( end - start ) / nintervals;
+    double lhs = f( start );
+    for ( size_t i( 0 ); i != nintervals; ++i )
+    {
+        double rhs = f( start + ( i + 1 ) * interval );
+        result += ( ( lhs + rhs ) / 2.0 ) * interval;
+        lhs = rhs;
+    }
+    return result;
+}
+
+// ********************************************************************************
+
+double integral_Monte_Carlo( const Function f, const double start, const double end, const size_t npoints )
+{
+    double result( 0.0 );
+    if ( npoints == 0 )
+        throw std::runtime_error( "integral_Monte_Carlo(): npoints == 0." );
+    double interval = ( end - start ) / npoints;
+    for ( size_t i( 0 ); i != npoints; ++i )
+    {
+        result += f( start + uniform_distribution_1() * ( end - start ) ) * interval;
+    }
+    return result;
+}
 
 // ********************************************************************************
 
@@ -169,62 +226,6 @@ size_t calculate_maximum( const std::vector< size_t > & values )
 
 // ********************************************************************************
 
-int greatest_common_divisor( const int lhs, const int rhs )
-{
-    return ( ( rhs == 0 ) ? lhs : greatest_common_divisor( rhs, lhs % rhs ) );
-}
-
-// ********************************************************************************
-
-int round_to_int( const double x )
-{
-    return ( x < 0 ) ? static_cast<int>( x - 0.5 ) : static_cast<int>( x + 0.5 );
-}
-
-// ********************************************************************************
-
-size_t round_to_size_t( const double x )
-{
-    if ( x < -0.5 )
-        throw std::runtime_error( "round_to_size_t(): value is negative." );
-    return static_cast<size_t>( x + 0.5 );
-}
-
-// ********************************************************************************
-
-double absolute_relative_difference( const double lhs, const double rhs )
-{
-    return std::abs( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
-}
-
-// ********************************************************************************
-
-void sincos( Angle angle, double & sine, double & cosine )
-{
-//    sine = sin( x );
-
-// Sine
-    double x = angle.value_in_radians();
-    while ( x > CONSTANT_PI )
-        x -= 2.0*CONSTANT_PI;
-    while ( x < -CONSTANT_PI )
-        x += 2.0*CONSTANT_PI;
-    double B = 4.0/CONSTANT_PI;
-    double C = -4.0/(CONSTANT_PI*CONSTANT_PI);
-    double y = B * x + C * x * fabs(x);
-    double P = 0.225;
-    sine = P * ( y * fabs(y) - y ) + y; // = Q * y + P * y * fabs(y), Q = 0.775 ( P + Q = 1.0 )
-
-//    cosine = cos( x );
-    x += CONSTANT_PI/2.0; // cos(x) = sin(x + pi/2)
-    if ( x > CONSTANT_PI ) // Original x > pi/2
-        x -= 2.0*CONSTANT_PI; // Wrap: cos(x) = cos(x - 2 pi)
-    y = B * x + C * x * fabs(x);
-    cosine = P * ( y * fabs(y) - y ) + y; // = Q * y + P * y * fabs(y), Q = 0.775 ( P + Q = 1.0 )
-}
-
-// ********************************************************************************
-
 // hypothenuse
 double hypothenuse( const double x, const double y )
 {
@@ -240,9 +241,34 @@ double hypothenuse( const double x, const double y )
 
 // ********************************************************************************
 
-Vector3D cylindrical2Cartesian( const double r, Angle phi, const double z )
+// Centered around 0.0, area normalised to 1.0.
+double Lorentzian( const double x, const double FWHM )
 {
-    return Vector3D( r * phi.cosine(), r * phi.sine(), z );
+    return (1.0/CONSTANT_PI) * ( ( 0.5*FWHM ) / ( square( x ) + square( 0.5*FWHM ) ) );
+}
+
+// ********************************************************************************
+
+// Centered around 0.0, area normalised to 1.0.
+double Gaussian( const double x, const double FWHM )
+{
+    double sigma = FWHM / 2.35482; // 2.35482 = 2*sqrt(2*ln(2))
+    return exp( -square(x) / (2.0*square( sigma )) ) / ( sigma*sqrt(2.0*CONSTANT_PI) );
+}
+
+// ********************************************************************************
+
+// Centered around 0.0, area normalised to 1.0.
+// Needs: FWHM (in degrees 2theta), eta, 2theta w.r.t. 0.0
+// eta should probably be 0.68 for the FWHM of the pseudo-Voigt to be the same as the
+// FWHM of the individual Lorentzian and Gaussian.
+double pseudo_Voigt( const double x, const double FWHM )
+{
+    double eta( 0.9 );
+// For a *full* Voigt, when the FWHM is set to the same value for the Gaussian and the Lorentzian part, the FWHM of the
+// resulting full Voigt is also that same FWHM. This is no longer true for our pseudo-Voigt, so we
+// must calculate the correct FWHM.
+    return eta * Lorentzian( x, FWHM ) + (1.0-eta) * Gaussian( x, FWHM );
 }
 
 // ********************************************************************************

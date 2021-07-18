@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Angle.h"
-#include "MathsFunctions.h"
+#include "BasicMathsFunctions.h"
 #include "Vector3D.h"
 
 #include <cmath>
