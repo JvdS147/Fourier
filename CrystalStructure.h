@@ -120,7 +120,7 @@ public:
     // And some intermediate results may actually be very useful
 
     // Only the asymmetric unit is kept, everything else is deleted.
-    void reduce_to_asymmetric_unit();
+    void reduce_to_asymmetric_unit( const double tolerance = 0.001 );
 
     bool space_group_symmetry_has_been_applied() const { return space_group_symmetry_has_been_applied_; }
 

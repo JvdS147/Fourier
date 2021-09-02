@@ -98,7 +98,7 @@ void Fraction::power( const int n )
     }
     if ( n < 0 )
         reciprocal();
-    size_t abs_n = abs( n );
+    size_t abs_n = std::abs( n );
     if ( ( abs_n == 1 ) || is_zero() )
         return;
     if ( abs_n == 2 )

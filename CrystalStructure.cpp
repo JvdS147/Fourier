@@ -159,7 +159,7 @@ std::set< Element > CrystalStructure::elements() const
 // ********************************************************************************
 
 // Only the asymmetric unit is kept, everything else is deleted.
-void CrystalStructure::reduce_to_asymmetric_unit()
+void CrystalStructure::reduce_to_asymmetric_unit( const double tolerance )
 {
     std::vector< Atom > new_atoms;
     std::vector< bool > is_duplicate( natoms(), false );
@@ -173,7 +173,7 @@ void CrystalStructure::reduce_to_asymmetric_unit()
                 continue;
             if ( atom(i).element() != atom(j).element() )
                 continue;
-            if ( shortest_distance2( atom(i).position(), atom(j).position() ) < square( 0.001 ) )
+            if ( shortest_distance2( atom(i).position(), atom(j).position() ) < square( tolerance ) )
             {
                 if ( ! nearly_equal( atom(i).occupancy(), atom(j).occupancy() ) )
                     std::cout << "CrystalStructure::reduce_to_asymmetric_unit(): warning: duplicate atoms have different occupancies." << std::endl;

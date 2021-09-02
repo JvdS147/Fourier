@@ -228,8 +228,11 @@ std::string SpaceGroup::crystal_system() const
     size_t sum_6( 0 );
     for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
     {
-        // std::abs() does not work here because it always returns at least a float
-        switch( abs( representative_symmetry_operators_[i].rotation_part_type() ) )
+        // @@ Ugly. std::abs() cannot return an integer type, abs() does not compile on all platforms.
+        size_t absolute_rotation_part_type = representative_symmetry_operators_[i].rotation_part_type();
+        if ( absolute_rotation_part_type < 0 )
+            absolute_rotation_part_type = -absolute_rotation_part_type;
+        switch( absolute_rotation_part_type )
         {
             case  2 : ++sum_2; break;
             case  3 : ++sum_3; break;

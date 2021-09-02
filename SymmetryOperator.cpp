@@ -230,15 +230,15 @@ std::string SymmetryOperator::to_string() const
             int value = round_to_int( rotation_matrix_.value( row, col ) );
             if ( value == 0 )
                 continue;
-            if ( value == +1 )
+            if ( value < 0 )
+                result += "-";
+            else
             {
                 if ( ! is_first_character )
                     result += "+";
             }
-            else if ( value == -1 )
-                result += "-";
-            else
-                result += int2string( value );
+            if ( std::abs( value ) > 1 )
+                result += int2string( std::abs( value ) );
             result += xyz[col];
             is_first_character = false;
         }
