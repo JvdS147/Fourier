@@ -1,8 +1,5 @@
-#ifndef AMS_CONVERT_FLX2XYZ_H
-#define AMS_CONVERT_FLX2XYZ_H
-
 /* *********************************************
-Copyright (c) 2013-2020, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,9 +25,28 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "PowderPattern.h"
+
+#include "TestSuite.h"
+
 #include <string>
+#include <iostream>
 
-void convert_flx2xyz( const std::string & input_file_name );
-
-#endif // AMS_CONVERT_FLX2XYZ_H
+void test_PowderPattern( TestSuite & test_suite )
+{
+    std::cout << "Now running tests for PowderPattern." << std::endl;
+    {
+    PowderPattern powder_pattern;
+    powder_pattern.push_back( Angle::from_degrees( 1.0 ), 9000 );
+    powder_pattern.push_back( Angle::from_degrees( 2.0 ), 1 );
+    std::vector< PowderPattern > powder_patterns;
+    split( powder_pattern, 2, powder_patterns );
+    test_suite.test_equality( powder_patterns[0].two_theta( 0 ), Angle::from_degrees( 1.0 ), "split( PowderPattern ) 01" );
+    test_suite.test_equality( powder_patterns[1].two_theta( 0 ), Angle::from_degrees( 1.0 ), "split( PowderPattern ) 02" );
+    test_suite.test_equality( powder_patterns[0].two_theta( 1 ), Angle::from_degrees( 2.0 ), "split( PowderPattern ) 03" );
+    test_suite.test_equality( powder_patterns[1].two_theta( 1 ), Angle::from_degrees( 2.0 ), "split( PowderPattern ) 04" );
+    test_suite.test_equality( powder_patterns[0].intensity( 0 ) + powder_patterns[1].intensity( 0 ), 9000, "split( PowderPattern ) 05" );
+    test_suite.test_equality( powder_patterns[0].intensity( 1 ) + powder_patterns[1].intensity( 1 ), 1, "split( PowderPattern ) 06" );
+    }
+}
 

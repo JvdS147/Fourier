@@ -40,6 +40,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     I guess this means that this molecule can be disordered (whereas a Molecule2D or a Molecule3D cannot be disordered.
     A Molecule2D would be a chemical diagram, just a topology/connectivity, a Molecule3D would be the
     class that you would use in a conformer search, coordinates would be Cartesian and the molecule cannot be disordered.)
+    
+    I could imagine that we use the centre of mass to represent the entire molecule (e.g. to check if two molecules are related by symmetry).
+    The c.o.m. should then be precalculated and stored.
+    
 */
 class MoleculeInCrystal
 {
@@ -59,8 +63,12 @@ public:
     Atom atom( const size_t i ) const { return atoms_[i]; }
     
     void set_atom( const size_t i, const Atom & new_atom ) { atoms_[i] = new_atom; }
+    
+    // Fractional coordinates
+    Vector3D centre_of_mass() const;
 
 private:
+    // @@ I do not understand the comment below
     // The atom perception algorithm moves atoms so that they form connected molecules,
     // so we cannot use indices but must really store entire atoms.
     std::vector< Atom > atoms_;

@@ -65,7 +65,7 @@ public:
 // Same for eta and/or peak shape
 
     void calculate( PowderPattern & powder_pattern );
-    
+
     // Calculates d, multiplicity and h,k,l.
     // Only stores one representative reflection if multiplicity > 1 (which is always the case because of Friedel's law).
     // The structure factors are NOT calculated.

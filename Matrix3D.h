@@ -49,9 +49,9 @@ public:
             );
 
     // In keeping with the silly C++ convention: zero-based.
-    double value( const size_t i, const size_t j ) const { return data_[i][j]; }
+    double value( const size_t i, const size_t j ) const;
 
-    void set_value( const size_t i, const size_t j, const double value ) { data_[i][j] = value; }
+    void set_value( const size_t i, const size_t j, const double value );
 
     double sum_of_elements() const;
 

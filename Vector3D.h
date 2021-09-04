@@ -53,8 +53,8 @@ public:
     void set_x( const double value ) { data_[0] = value; }
     void set_y( const double value ) { data_[1] = value; }
     void set_z( const double value ) { data_[2] = value; }
-    double value( const size_t i ) const { return data_[i]; }
-    void set_value( const size_t i, const double value ) { data_[i] = value; }
+    double value( const size_t i ) const;
+    void set_value( const size_t i, const double value );
 
     void set_length( const double value );
 

@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PowderPattern.h"
 #include "FileName.h"
 #include "MathsFunctions.h"
+#include "RandomNumberGenerator.h"
 #include "RunningAverageAndESD.h"
 #include "TextFileReader.h"
 #include "TextFileReader_2.h"
@@ -49,8 +50,7 @@ PowderPattern::PowderPattern() : wavelength_(1.54056)
 // ********************************************************************************
 
 PowderPattern::PowderPattern( const Angle two_theta_start, const Angle two_theta_end, const Angle two_theta_step ):
-wavelength_(1.54056),
-noise_is_available_(false)
+wavelength_(1.54056)
 {
     size_t npoints = round_to_int( ( (two_theta_end-two_theta_start) / two_theta_step ) ) + 1;
     two_theta_values_.reserve( npoints );
@@ -63,8 +63,7 @@ noise_is_available_(false)
 // ********************************************************************************
 
 PowderPattern::PowderPattern( const FileName & file_name ):
-wavelength_(1.54056),
-noise_is_available_(false)
+wavelength_(1.54056)
 {
     read_xye( file_name );
 }
@@ -223,27 +222,6 @@ void PowderPattern::set_two_theta_end( const Angle two_theta_end ) const
 double PowderPattern::cumulative_intensity() const
 {
     return add_doubles( intensities_ );
-}
-
-// ********************************************************************************
-
-double PowderPattern::cumulative_noise() const
-{
-    return add_doubles( noise_ );
-}
-
-// ********************************************************************************
-
-double PowderPattern::cumulative_absolute_noise() const
-{
-    return add_absolute_doubles( noise_ );
-}
-
-// ********************************************************************************
-
-double PowderPattern::cumulative_squared_noise() const
-{
-    return add_squared_doubles( noise_ );
 }
 
 // ********************************************************************************
@@ -682,23 +660,67 @@ void PowderPattern::add_constant_background( const double background )
 
 // ********************************************************************************
 
-void PowderPattern::add_Poisson_noise()
-{
-    for ( size_t i( 0 ); i != size(); ++i )
-    {
-        double old_intensity = intensities_[i];
-        intensities_[i] = Poisson_distribution( round_to_int( old_intensity ) );
-        noise_.push_back( intensities_[i] - old_intensity );
-    }
-    noise_is_available_ = true;
-}
-
-// ********************************************************************************
-
 void PowderPattern::make_counts_integer()
 {
     for ( size_t i( 0 ); i != size(); ++i )
         intensities_[i] = round_to_int( intensities_[i] );
+}
+
+// ********************************************************************************
+
+// Should not be necessary. Introduced to manipulate data from a tool that extracted a powder pattern from a bitmap picture.
+void PowderPattern::sort_two_theta()
+{
+    if ( size() < 2 )
+        return;
+    bool changed( true );
+    while ( changed )
+    {
+        changed = false;
+        for ( size_t i( size()-1 ); i != 0; --i )
+        {
+            if ( two_theta_values_[i] < two_theta_values_[i-1] )
+            {
+                // @@ The following code strongly suggests that we should have used a struct to hold each triplet of values...
+                std::swap( two_theta_values_[i], two_theta_values_[i-1] );
+                std::swap( intensities_[i], intensities_[i-1] );
+                std::swap( estimated_standard_deviations_[i], estimated_standard_deviations_[i-1] );
+                changed = true;
+            }
+        }
+    }
+}
+
+// ********************************************************************************
+
+// Should not be necessary. Introduced to manipulate data from a tool that extracted a powder pattern from a bitmap picture.
+void PowderPattern::average_if_two_theta_equal()
+{
+    std::vector< Angle > new_two_theta_values;
+    std::vector< double > new_intensities;
+    std::vector< double > new_estimated_standard_deviations;
+    size_t iPos1 = 0;
+    while ( iPos1 < size() )
+    {
+        Angle sum_two_theta_values( two_theta_values_[iPos1] );
+        double sum_intensity( intensities_[iPos1] );
+        double sum_estimated_standard_deviation_2( square( estimated_standard_deviations_[iPos1] ) );
+        size_t iPos2 = iPos1 + 1;
+        while ( ( iPos2 < size() ) && nearly_equal( two_theta_values_[iPos1], two_theta_values_[iPos2] ) )
+        {
+            sum_two_theta_values += two_theta_values_[iPos2];
+            sum_intensity += intensities_[iPos2];
+            sum_estimated_standard_deviation_2 += square( estimated_standard_deviations_[iPos2] );
+            ++iPos2;
+        }
+        new_two_theta_values.push_back( sum_two_theta_values / ( iPos2 - iPos1 ) );
+        new_intensities.push_back( sum_intensity / ( iPos2 - iPos1 ) );
+        new_estimated_standard_deviations.push_back( sqrt( sum_estimated_standard_deviation_2 ) );
+        iPos1 = iPos2;
+    }
+    two_theta_values_ = new_two_theta_values;
+    intensities_ = new_intensities;
+    estimated_standard_deviations_ = new_estimated_standard_deviations;
 }
 
 // ********************************************************************************
@@ -824,6 +846,26 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
 
 // ********************************************************************************
 
+void add_Poisson_noise( PowderPattern & powder_pattern )
+{
+    for ( size_t i( 0 ); i != powder_pattern.size(); ++i )
+        powder_pattern.set_intensity( i, Poisson_distribution( round_to_int( powder_pattern.intensity( i ) ) ) );
+}
+
+// ********************************************************************************
+
+PowderPattern calculate_Poisson_noise( const PowderPattern & powder_pattern )
+{
+    PowderPattern result;
+    result.set_wavelength( powder_pattern.wavelength() );
+    result.reserve( powder_pattern.size() );
+    for ( size_t i( 0 ); i != powder_pattern.size(); ++i )
+        result.push_back( powder_pattern.two_theta( i ), Poisson_distribution( round_to_int( powder_pattern.intensity( i ) ) ) - powder_pattern.intensity( i ) );
+    return result;
+}
+
+// ********************************************************************************
+
 PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_patterns, const std::vector< double > & noscp2ts )
 {
     if ( powder_patterns.empty() )
@@ -878,59 +920,52 @@ PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_p
 
 // ********************************************************************************
 
-// Should not be necessary. Introduced to manipulate data from a tool that extracted a powder pattern from a bitmap picture.
-void PowderPattern::sort_two_theta()
+void split( const PowderPattern & powder_pattern, const size_t n, std::vector< PowderPattern > & powder_patterns )
 {
-    if ( size() < 2 )
-        return;
-    bool changed( true );
-    while ( changed )
+    powder_patterns.clear();
+    for ( size_t j( 0 ); j != n; ++j )
     {
-        changed = false;
-        for ( size_t i( size()-1 ); i != 0; --i )
+        powder_patterns.push_back( PowderPattern() );
+        powder_patterns[j].set_wavelength( powder_pattern.wavelength() );
+    }
+    for ( size_t i( 0 ); i != powder_pattern.size(); ++i )
+    {
+        size_t old_intensity = round_to_int( powder_pattern.intensity( i ) );
+        size_t target_average = round_to_int( powder_pattern.intensity( i ) / n );
+        size_t sum( 0 );
+        std::vector< size_t > intensities;
+        for ( size_t j( 0 ); j != n; ++j )
         {
-            if ( two_theta_values_[i] < two_theta_values_[i-1] )
+            size_t new_intensity = Poisson_distribution( target_average );
+            sum += new_intensity;
+            intensities.push_back( new_intensity );
+        }
+        if ( sum != old_intensity )
+        {
+            size_t new_sum( 0 );
+            // We scale all intensities.
+            for ( size_t j( 0 ); j != n; ++j )
             {
-                // @@ The following code strongly suggests that we should have used a struct to hold each triplet of values...
-                std::swap( two_theta_values_[i], two_theta_values_[i-1] );
-                std::swap( intensities_[i], intensities_[i-1] );
-                std::swap( estimated_standard_deviations_[i], estimated_standard_deviations_[i-1] );
-                changed = true;
+                intensities[j] = round_to_int( intensities[j] * ( powder_pattern.intensity( i ) / sum ) );
+                new_sum += intensities[j];
+            }
+            // We randomly add / remove counts until we have reached the target.
+            if ( new_sum != old_intensity )
+            {
+                RandomNumberGenerator_integer rng;
+                int step = ( new_sum > old_intensity ) ? -1 : 1;
+                while ( new_sum != old_intensity )
+                {
+                    // Randomly pick a pattern.
+                    size_t j = rng.next_number( 0, n-1 );
+                    intensities[j] += step;
+                    new_sum += step;
+                }
             }
         }
+        for ( size_t j( 0 ); j != n; ++j )
+            powder_patterns[j].push_back( powder_pattern.two_theta( i ), intensities[j] );
     }
-}
-
-// ********************************************************************************
-
-// Should not be necessary. Introduced to manipulate data from a tool that extracted a powder pattern from a bitmap picture.
-void PowderPattern::average_if_two_theta_equal()
-{
-    std::vector< Angle > new_two_theta_values;
-    std::vector< double > new_intensities;
-    std::vector< double > new_estimated_standard_deviations;
-    size_t iPos1 = 0;
-    while ( iPos1 < size() )
-    {
-        Angle sum_two_theta_values( two_theta_values_[iPos1] );
-        double sum_intensity( intensities_[iPos1] );
-        double sum_estimated_standard_deviation_2( square( estimated_standard_deviations_[iPos1] ) );
-        size_t iPos2 = iPos1 + 1;
-        while ( ( iPos2 < size() ) && nearly_equal( two_theta_values_[iPos1], two_theta_values_[iPos2] ) )
-        {
-            sum_two_theta_values += two_theta_values_[iPos2];
-            sum_intensity += intensities_[iPos2];
-            sum_estimated_standard_deviation_2 += square( estimated_standard_deviations_[iPos2] );
-            ++iPos2;
-        }
-        new_two_theta_values.push_back( sum_two_theta_values / ( iPos2 - iPos1 ) );
-        new_intensities.push_back( sum_intensity / ( iPos2 - iPos1 ) );
-        new_estimated_standard_deviations.push_back( sqrt( sum_estimated_standard_deviation_2 ) );
-        iPos1 = iPos2;
-    }
-    two_theta_values_ = new_two_theta_values;
-    intensities_ = new_intensities;
-    estimated_standard_deviations_ = new_estimated_standard_deviations;
 }
 
 // ********************************************************************************

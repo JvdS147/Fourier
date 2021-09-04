@@ -50,11 +50,9 @@ public:
                     );
 
     // In keeping with the silly C++ convention: zero-based.
-// @@ Should be range-checked
-    Fraction value( const size_t i, const size_t j ) const { return data_[i][j]; }
+    Fraction value( const size_t i, const size_t j ) const;
 
-// @@ Should be range-checked
-    void set_value( const size_t i, const size_t j, const Fraction & value ) { data_[i][j] = value; }
+    void set_value( const size_t i, const size_t j, const Fraction & value );
 
     Fraction sum_of_elements() const;
 

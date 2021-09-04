@@ -33,12 +33,24 @@ class FileName;
 class Mapping;
 
 #include "Atom.h"
+#include "ConnectivityTable.h"
 #include "CrystalLattice.h"
 #include "MoleculeInCrystal.h"
 #include "SpaceGroup.h"
 
 #include <set>
 #include <vector>
+
+struct SpecialPositionsReport
+{
+    size_t number_of_atoms_in_unit_cell_; // Could make it a ChemicalFormula.
+    // We could enumerate the number of atoms found per point group, but two atoms that are on two special positions with the same point group are not necesarily the same atom.
+    std::vector< size_t > point_group_orders_;
+    std::vector< size_t > nmolecules_per_point_group_order_; // Same size as point_group_orders_
+    size_t nmolecules_on_special_positions_; // Sum of nmolecules_per_point_group_order_
+    size_t nsymmetry_operators_;
+    size_t nmolecules_;
+};
 
 //enum DriftCorrection { NONE, USE_FIRST_FRAME, USE_VECTOR };
 
@@ -85,7 +97,7 @@ public:
     // The alternative would have been to make atom(size_t) return a reference.
     // To keep all other attributes of the atom use something like:
     // Atom new_atom = crystal_structure.atom( i );
-    // new_atom.set_X( Y ); // Change property X to Y
+    // new_atom.set_X( X_new ); // Change property X to X_new
     // crystal_structure.set_atom( i, new_atom );
     void set_atom( const size_t i, const Atom & atom );
 
@@ -110,6 +122,9 @@ public:
 
     // This should somehow be cross-checked with the space group, which suggests that the two should be combined into a class.
     void set_crystal_lattice( const CrystalLattice & crystal_lattice ) { crystal_lattice_ = crystal_lattice; }
+
+    void list_all_bonds( std::vector< std::string > & labels_1, std::vector< std::string > & labels_2, std::vector< double > & bonds ) const;
+    void list_all_angles( std::vector< std::string > & labels_1, std::vector< std::string > & labels_2, std::vector< std::string > & labels_3, std::vector< double > & angles ) const;
 
     // @@ The only correct way to interpret a CrystalStructure correctly is to use the series of commands:
     // reduce_to_asymmetric_unit();
@@ -139,12 +154,14 @@ public:
     // should also be included, so that the atoms form connected molecules.
     // This is important when dealing with floating axes.
     // If a molecule is on a special position, this function does NOT generate the second half.
-//    void move_atoms_to_form_molecules();
+    void move_atoms_to_form_molecules( const bool include_symmetry_operators );
 
     void perceive_molecules( const bool I_know_Zprime_is_one = false );
 
     // @@ This requires that you run the molecule preception method first
     void remove_symmetry_related_molecules();
+
+    size_t nmolecules() const { return molecules_.size(); }
 
     // This returns a copy, so would copy all atoms.
     MoleculeInCrystal molecule_in_crystal( const size_t i ) const;
@@ -153,12 +170,18 @@ public:
 
     // point is in fractional coordinates.
     // Tolerance is in Angstrom.
+    // On return, point contains the point moved to the exact special position.
     PointGroup point_is_on_special_position( Vector3D & point, const double tolerance = 0.01 ) const;
-    
-    bool molecule_is_on_special_position( const size_t i ) const;
 
-    Vector3D molecular_centre_of_mass( const size_t i ) const;
+    PointGroup point_is_on_special_position_const( Vector3D point, const double tolerance = 0.01 ) const;
     
+    // @@ Can't be const because it calls perceive_molecules()
+    PointGroup molecule_is_on_special_position( const size_t i, const double tolerance = 0.01 ) const;
+
+    // Must have called perceive_molecules() first.
+    SpecialPositionsReport special_positions_report() const;
+    
+    // @@ This is problematic because MoleculeInCrystal stores copies of all the atoms.
     void move_molecule( const size_t i, const Vector3D shift );
 
     void convert_to_P1();
@@ -180,6 +203,7 @@ public:
     Vector3D centre_of_mass() const;
 
     // Unit: eA
+    // @@ Undefined for a crystal structure, gives the wrong answer.
     double dipole_moment() const;
 
     // g/cm3
@@ -266,7 +290,7 @@ private:
     std::vector< bool > suppressed_; //
     std::string name_;
     bool space_group_symmetry_has_been_applied_;
-
+    ConnectivityTable connectivity_table_;
 };
 
 // Atoms on special positions contribute fractionally if space group has not been applied.

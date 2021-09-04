@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Vector3D.h"
-#include "BasicMathsFunctions.h""
+#include "BasicMathsFunctions.h"
 #include "Utilities.h"
 
 #include <cmath>
@@ -49,6 +49,24 @@ Vector3D::Vector3D( const double x, const double y, const double z )
     data_[0] = x;
     data_[1] = y;
     data_[2] = z;
+}
+
+// ********************************************************************************
+
+double Vector3D::value( const size_t i ) const
+{
+    if ( 2 < i )
+        throw std::runtime_error( "Vector3D::value(): index out of bounds." );
+    return data_[i];
+}
+
+// ********************************************************************************
+
+void Vector3D::set_value( const size_t i, const double value )
+{
+    if ( 2 < i )
+        throw std::runtime_error( "Vector3D::set_value(): index out of bounds." );
+    data_[i] = value;
 }
 
 // ********************************************************************************
