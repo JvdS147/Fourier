@@ -108,11 +108,14 @@ public:
     PowderPattern & operator+=( const PowderPattern & rhs );
     PowderPattern & operator-=( const PowderPattern & rhs );
 
-    // Normalises the highest peak
-    void normalise_highest_peak( const double highest_peak = 10000 );
+
+    // Normalises the highest peak.
+    // Returns the scale factor.
+    double normalise_highest_peak( const double highest_peak = 10000 );
 
     // Normalises the total signal = area under the pattern = cumulative_intensity() .
-    void normalise_total_signal( const double total_signal = 10000 );
+    // Returns the scale factor.
+    double normalise_total_signal( const double total_signal = 10000 );
 
     // Simply subtracts the value from each 2theta value
     void correct_zero_point_error( const Angle two_theta_value );
@@ -174,8 +177,8 @@ void add_Poisson_noise( PowderPattern & powder_pattern );
 // It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
 // For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
 // makes all points of the pattern behave as Gaussian.
-// Note that Poisson noise is only defined for positive integer values,
-// so the noise consists of integers.
+// Note that Poisson noise is only defined for positive integer values, so the noise consists of integers.
+// The noise can be positive or negative. ESDs are set to 0.0.
 PowderPattern calculate_Poisson_noise( const PowderPattern & powder_pattern );
 
 // Useful for Variable Count Time schemes

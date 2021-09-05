@@ -56,8 +56,8 @@ wavelength_(1.54056)
     two_theta_values_.reserve( npoints );
     for ( size_t i( 0 ); i != npoints; ++i )
         two_theta_values_.push_back( ( i * two_theta_step ) + two_theta_start );
-    intensities_ = std::vector<double>( npoints, 0.0 );
-    estimated_standard_deviations_ = std::vector<double>( npoints, 0.0 );
+    intensities_ = std::vector< double >( npoints, 0.0 );
+    estimated_standard_deviations_ = std::vector< double >( npoints, 0.0 );
 }
 
 // ********************************************************************************
@@ -83,7 +83,12 @@ void PowderPattern::push_back( const Angle two_theta, const double intensity )
 {
     two_theta_values_.push_back( two_theta );
     intensities_.push_back( intensity );
-    estimated_standard_deviations_.push_back( std::max( sqrt( intensity ), intensity / 100.0 ) );
+    if ( intensity < 20.0 )
+        estimated_standard_deviations_.push_back(  4.4 );
+    else if ( intensity > 10000.0 )
+        estimated_standard_deviations_.push_back( intensity / 100.0 );
+    else
+        estimated_standard_deviations_.push_back( sqrt( intensity ) );
 }
 
 // ********************************************************************************
@@ -151,9 +156,6 @@ size_t PowderPattern::find_two_theta( const Angle two_theta_value ) const
     {
         --lower_index;
     }
-  //  std::cout << two_theta_value << std::endl;
-  //  std::cout << lower_index << std::endl;
-  //  std::cout << upper_index << std::endl;
     if ( ( upper_index - lower_index ) != 1 )
         throw std::runtime_error( "PowderPattern::find_two_theta(): programming error." );
     if ( ( two_theta_value - two_theta( lower_index ) ) < ( two_theta( upper_index ) - two_theta_value ) )
@@ -571,30 +573,29 @@ PowderPattern & PowderPattern::operator-=( const PowderPattern & rhs )
 
 // ********************************************************************************
 
-void PowderPattern::normalise_highest_peak( const double highest_peak )
+double PowderPattern::normalise_highest_peak( const double highest_peak )
 {
-    // Find the highest intensity
-    double max_intensity( 0.0 );
-    for ( size_t i( 0 ); i != size(); ++i )
-    {
-        if ( max_intensity < intensities_[i] )
-            max_intensity = intensities_[i];
-    }
+    // Find the highest intensity.
+    double max_intensity = calculate_maximum( intensities_ );
     if ( nearly_zero( max_intensity ) )
         throw std::runtime_error( "PowderPattern::normalise_highest_peak(): highest peak is 0.0." );
-    scale( highest_peak / max_intensity );
+    double scale_factor = highest_peak / max_intensity;
+    scale( scale_factor );
+    return scale_factor;
 }
 
 // ********************************************************************************
 
 // Normalises the total signal = area under the pattern = cumulative_intensity() .
-void PowderPattern::normalise_total_signal( const double total_signal )
+double PowderPattern::normalise_total_signal( const double total_signal )
 {
     double current_total_signal = cumulative_intensity();
     if ( nearly_zero( current_total_signal ) )
         throw std::runtime_error( "PowderPattern::normalise_total_signal(): total signal is 0.0." );
-    // Scale to total_signal
-    scale( total_signal / current_total_signal );
+    // Scale to total_signal.
+    double scale_factor = total_signal / current_total_signal;
+    scale( scale_factor );
+    return scale_factor;
 }
 
 // ********************************************************************************
@@ -612,17 +613,11 @@ void PowderPattern::recalculate_estimated_standard_deviations()
     for ( size_t i( 0 ); i != size(); ++i )
     {
         if ( intensities_[i] < 20.0 )
-        {
             estimated_standard_deviations_[i] = 4.4;
-        }
         else if ( intensities_[i] > 10000.0 )
-        {
             estimated_standard_deviations_[i] = intensities_[i] / 100.0;
-        }
         else
-        {
             estimated_standard_deviations_[i] = sqrt( intensities_[i] );
-        }
     }
 }
 
@@ -793,7 +788,7 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
 {
     if ( powder_pattern.size() == 0 )
         return powder_pattern;
-    PowderPattern pp_new( powder_pattern );
+    PowderPattern result( powder_pattern );
     size_t size( powder_pattern.size() );
     if ( apply_smoothing )
     {
@@ -805,28 +800,28 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
                 new_value += powder_pattern.intensity( std::max( int(i)-int(j), int(0) ) );
                 new_value += powder_pattern.intensity( std::min( i+j, size-1 ) );
             }
-            pp_new.set_intensity( i, new_value / ( 2.0 * smoothing_window + 1.0 ) );
+            result.set_intensity( i, new_value / ( 2.0 * smoothing_window + 1.0 ) );
         }
     }
     if ( true )
     {
-        RunningAverageAndESD<double> I_average;
-        double I_minimum = pp_new.intensity( 0 );
+        RunningAverageAndESD< double > I_average;
+        double I_minimum = result.intensity( 0 );
         for ( size_t i( 0 ); i < size; ++i )
         {
-            if ( pp_new.intensity( i ) < I_minimum )
-                I_minimum = pp_new.intensity( i );
-            I_average.add_value( pp_new.intensity( i ) );
+            if ( result.intensity( i ) < I_minimum )
+                I_minimum = result.intensity( i );
+            I_average.add_value( result.intensity( i ) );
         }
         for ( size_t i( 0 ); i < size; ++i )
         {
-            if ( pp_new.intensity( i ) > ( I_average.average() + 2.0 * ( I_average.average() - I_minimum ) ) )
-                pp_new.set_intensity( i, ( I_average.average() + 2.0 * ( I_average.average() - I_minimum ) ) );
+            if ( result.intensity( i ) > ( I_average.average() + 2.0 * ( I_average.average() - I_minimum ) ) )
+                result.set_intensity( i, ( I_average.average() + 2.0 * ( I_average.average() - I_minimum ) ) );
         }
     }
     for ( size_t iter( 0 ); iter < niterations; ++iter )
     {
-        PowderPattern pp_old = pp_new;
+        PowderPattern pp_old = result;
         for ( size_t i( 0 ); i < size; ++i )
         {
             double average_value( 0.0 );
@@ -836,12 +831,12 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
                 average_value += pp_old.intensity( std::min( i+j, size-1 ) );
             }
             average_value /= 2.0 * window;
-            pp_new.set_intensity( i, average_value );
+            result.set_intensity( i, average_value );
         }
         for ( size_t i( 0 ); i < size; ++i )
-            pp_new.set_intensity( i, std::min( pp_old.intensity( i ), pp_new.intensity( i ) ) );
+            result.set_intensity( i, std::min( pp_old.intensity( i ), result.intensity( i ) ) );
     }
-    return pp_new;
+    return result;
 }
 
 // ********************************************************************************
@@ -860,7 +855,7 @@ PowderPattern calculate_Poisson_noise( const PowderPattern & powder_pattern )
     result.set_wavelength( powder_pattern.wavelength() );
     result.reserve( powder_pattern.size() );
     for ( size_t i( 0 ); i != powder_pattern.size(); ++i )
-        result.push_back( powder_pattern.two_theta( i ), Poisson_distribution( round_to_int( powder_pattern.intensity( i ) ) ) - powder_pattern.intensity( i ) );
+        result.push_back( powder_pattern.two_theta( i ), Poisson_distribution( round_to_int( powder_pattern.intensity( i ) ) ) - powder_pattern.intensity( i ), 0.0 );
     return result;
 }
 
