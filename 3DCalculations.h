@@ -47,6 +47,20 @@ class Vector3D;
 
 #include <vector>
 
+//struct SpecialPositionsReport
+//{
+//    size_t number_of_atoms_in_unit_cell_; // Could make it a ChemicalFormula.
+//    // We could enumerate the number of atoms found per point group, but two atoms that are on two special positions with the same point group are not necesarily the same atom.
+//    std::vector< size_t > point_group_orders_;
+//    std::vector< size_t > natoms_per_point_group_order_; // Same size as point_group_orders_
+//    size_t natoms_on_special_positions_; // Sum of natoms_per_point_group_order_
+//    size_t natoms_with_symmetry_copies; // Benzene in P-1 would return six (three carbon, three hydrogen).
+//    size_t nsymmetry_operators_;
+//    size_t nmolecules_;
+//};
+
+//SpecialPositionsReport special_positions_report()
+
 Vector3D reciprocal_lattice_point( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice );
 
 NormalisedVector3D reciprocal_lattice_direction( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice );

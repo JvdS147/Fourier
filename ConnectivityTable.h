@@ -43,9 +43,7 @@ class ConnectivityTable
 {
 public:
 
-    explicit ConnectivityTable( const size_t natoms );
-
-    ~ConnectivityTable();
+    explicit ConnectivityTable( const size_t natoms = 0 );
 
     size_t size() const { return dimension_; }
 
@@ -58,7 +56,7 @@ public:
     void show() const;
 
 private:
-    size_t* data_ptr_; // Could have used bool, but I assume it will store the bond type one day.
+    std::vector< size_t > data_; // Could have used bool, but I assume it will store the bond type one day.
     size_t dimension_;
 
 };

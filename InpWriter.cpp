@@ -44,6 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void inp_writer( const FileName & input_cif_file_name, const FileName & input_xye_file_name, const std::string & aal  )
 {
+    bool generate_restraints( true );
     CrystalStructure crystal_structure;
     std::cout << "Now reading cif... " + input_cif_file_name.full_name() << std::endl;
     read_cif( input_cif_file_name, crystal_structure );
@@ -79,6 +80,17 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
             bond_target_values.push_back( string2double( words[3] ) );
         }
     }
+    else if ( generate_restraints )
+    {
+        std::vector< std::string > temp_labels_1;
+        std::vector< std::string > temp_labels_2;
+        crystal_structure.list_all_bonds( temp_labels_1, temp_labels_2, bond_target_values );
+        for ( size_t i( 0 ); i != bond_target_values.size(); ++i )
+        {
+            bond_labels_1.push_back( temp_labels_1[i]+aal );
+            bond_labels_2.push_back( temp_labels_2[i]+aal );
+        }
+    }
     else
         std::cout << "No bond restraints file found, no bond restraints will be written out." << std::endl;
     if ( file_00000001_AllAngles_tsv_exists )
@@ -95,6 +107,19 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
             angle_labels_2.push_back( words[2]+aal );
             angle_labels_3.push_back( words[3]+aal );
             angle_target_values.push_back( string2double( words[4] ) );
+        }
+    }
+    else if ( generate_restraints )
+    {
+        std::vector< std::string > temp_labels_1;
+        std::vector< std::string > temp_labels_2;
+        std::vector< std::string > temp_labels_3;
+        crystal_structure.list_all_angles( temp_labels_1, temp_labels_2, temp_labels_3, angle_target_values );
+        for ( size_t i( 0 ); i != angle_target_values.size(); ++i )
+        {
+            angle_labels_1.push_back( temp_labels_1[i]+aal );
+            angle_labels_2.push_back( temp_labels_2[i]+aal );
+            angle_labels_3.push_back( temp_labels_3[i]+aal );
         }
     }
     else

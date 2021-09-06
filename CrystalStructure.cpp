@@ -158,6 +158,35 @@ std::set< Element > CrystalStructure::elements() const
 
 // ********************************************************************************
 
+void CrystalStructure::list_all_bonds( std::vector< std::string > & labels_1, std::vector< std::string > & labels_2, std::vector< double > & bonds ) const
+{
+    
+    for ( size_t i( 0 ); i != connectivity_table_.size(); ++i )
+    {
+        for ( size_t j( i + 1 ); j != connectivity_table_.size(); ++j )
+        {
+            if ( connectivity_table_.value( i, j ) != 0 )
+            {
+                labels_1.push_back( atom( i ).label() );
+                labels_2.push_back( atom( j ).label() );
+                double distance;
+                Vector3D difference_vector; // @@ This is a bit wasteful...
+                crystal_lattice_.shortest_distance( atom( i ).position(), atom( j ).position(), distance, difference_vector );
+                bonds.push_back( distance );
+            }
+        }
+    }
+}
+
+// ********************************************************************************
+
+void CrystalStructure::list_all_angles( std::vector< std::string > & labels_1, std::vector< std::string > & labels_2, std::vector< std::string > & labels_3, std::vector< double > & angles ) const
+{
+    
+}
+
+// ********************************************************************************
+
 // Only the asymmetric unit is kept, everything else is deleted.
 void CrystalStructure::reduce_to_asymmetric_unit( const double tolerance )
 {
@@ -222,35 +251,54 @@ void CrystalStructure::apply_space_group_symmetry()
 
 // ********************************************************************************
 
-//void CrystalStructure::move_atoms_to_form_molecules()
-//{
-//    if ( natoms() == 0 )
-//        return;
-//    std::vector< bool > has_been_moved( natoms(), false );
-//    has_been_moved[0] = true;
-//    for ( size_t i( 0 ); i != natoms(); ++i )
-//    {
-//        Atom iAtom = atom( i );
-//        if ( ! has_been_moved[i] )
-//            continue;
-//        for ( size_t j( i+1 ); j != natoms(); ++j )
-//        {
-//            if ( has_been_moved[j] )
-//                continue;
-//            Atom jAtom = atom( j );                
-//            double distance2 = crystal_lattice_.shortest_distance2( iAtom.position(), jAtom.position() );
-//            if ( are_bonded( iAtom.element(), jAtom.element(), distance2 ) )
-//            {
-//                // Move atom j so that it really bonds to atom i
-//                double distance;
-//                Vector3D difference_vector;
-//                crystal_lattice_.shortest_distance( iAtom.position(), jAtom.position(), distance, difference_vector );
-//                jAtom.set_position( iAtom.position() + difference_vector );
-//                set_atom( j, jAtom );
-//            }
-//        }
-//    }
-//}
+void CrystalStructure::move_atoms_to_form_molecules( const bool include_symmetry_operators )
+{
+    std::vector< bool > has_been_connected( natoms(), false );
+    connectivity_table_ = ConnectivityTable( natoms() );
+    for ( size_t i( 0 ); i != natoms(); ++i )
+    {
+        Atom iAtom = atom( i );
+        for ( size_t j( i+1 ); j != natoms(); ++j )
+        {
+            Atom jAtom = atom( j );
+            double distance2;
+            if ( include_symmetry_operators )
+                distance2 = shortest_distance2( iAtom.position(), jAtom.position() );
+            else
+                distance2 = crystal_lattice_.shortest_distance2( iAtom.position(), jAtom.position() );
+            if ( are_bonded( iAtom.element(), jAtom.element(), distance2 ) )
+            {
+                // Add this one to the connectivity table.
+                connectivity_table_.set_value( i, j, 1 );
+                // Move atom j so that it really bonds to atom i
+                double distance;
+                Vector3D difference_vector;
+                if ( include_symmetry_operators )
+                    shortest_distance( iAtom.position(), jAtom.position(), distance, difference_vector );
+                else
+                    crystal_lattice_.shortest_distance( iAtom.position(), jAtom.position(), distance, difference_vector );
+                if ( ! nearly_equal( jAtom.position(), iAtom.position() + difference_vector ) )
+                {
+                    // If we are here, we have to move atom j to connect it to atom i
+                    if ( ! has_been_connected[j] )
+                    {
+                        jAtom.set_position( iAtom.position() + difference_vector );
+                        set_atom( j, jAtom );
+                    }
+                    else if ( ! has_been_connected[i] )
+                    {
+                        iAtom.set_position( jAtom.position() - difference_vector );
+                        set_atom( i, iAtom );
+                    }
+                    else
+                        throw std::runtime_error( "CrystalStructure::move_atoms_to_form_molecules(): atoms i and j have both been moved but are not bonded." );
+                }
+                has_been_connected[i] = true;
+                has_been_connected[j] = true;
+            }
+        }
+    }
+}
 
 // ********************************************************************************
 
@@ -270,29 +318,8 @@ void CrystalStructure::perceive_molecules( const bool I_know_Zprime_is_one )
         reduce_to_asymmetric_unit();
         apply_space_group_symmetry();
     }
-    ConnectivityTable connectivity_table( natoms() );
-    for ( size_t i( 0 ); i != natoms(); ++i )
-    {
-        Atom iAtom = atom( i );
-        for ( size_t j( i+1 ); j != natoms(); ++j )
-        {
-            Atom jAtom = atom( j );
-            double distance2 = crystal_lattice_.shortest_distance2( iAtom.position(), jAtom.position() );
-            // @@ Are we now doing this time and time again because we do not keep track if an atom had already been moved or not???
-            if ( are_bonded( iAtom.element(), jAtom.element(), distance2 ) )
-            {
-                // Add this one to the connectivity table.
-                connectivity_table.set_value( i, j, 1 );
-                // Move atom j so that it really bonds to atom i
-                double distance;
-                Vector3D difference_vector;
-                crystal_lattice_.shortest_distance( iAtom.position(), jAtom.position(), distance, difference_vector );
-                jAtom.set_position( iAtom.position() + difference_vector );
-                set_atom( j, jAtom );
-            }
-        }
-    }
-    std::vector< std::vector< size_t > > molecules = split( connectivity_table );
+    move_atoms_to_form_molecules( false );
+    std::vector< std::vector< size_t > > molecules = split( connectivity_table_ );
     for ( size_t i( 0 ); i != molecules.size(); ++i )
     {
         MoleculeInCrystal molecule_in_crystal;
@@ -309,6 +336,7 @@ void CrystalStructure::perceive_molecules( const bool I_know_Zprime_is_one )
 // @@ This requires that you run the molecule perception method first
 void CrystalStructure::remove_symmetry_related_molecules()
 {
+    
 }
 
 // ********************************************************************************
@@ -316,18 +344,19 @@ void CrystalStructure::remove_symmetry_related_molecules()
 // This returns a copy, so would copy all atoms.
 MoleculeInCrystal CrystalStructure::molecule_in_crystal( const size_t i ) const
 {
-    if ( i >= molecules_.size() )
-        throw std::runtime_error( "CrystalStructure::molecule_in_crystal(): i >= molecules_.size()." );
-    return molecules_[i];
+    if ( i < molecules_.size() )
+        return molecules_[i];
+    throw std::runtime_error( "CrystalStructure::molecule_in_crystal(): i >= molecules_.size()." );
 }
 
 // ********************************************************************************
 
+// point is in fractional coordinates.
+// Tolerance is in Angstrom.
+// On return, point contains the point moved to the exact special position.
 PointGroup CrystalStructure::point_is_on_special_position( Vector3D & point, const double tolerance ) const
 {
-    std::vector< bool > used;
-    for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
-        used.push_back( false );
+    std::vector< bool > used( space_group_.nsymmetry_operators(), false );
     bool a_change_was_made( true );
     while ( a_change_was_made )
     {
@@ -359,7 +388,8 @@ PointGroup CrystalStructure::point_is_on_special_position( Vector3D & point, con
         }
     }
     std::vector< Matrix3D > point_group_symmetry_operators;
-    for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
+    point_group_symmetry_operators.push_back( Matrix3D() );
+    for ( size_t i( 1 ); i != space_group_.nsymmetry_operators(); ++i )
     {
         Vector3D point_2 = space_group_.symmetry_operator( i ) * point;
         double distance;
@@ -383,25 +413,65 @@ PointGroup CrystalStructure::point_is_on_special_position( Vector3D & point, con
 
 // ********************************************************************************
 
-bool CrystalStructure::molecule_is_on_special_position( const size_t i ) const
+PointGroup CrystalStructure::point_is_on_special_position_const( Vector3D point, const double tolerance ) const
 {
-    throw std::runtime_error( "CrystalStructure::molecule_is_on_special_position(): not yet implemented." );
+    return point_is_on_special_position( point, tolerance );
 }
 
 // ********************************************************************************
 
-Vector3D CrystalStructure::molecular_centre_of_mass( const size_t i ) const
+PointGroup CrystalStructure::molecule_is_on_special_position( const size_t i, const double tolerance ) const
 {
-    Vector3D result;
-    for ( size_t j( 0 ); j != molecules_[i].natoms(); ++j )
+    return point_is_on_special_position_const( molecule_in_crystal( i ).centre_of_mass(), tolerance );
+}
+
+// ********************************************************************************
+
+//struct SpecialPositionsReport
+//{
+//      size_t number_of_atoms_in_unit_cell_; // Could make it a ChemicalFormula.
+//    // We could enumerate the number of atoms found per point group, but two atoms that are on two special positions with the same point group are not necesarily the same atom.
+//      std::vector< size_t > point_group_orders_;
+//      std::vector< size_t > nmolecules_per_point_group_order_; // Same size as point_group_orders_
+//      size_t nmolecules_on_special_positions_; // Sum of nmolecules_per_point_group_order_
+//      size_t nsymmetry_operators_;
+//    size_t nmolecules_;
+//};
+
+SpecialPositionsReport CrystalStructure::special_positions_report() const
+{
+    SpecialPositionsReport result;
+ //   perceive_molecules();
+    result.nsymmetry_operators_ = space_group_.nsymmetry_operators();
+    //reduce_to_asymmetric_unit();
+    //apply_space_group_symmetry();
+    result.number_of_atoms_in_unit_cell_ = natoms();
+    for ( size_t i( 0 ); i != nmolecules(); ++i )
     {
-        result += molecules_[i].atom( j ).position();
+        PointGroup point_group = molecule_is_on_special_position( i );
+        if ( point_group.nsymmetry_operators() != 1 )
+        {
+            bool found( false );
+            for ( size_t j( 0 ); j != result.point_group_orders_.size(); ++j )
+            {
+                if ( result.point_group_orders_[j] == point_group.nsymmetry_operators() )
+                {
+                    ++result.nmolecules_per_point_group_order_[j];
+                    found == true;
+                }
+            }
+            if ( ! found )
+            {
+                result.point_group_orders_.push_back( point_group.nsymmetry_operators() );
+                result.nmolecules_per_point_group_order_.push_back( 1 );
+            }
+        }
     }
-    return result / molecules_[i].natoms();
 }
 
 // ********************************************************************************
 
+// @@ This is problematic because MoleculeInCrystal stores copies of all the atoms.
 void CrystalStructure::move_molecule( const size_t i, const Vector3D shift )
 {
     for ( size_t j( 0 ); j != molecules_[i].natoms(); ++j )
@@ -533,6 +603,7 @@ Vector3D CrystalStructure::centre_of_mass() const
 
 // ********************************************************************************
 
+// @@ Undefined for a crystal structure, gives the wrong answer.
 double CrystalStructure::dipole_moment() const
 {
     // We must first get rid of the nett charge

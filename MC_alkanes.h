@@ -1,5 +1,5 @@
-#ifndef AMS_CONVERT_FLX2XYZ_H
-#define AMS_CONVERT_FLX2XYZ_H
+#ifndef MC_ALKANES_H
+#define MC_ALKANES_H
 
 /* *********************************************
 Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
@@ -28,9 +28,18 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class Angle;
 class FileName;
+class Vector3D;
 
-void convert_flx2xyz( const FileName & input_file_name );
+#include <vector>
+#include <cstddef> // For definition of size_t
 
-#endif // AMS_CONVERT_FLX2XYZ_H
+std::vector< Vector3D > build_alkane( const size_t n, const std::vector< Angle > & torsion_angles );
+
+void save_as_xyz( const std::vector< Vector3D > & coordinates, const FileName & file_name );
+
+bool there_is_overlap( const std::vector< Vector3D > & coordinates, const double exclusion_distance = 3.65 );
+
+#endif // MC_ALKANES_H
 

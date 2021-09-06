@@ -67,7 +67,6 @@ public:
     Angle two_theta( const size_t i ) const { return two_theta_values_[i]; }
     double intensity( const size_t i ) const { return intensities_[i]; }
     double estimated_standard_deviation( const size_t i ) const { return estimated_standard_deviations_[i]; }
-    double noise( const size_t i ) const { return noise_[i]; }
     void set_two_theta( const size_t i, const Angle value ) { two_theta_values_[i] = value; }
     double wavelength() const { return wavelength_; }
     void set_wavelength( const double wavelength ) { wavelength_ = wavelength; }
@@ -93,9 +92,6 @@ public:
 
     // Area under the pattern
     double cumulative_intensity() const;
-    double cumulative_noise() const;
-    double cumulative_absolute_noise() const;
-    double cumulative_squared_noise() const;
 
     void read_xye( const FileName & file_name );
     void read_xrdml( const FileName & file_name );
@@ -112,11 +108,14 @@ public:
     PowderPattern & operator+=( const PowderPattern & rhs );
     PowderPattern & operator-=( const PowderPattern & rhs );
 
-    // Normalises the highest peak
-    void normalise_highest_peak( const double highest_peak = 10000 );
+
+    // Normalises the highest peak.
+    // Returns the scale factor.
+    double normalise_highest_peak( const double highest_peak = 10000 );
 
     // Normalises the total signal = area under the pattern = cumulative_intensity() .
-    void normalise_total_signal( const double total_signal = 10000 );
+    // Returns the scale factor.
+    double normalise_total_signal( const double total_signal = 10000 );
 
     // Simply subtracts the value from each 2theta value
     void correct_zero_point_error( const Angle two_theta_value );
@@ -129,12 +128,6 @@ public:
     void convert_to_variable_slit();
 
     void add_constant_background( const double background );
-
-    // It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
-    // For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
-    // makes all points of the pattern behave as Gaussian.
-    // The noise is stored separately.
-    void add_Poisson_noise();
 
     void make_counts_integer();
 
@@ -149,8 +142,6 @@ private:
     std::vector< Angle > two_theta_values_;
     std::vector< double > intensities_;
     std::vector< double > estimated_standard_deviations_;
-    bool noise_is_available_;
-    std::vector< double > noise_;
 };
 
 // Assumes uniform 2theta step size
@@ -176,11 +167,29 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
                                               const bool apply_smoothing,
                                               const size_t smoothing_window );
 
+// It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
+// For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
+// makes all points of the pattern behave as Gaussian.
+// Note that Poisson noise is only defined for positive integer values,
+// so the noise consists of integers.
+void add_Poisson_noise( PowderPattern & powder_pattern );
+
+// It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
+// For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
+// makes all points of the pattern behave as Gaussian.
+// Note that Poisson noise is only defined for positive integer values, so the noise consists of integers.
+// The noise can be positive or negative. ESDs are set to 0.0.
+PowderPattern calculate_Poisson_noise( const PowderPattern & powder_pattern );
+
 // Useful for Variable Count Time schemes
 // The 2theta values must currently be the same.
 // @@ Currently does not allow the "monitor" to be passed, so only suitable for laboratory data.
 // For each powder pattern the "number of seconds counted per 2theta step" (noscp2ts) must be provided to allow the intensities to be put onto the same scale.
 PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_patterns, const std::vector< double > & noscp2ts );
+
+// Splits a powder pattern over n powder patterns, taking into account Poisson statistics.
+// So splitting an intensity of 100 counts over two patterns may assign, say, 54 counts to one, 46 to the other.
+void split( const PowderPattern & powder_pattern, const size_t n, std::vector< PowderPattern > & powder_patterns );
 
 #endif // POWDERPATTERN_H
 

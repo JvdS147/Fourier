@@ -54,6 +54,24 @@ MatrixFraction3D::MatrixFraction3D( const Fraction & a00, const Fraction & a01, 
 
 // ********************************************************************************
 
+Fraction MatrixFraction3D::value( const size_t i, const size_t j ) const
+{
+    if ( ( 2 < i ) || ( 2 < j ) )
+        throw std::runtime_error( "MatrixFraction3D::value(): index out of bounds." );
+    return data_[i][j];
+}
+
+// ********************************************************************************
+
+void MatrixFraction3D::set_value( const size_t i, const size_t j, const Fraction & value )
+{
+    if ( ( 2 < i ) || ( 2 < j ) )
+        throw std::runtime_error( "MatrixFraction3D::set_value(): index out of bounds." );
+    data_[i][j] = value;
+}
+
+// ********************************************************************************
+
 Fraction MatrixFraction3D::sum_of_elements() const
 {
     return data_[0][0] + data_[0][1] + data_[0][2] + data_[1][0] + data_[1][1] + data_[1][2] + data_[2][0] + data_[2][1] + data_[2][2];
@@ -77,9 +95,9 @@ void MatrixFraction3D::invert()
         throw std::runtime_error( "MatrixFraction3D::invert(): determinant = 0" );
     transpose();
     MatrixFraction3D adjoint;
-    adjoint.data_[0][0] = +minor_matrix_determinant(0,0); adjoint.data_[0][1] = -minor_matrix_determinant(0,1); adjoint.data_[0][2] = +minor_matrix_determinant(0,2);
-    adjoint.data_[1][0] = -minor_matrix_determinant(1,0); adjoint.data_[1][1] = +minor_matrix_determinant(1,1); adjoint.data_[1][2] = -minor_matrix_determinant(1,2);
-    adjoint.data_[2][0] = +minor_matrix_determinant(2,0); adjoint.data_[2][1] = -minor_matrix_determinant(2,1); adjoint.data_[2][2] = +minor_matrix_determinant(2,2);
+    adjoint.data_[0][0] = +minor_matrix_determinant( 0, 0 ); adjoint.data_[0][1] = -minor_matrix_determinant( 0, 1 ); adjoint.data_[0][2] = +minor_matrix_determinant( 0, 2 );
+    adjoint.data_[1][0] = -minor_matrix_determinant( 1, 0 ); adjoint.data_[1][1] = +minor_matrix_determinant( 1, 1 ); adjoint.data_[1][2] = -minor_matrix_determinant( 1, 2 );
+    adjoint.data_[2][0] = +minor_matrix_determinant( 2, 0 ); adjoint.data_[2][1] = -minor_matrix_determinant( 2, 1 ); adjoint.data_[2][2] = +minor_matrix_determinant( 2, 2 );
     adjoint /= D;
     *this = adjoint;
 }
@@ -97,9 +115,9 @@ void MatrixFraction3D::transpose()
 
 Fraction MatrixFraction3D::determinant() const
 {
-    return data_[0][0] * minor_matrix_determinant(0,0) -
-           data_[0][1] * minor_matrix_determinant(0,1) +
-           data_[0][2] * minor_matrix_determinant(0,2);
+    return data_[0][0] * minor_matrix_determinant( 0, 0 ) -
+           data_[0][1] * minor_matrix_determinant( 0, 1 ) +
+           data_[0][2] * minor_matrix_determinant( 0, 2 );
 }
 
 // ********************************************************************************
@@ -114,7 +132,7 @@ Fraction MatrixFraction3D::trace() const
 void MatrixFraction3D::swap_rows( const size_t i, const size_t j )
 {
     if ( ( 2 < i ) || ( 2 < j ) )
-        throw std::runtime_error( "MatrixFraction3D::swap_rows(): index out of bounds" );
+        throw std::runtime_error( "MatrixFraction3D::swap_rows(): index out of bounds." );
     std::swap( data_[i][0], data_[j][0] );
     std::swap( data_[i][1], data_[j][1] );
     std::swap( data_[i][2], data_[j][2] );
@@ -125,7 +143,7 @@ void MatrixFraction3D::swap_rows( const size_t i, const size_t j )
 void MatrixFraction3D::swap_columns( const size_t i, const size_t j )
 {
     if ( ( 2 < i ) || ( 2 < j ) )
-        throw std::runtime_error( "MatrixFraction3D::swap_columns(): index out of bounds" );
+        throw std::runtime_error( "MatrixFraction3D::swap_columns(): index out of bounds." );
     std::swap( data_[0][i], data_[0][j] );
     std::swap( data_[1][i], data_[1][j] );
     std::swap( data_[2][i], data_[2][j] );    
@@ -136,7 +154,7 @@ void MatrixFraction3D::swap_columns( const size_t i, const size_t j )
 Fraction MatrixFraction3D::maximum_absolute_value_in_row( const size_t i ) const
 {
     if ( 2 < i )
-        throw std::runtime_error( "MatrixFraction3D::maximum_absolute_value_in_row(): index out of bounds" );
+        throw std::runtime_error( "MatrixFraction3D::maximum_absolute_value_in_row(): index out of bounds." );
     return std::max( absolute( data_[i][0] ), std::max( absolute( data_[i][1] ), absolute( data_[i][2] ) ) );
 }
 
@@ -145,7 +163,7 @@ Fraction MatrixFraction3D::maximum_absolute_value_in_row( const size_t i ) const
 Fraction MatrixFraction3D::maximum_absolute_value_in_column( const size_t i ) const
 {
     if ( 2 < i )
-        throw std::runtime_error( "MatrixFraction3D::maximum_absolute_value_in_column(): index out of bounds" );
+        throw std::runtime_error( "MatrixFraction3D::maximum_absolute_value_in_column(): index out of bounds." );
     return std::max( absolute( data_[0][i] ), std::max( absolute( data_[1][i] ), absolute( data_[2][i] ) ) );    
 }
 
@@ -327,15 +345,15 @@ MatrixFraction3D operator-( const MatrixFraction3D & lhs, const MatrixFraction3D
 MatrixFraction3D operator*( const MatrixFraction3D & lhs, const MatrixFraction3D & rhs )
 {
     MatrixFraction3D result;
-    result.set_value( 0, 0, lhs.value(0,0) * rhs.value(0,0) + lhs.value(0,1) * rhs.value(1,0) + lhs.value(0,2) * rhs.value(2,0) );
-    result.set_value( 0, 1, lhs.value(0,0) * rhs.value(0,1) + lhs.value(0,1) * rhs.value(1,1) + lhs.value(0,2) * rhs.value(2,1) );
-    result.set_value( 0, 2, lhs.value(0,0) * rhs.value(0,2) + lhs.value(0,1) * rhs.value(1,2) + lhs.value(0,2) * rhs.value(2,2) );
-    result.set_value( 1, 0, lhs.value(1,0) * rhs.value(0,0) + lhs.value(1,1) * rhs.value(1,0) + lhs.value(1,2) * rhs.value(2,0) );
-    result.set_value( 1, 1, lhs.value(1,0) * rhs.value(0,1) + lhs.value(1,1) * rhs.value(1,1) + lhs.value(1,2) * rhs.value(2,1) );
-    result.set_value( 1, 2, lhs.value(1,0) * rhs.value(0,2) + lhs.value(1,1) * rhs.value(1,2) + lhs.value(1,2) * rhs.value(2,2) );
-    result.set_value( 2, 0, lhs.value(2,0) * rhs.value(0,0) + lhs.value(2,1) * rhs.value(1,0) + lhs.value(2,2) * rhs.value(2,0) );
-    result.set_value( 2, 1, lhs.value(2,0) * rhs.value(0,1) + lhs.value(2,1) * rhs.value(1,1) + lhs.value(2,2) * rhs.value(2,1) );
-    result.set_value( 2, 2, lhs.value(2,0) * rhs.value(0,2) + lhs.value(2,1) * rhs.value(1,2) + lhs.value(2,2) * rhs.value(2,2) );
+    result.set_value( 0, 0, lhs.value( 0, 0 ) * rhs.value( 0, 0 ) + lhs.value( 0, 1 ) * rhs.value( 1, 0 ) + lhs.value( 0, 2 ) * rhs.value( 2, 0 ) );
+    result.set_value( 0, 1, lhs.value( 0, 0 ) * rhs.value( 0, 1 ) + lhs.value( 0, 1 ) * rhs.value( 1, 1 ) + lhs.value( 0, 2 ) * rhs.value( 2, 1 ) );
+    result.set_value( 0, 2, lhs.value( 0, 0 ) * rhs.value( 0, 2 ) + lhs.value( 0, 1 ) * rhs.value( 1, 2 ) + lhs.value( 0, 2 ) * rhs.value( 2, 2 ) );
+    result.set_value( 1, 0, lhs.value( 1, 0 ) * rhs.value( 0, 0 ) + lhs.value( 1, 1 ) * rhs.value( 1, 0 ) + lhs.value( 1, 2 ) * rhs.value( 2, 0 ) );
+    result.set_value( 1, 1, lhs.value( 1, 0 ) * rhs.value( 0, 1 ) + lhs.value( 1, 1 ) * rhs.value( 1, 1 ) + lhs.value( 1, 2 ) * rhs.value( 2, 1 ) );
+    result.set_value( 1, 2, lhs.value( 1, 0 ) * rhs.value( 0, 2 ) + lhs.value( 1, 1 ) * rhs.value( 1, 2 ) + lhs.value( 1, 2 ) * rhs.value( 2, 2 ) );
+    result.set_value( 2, 0, lhs.value( 2, 0 ) * rhs.value( 0, 0 ) + lhs.value( 2, 1 ) * rhs.value( 1, 0 ) + lhs.value( 2, 2 ) * rhs.value( 2, 0 ) );
+    result.set_value( 2, 1, lhs.value( 2, 0 ) * rhs.value( 0, 1 ) + lhs.value( 2, 1 ) * rhs.value( 1, 1 ) + lhs.value( 2, 2 ) * rhs.value( 2, 1 ) );
+    result.set_value( 2, 2, lhs.value( 2, 0 ) * rhs.value( 0, 2 ) + lhs.value( 2, 1 ) * rhs.value( 1, 2 ) + lhs.value( 2, 2 ) * rhs.value( 2, 2 ) );
     return result;
 }
 

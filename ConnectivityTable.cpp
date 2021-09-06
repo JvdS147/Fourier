@@ -35,22 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ConnectivityTable::ConnectivityTable( const size_t natoms ) : dimension_(natoms)
 {
-    data_ptr_ = new size_t[ ( dimension_ * ( dimension_ - 1 ) ) / 2 ];
-    // The data has not been initialised.
-    for ( size_t i( 0 ); i != size(); ++i )
-    {
-        for ( size_t j( i+1 ); j != size(); ++j )
-        {
-            set_value( i, j, 0 );
-        }
-    }
-}
-
-// ********************************************************************************
-
-ConnectivityTable::~ConnectivityTable()
-{
-    delete[] data_ptr_;
+    data_ = std::vector< size_t >( ( dimension_ * ( dimension_ - 1 ) ) / 2, 0 );
 }
 
 // ********************************************************************************
@@ -59,11 +44,14 @@ size_t ConnectivityTable::value( size_t i, size_t j ) const
 {
     if ( i < j )
         std::swap( i, j );
-    if ( i > (dimension_-1) )
+    if ( i < dimension_ )
+    {
+        if ( i == j )
+            return 1;
+        return data_[ ((i*(i-1))/2) + j ];
+    }
+    else
         throw std::runtime_error( "ConnectivityTable::value(): out of bounds ( " + size_t2string(i) + " > " + size_t2string(dimension_) + " )" );
-    if ( i == j )
-        return 1;
-    return data_ptr_[ ((i*(i-1))/2) + j ];
 }
 
 // ********************************************************************************
@@ -72,11 +60,14 @@ void ConnectivityTable::set_value( size_t i, size_t j, const size_t value )
 {
     if ( i < j )
         std::swap( i, j );
-    if ( i > (dimension_-1) )
+    if ( i < dimension_ )
+    {
+        if ( i == j )
+            return;
+        data_[ ((i*(i-1))/2) + j ] = value;
+    }
+    else
         throw std::runtime_error( "ConnectivityTable::set_value(): out of bounds ( " + size_t2string(i) + " > " + size_t2string(dimension_) + " )" );
-    if ( i == j )
-        return;
-    data_ptr_[ ((i*(i-1))/2) + j ] = value;
 }
 
 // ********************************************************************************

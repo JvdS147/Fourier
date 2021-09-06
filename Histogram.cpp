@@ -89,8 +89,12 @@ size_t Histogram::bin( const size_t i ) const
 
 double Histogram::middle_of_bin( const size_t i ) const
 {
-    double bin_size = ( finish_ - start_ ) / static_cast<double>(number_of_bins_);
-    return start_ + ( bin_size * ( static_cast<double>(i) + 0.5 ) );
+    if ( i < number_of_bins_ )
+    {
+        double bin_size = ( finish_ - start_ ) / static_cast<double>(number_of_bins_);
+        return start_ + ( bin_size * ( static_cast<double>(i) + 0.5 ) );
+    }
+    throw std::runtime_error( "Histogram::middle_of_bin(): index out of range." );
 }
 
 // ********************************************************************************

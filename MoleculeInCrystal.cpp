@@ -48,3 +48,13 @@ void MoleculeInCrystal::add_atoms( const std::vector< Atom > & atoms )
 
 // ********************************************************************************
 
+Vector3D MoleculeInCrystal::centre_of_mass() const
+{
+    Vector3D result;
+    for ( size_t i( 0 ); i != natoms(); ++i )
+        result += atom( i ).position();
+    return result / natoms();
+}
+
+// ********************************************************************************
+
