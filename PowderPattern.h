@@ -60,7 +60,7 @@ public:
 
     // Returns the *nearest* 2theta value
     size_t find_two_theta( const Angle two_theta_value ) const;
-    
+
     // Multiplies intensities and ESDs by factor
     void scale( const double factor );
 
@@ -86,7 +86,7 @@ public:
 
     // Uses average_two_theta_step() to add new points. Intensities and ESDs are initialised to 0.0.
     void set_two_theta_start( const Angle two_theta_start ) const;
-    
+
     // Uses average_two_theta_step() to add new points. Intensities and ESDs are initialised to 0.0.
     void set_two_theta_end( const Angle two_theta_end ) const;
 
@@ -100,14 +100,13 @@ public:
     void read_brml( const FileName & file_name );
     void read_txt( const FileName & file_name );
     void save_xye( const FileName & file_name, const bool include_wave_length ) const;
-    
+
     // Writes to std::cout the code that is necessary to generate the PowderPattern object.
     // Useful for writing test-suite code that does not rely on external files.
     void generate_code( const bool include_estimated_standard_deviation ) const;
 
     PowderPattern & operator+=( const PowderPattern & rhs );
     PowderPattern & operator-=( const PowderPattern & rhs );
-
 
     // Normalises the highest peak.
     // Returns the scale factor.
@@ -122,18 +121,24 @@ public:
 
     // ESD is initialised to std::max( sqrt( intensity ), intensity / 100.0 ), or to 4.4 if intensity < 20.
     void recalculate_estimated_standard_deviations();
-    
+
     // I(fixed slit) = I(variable slit) / sin(theta) is a very good approximation.
     void convert_to_fixed_slit();
     void convert_to_variable_slit();
 
     void add_constant_background( const double background );
 
+    // It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
+    // For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
+    // makes all points of the pattern behave as Gaussian.
+    // Note that Poisson noise is only defined for positive integer values, so after adding noise all intensities are integers.
+    void add_Poisson_noise();
+
     void make_counts_integer();
 
     // Should not be necessary. Introduced to manipulate data from a tool that extracted a powder pattern from a bitmap picture.
     void sort_two_theta();
-    
+
     // Should not be necessary. Introduced to manipulate data from a tool that extracted a powder pattern from a bitmap picture.
     void average_if_two_theta_equal();
 
@@ -166,13 +171,6 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
                                               const size_t window,
                                               const bool apply_smoothing,
                                               const size_t smoothing_window );
-
-// It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
-// For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
-// makes all points of the pattern behave as Gaussian.
-// Note that Poisson noise is only defined for positive integer values,
-// so the noise consists of integers.
-void add_Poisson_noise( PowderPattern & powder_pattern );
 
 // It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
 // For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and

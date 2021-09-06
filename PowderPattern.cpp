@@ -655,6 +655,14 @@ void PowderPattern::add_constant_background( const double background )
 
 // ********************************************************************************
 
+void PowderPattern::add_Poisson_noise()
+{
+    for ( size_t i( 0 ); i != size(); ++i )
+        intensities_[i] = Poisson_distribution( round_to_int( intensities_[i] ) );
+}
+
+// ********************************************************************************
+
 void PowderPattern::make_counts_integer()
 {
     for ( size_t i( 0 ); i != size(); ++i )
@@ -837,14 +845,6 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
             result.set_intensity( i, std::min( pp_old.intensity( i ), result.intensity( i ) ) );
     }
     return result;
-}
-
-// ********************************************************************************
-
-void add_Poisson_noise( PowderPattern & powder_pattern )
-{
-    for ( size_t i( 0 ); i != powder_pattern.size(); ++i )
-        powder_pattern.set_intensity( i, Poisson_distribution( round_to_int( powder_pattern.intensity( i ) ) ) );
 }
 
 // ********************************************************************************

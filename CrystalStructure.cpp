@@ -457,7 +457,7 @@ SpecialPositionsReport CrystalStructure::special_positions_report() const
                 if ( result.point_group_orders_[j] == point_group.nsymmetry_operators() )
                 {
                     ++result.nmolecules_per_point_group_order_[j];
-                    found == true;
+                    found = true;
                 }
             }
             if ( ! found )
@@ -467,6 +467,7 @@ SpecialPositionsReport CrystalStructure::special_positions_report() const
             }
         }
     }
+    return result;
 }
 
 // ********************************************************************************
