@@ -28,9 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include <string>
+class FileName;
 
-void convert_flx2xyz( const std::string & input_file_name );
+void convert_flx2xyz( const FileName & input_file_name );
 
 #endif // AMS_CONVERT_FLX2XYZ_H
-
