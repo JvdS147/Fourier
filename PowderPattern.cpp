@@ -923,6 +923,7 @@ void split( const PowderPattern & powder_pattern, const size_t n, std::vector< P
         powder_patterns.push_back( PowderPattern() );
         powder_patterns[j].set_wavelength( powder_pattern.wavelength() );
     }
+    RandomNumberGenerator_integer rng;
     for ( size_t i( 0 ); i != powder_pattern.size(); ++i )
     {
         size_t old_intensity = round_to_int( powder_pattern.intensity( i ) );
@@ -945,17 +946,13 @@ void split( const PowderPattern & powder_pattern, const size_t n, std::vector< P
                 new_sum += intensities[j];
             }
             // We randomly add / remove counts until we have reached the target.
-            if ( new_sum != old_intensity )
+            int step = ( new_sum > old_intensity ) ? -1 : 1;
+            while ( new_sum != old_intensity )
             {
-                RandomNumberGenerator_integer rng;
-                int step = ( new_sum > old_intensity ) ? -1 : 1;
-                while ( new_sum != old_intensity )
-                {
-                    // Randomly pick a pattern.
-                    size_t j = rng.next_number( 0, n-1 );
-                    intensities[j] += step;
-                    new_sum += step;
-                }
+                // Randomly pick a pattern.
+                size_t j = rng.next_number( 0, n-1 );
+                intensities[j] += step;
+                new_sum += step;
             }
         }
         for ( size_t j( 0 ); j != n; ++j )
