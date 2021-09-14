@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // a along x, b in xy plane, right-handed coordinate frame
 // We also abuse this class for any functionality related to parallelepipeds
+// The CrystalLattice and the SpaceGroup have a mutual dependence that is currently not captured anywhere.
 class CrystalLattice
 {
 public:

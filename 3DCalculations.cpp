@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Angle.h"
 #include "BasicMathsFunctions.h"
 #include "CollectionOfPoints.h"
+#include "CoordinateFrame.h"
 #include "CrystalLattice.h"
 #include "Matrix3D.h"
 #include "MillerIndices.h"
@@ -36,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Plane.h"
 #include "SpaceGroup.h"
 #include "SymmetricMatrix3D.h"
+#include "Vector2D.h"
 #include "Vector3DCalculations.h"
 
 #include <cmath>
@@ -70,36 +72,29 @@ NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const Vector3D &
 
 // ********************************************************************************
 
-// Gram-Schmidt orthogonalisation
-//NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const NormalisedVector3D & r )
-//{
-//    return normalised_vector( r - (n*r) * n );
-//}
-
-// ********************************************************************************
-
-void generate_basis_1( const NormalisedVector3D & basis_vector_1, NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 )
+Vector3D change_of_basis( const Vector3D & point, const CoordinateFrame & before, const CoordinateFrame & after )
 {
-    Vector3D best_attempt( 1.0, 0.0, 0.0 );
-    double smallest_absolute_inner_product = std::abs( basis_vector_1 * best_attempt );
-    if ( std::abs( basis_vector_1 * NormalisedVector3D( 0.0, 1.0, 0.0 ) ) < smallest_absolute_inner_product )
-    {
-        best_attempt = Vector3D( 0.0, 1.0, 0.0 );
-        smallest_absolute_inner_product = basis_vector_1 * best_attempt;
-    }
-    if ( std::abs( basis_vector_1 * NormalisedVector3D( 0.0, 0.0, 1.0 ) ) < smallest_absolute_inner_product )
-        best_attempt = Vector3D( 0.0, 0.0, 1.0 );
-    basis_vector_2 = orthogonalise( basis_vector_1, best_attempt );
-    generate_basis_2( basis_vector_1, basis_vector_2, basis_vector_3 );
+    return Vector3D( point.x() * before.x_axis() * after.x_axis() + point.y() * before.y_axis() * after.x_axis() + point.z() * before.z_axis() * after.x_axis(),
+                     point.x() * before.x_axis() * after.y_axis() + point.y() * before.y_axis() * after.y_axis() + point.z() * before.z_axis() * after.y_axis(),
+                     point.x() * before.x_axis() * after.z_axis() + point.y() * before.y_axis() * after.z_axis() + point.z() * before.z_axis() * after.z_axis() );
 }
 
 // ********************************************************************************
 
-void generate_basis_2( const NormalisedVector3D & basis_vector_1, const NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 )
+Plane plane( const CollectionOfPoints & points )
 {
-    basis_vector_3 = NormalisedVector3D( basis_vector_1.y() * basis_vector_2.z() - basis_vector_1.z() * basis_vector_2.y(),
-                                         basis_vector_1.z() * basis_vector_2.x() - basis_vector_1.x() * basis_vector_2.z(),
-                                         basis_vector_1.x() * basis_vector_2.y() - basis_vector_1.y() * basis_vector_2.x() );
+    // @@ This suggests that we must make CollectionOfPoints, renamed as SetOfPoints, a low-level class.
+    Plane result( points.points_wrt_com() );
+    return result;
+}
+
+// ********************************************************************************
+
+Vector2D projection( const Plane & plane, const Vector3D & point )
+{
+    Vector3D projected_point = plane.projection3D( point );
+    projected_point = change_of_basis( projected_point, CoordinateFrame(), plane.coordinate_frame() );
+    return Vector2D( projected_point.x(), projected_point.y() );
 }
 
 // ********************************************************************************
@@ -194,6 +189,13 @@ Vector3D operator-( const NormalisedVector3D & lhs, const NormalisedVector3D & r
 
 // ********************************************************************************
 
+Vector3D operator-( const NormalisedVector3D & lhs, const Vector3D & rhs )
+{
+    return Vector3D( lhs.x() - rhs.x(), lhs.y() - rhs.y(), lhs.z() - rhs.z() );
+}
+
+// ********************************************************************************
+
 Vector3D operator*( const double lhs, const NormalisedVector3D & rhs )
 {
     return Vector3D( rhs.x()*lhs, rhs.y()*lhs, rhs.z()*lhs );
@@ -224,7 +226,9 @@ SymmetricMatrix3D Matrix3D2SymmetricMatrix3D( const Matrix3D & matrix, const dou
          nearly_equal( matrix.value( 0, 2 ), matrix.value( 2, 0 ), tolerance ) &&
          nearly_equal( matrix.value( 1, 2 ), matrix.value( 2, 1 ), tolerance ) )
         return SymmetricMatrix3D( matrix.value( 0, 0 ), matrix.value( 1, 1 ), matrix.value( 2, 2 ),
-                                  ( matrix.value( 0, 1 ) + matrix.value( 1, 0 ) ) / 2.0, ( matrix.value( 0, 2 ) + matrix.value( 2, 0 ) ) / 2.0, ( matrix.value( 1, 2 ) + matrix.value( 2, 1 ) ) / 2.0 );
+                                  ( matrix.value( 0, 1 ) + matrix.value( 1, 0 ) ) / 2.0,
+                                  ( matrix.value( 0, 2 ) + matrix.value( 2, 0 ) ) / 2.0,
+                                  ( matrix.value( 1, 2 ) + matrix.value( 2, 1 ) ) / 2.0 );
     throw std::runtime_error( "Matrix3D2SymmetricMatrix3D() : input matrix is not symmetric." );
 }
 
@@ -463,9 +467,9 @@ Matrix3D rotation_about_z( const Angle angle )
 
 Vector3D rotate_point_about_axis( Vector3D point, const Vector3D & origin, const NormalisedVector3D & n, const Angle angle )
 {
-    NormalisedVector3D basis_vector_2;
-    NormalisedVector3D basis_vector_3;
-    generate_basis_1( n, basis_vector_2, basis_vector_3 );
+    CoordinateFrame coordination_frame( n );
+    NormalisedVector3D basis_vector_2 = coordination_frame.y_axis();
+    NormalisedVector3D basis_vector_3 = coordination_frame.z_axis();
     // Calculate the projection of "point" onto the axis (i.e. the point on the axis closest to "point".
     double omega = (n*point)-(n*origin);
     Vector3D new_origin = origin + (omega * n);

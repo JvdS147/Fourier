@@ -25,7 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "Vector3D.h"
+#include "Vector2D.h"
 #include "BasicMathsFunctions.h"
 #include "Utilities.h"
 
@@ -35,129 +35,126 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ********************************************************************************
 
-Vector3D::Vector3D()
+Vector2D::Vector2D()
 {
     data_[0] = 0.0;
     data_[1] = 0.0;
-    data_[2] = 0.0;
 }
 
 // ********************************************************************************
 
-Vector3D::Vector3D( const double x, const double y, const double z )
+Vector2D::Vector2D( const double x, const double y )
 {
     data_[0] = x;
     data_[1] = y;
-    data_[2] = z;
 }
 
 // ********************************************************************************
 
-double Vector3D::value( const size_t i ) const
+double Vector2D::value( const size_t i ) const
 {
-    if ( 2 < i )
-        throw std::runtime_error( "Vector3D::value(): index out of bounds." );
+    if ( 1 < i )
+        throw std::runtime_error( "Vector2D::value(): index out of bounds." );
     return data_[i];
 }
 
 // ********************************************************************************
 
-void Vector3D::set_value( const size_t i, const double value )
+void Vector2D::set_value( const size_t i, const double value )
 {
-    if ( 2 < i )
-        throw std::runtime_error( "Vector3D::set_value(): index out of bounds." );
+    if ( 1 < i )
+        throw std::runtime_error( "Vector2D::set_value(): index out of bounds." );
     data_[i] = value;
 }
 
 // ********************************************************************************
 
-void Vector3D::set_length( const double value )
+void Vector2D::set_length( const double value )
 {
     throw_if_zero_vector();
     double l = value / length();
     data_[0] *= l;
     data_[1] *= l;
-    data_[2] *= l;
 }
 
 // ********************************************************************************
 
-bool Vector3D::nearly_zero( const double tolerance ) const
+bool Vector2D::nearly_zero( const double tolerance ) const
 {
-    return ( ::nearly_zero( x(), tolerance ) && ::nearly_zero( y(), tolerance ) && ::nearly_zero( z(), tolerance ) );
+    return ( ::nearly_zero( x(), tolerance ) && ::nearly_zero( y(), tolerance ) );
 }
 
 // ********************************************************************************
 
-void Vector3D::throw_if_zero_vector( const double tolerance ) const
+void Vector2D::throw_if_zero_vector( const double tolerance ) const
 {
     if ( nearly_zero( tolerance ) )
-        throw std::runtime_error( "Vector3D::throw_if_zero_vector()." );
+        throw std::runtime_error( "Vector2D::throw_if_zero_vector()." );
 }
 
 // ********************************************************************************
 
-Vector3D & Vector3D::operator+=( const Vector3D & rhs )
+Vector2D & Vector2D::operator+=( const Vector2D & rhs )
 {
-    *this = Vector3D( x() + rhs.x(), y() + rhs.y(), z() + rhs.z() );
+    *this = Vector2D( x() + rhs.x(), y() + rhs.y() );
     return *this;
 }
 
 // ********************************************************************************
 
-Vector3D & Vector3D::operator-=( const Vector3D & rhs )
+Vector2D & Vector2D::operator-=( const Vector2D & rhs )
 {
-    *this = Vector3D( x() - rhs.x(), y() - rhs.y(), z() - rhs.z() );
+    *this = Vector2D( x() - rhs.x(), y() - rhs.y() );
     return *this;
 }
 
 // ********************************************************************************
 
-Vector3D & Vector3D::operator/=( const double rhs )
+Vector2D & Vector2D::operator/=( const double rhs )
 {
-    *this = Vector3D( x() / rhs, y() / rhs, z() / rhs );
+    *this = Vector2D( x() / rhs, y() / rhs );
     return *this;
 }
 
 // ********************************************************************************
 
-Vector3D & Vector3D::operator*=( const double rhs )
+Vector2D & Vector2D::operator*=( const double rhs )
 {
-    *this = Vector3D( x() * rhs, y() * rhs, z() * rhs );
+    *this = Vector2D( x() * rhs, y() * rhs );
     return *this;
 }
 
 // ********************************************************************************
 
-Vector3D Vector3D::operator-() const
+Vector2D Vector2D::operator-() const
 {
-    return Vector3D( -data_[0], -data_[1], -data_[2] );
+    return Vector2D( -data_[0], -data_[1] );
 }
 
 // ********************************************************************************
 
-Vector3D Vector3D::operator+() const
+Vector2D Vector2D::operator+() const
 {
-    return Vector3D( data_[0], data_[1], data_[2] );
+    return Vector2D( data_[0], data_[1] );
 }
 
 // ********************************************************************************
 
-double Vector3D::norm2() const
+double Vector2D::norm2() const
 {
-    return data_[0] * data_[0] + data_[1] * data_[1] + data_[2] * data_[2];
+    return data_[0] * data_[0] + data_[1] * data_[1];
 }
 
 // ********************************************************************************
 
-double Vector3D::length() const
+double Vector2D::length() const
 {
     return sqrt( norm2() );
 }
 
 // ********************************************************************************
 
-void Vector3D::orthogonalise( const Vector3D & other )
+void Vector2D::orthogonalise( const Vector2D & other )
 {
     double c = -(*this*other)/other.norm2();
     *this += c * other;
@@ -165,116 +162,114 @@ void Vector3D::orthogonalise( const Vector3D & other )
 
 // ********************************************************************************
 
-std::string Vector3D::to_string() const
+std::string Vector2D::to_string() const
 {
-   return double2string( x() ) + " " + double2string( y() ) + " " + double2string( z() );
+   return double2string( x() ) + " " + double2string( y() );
 }
 
 // ********************************************************************************
 
-void Vector3D::show() const
+void Vector2D::show() const
 {
-    std::cout << "x = " << x() << ", y = " << y() << ", z = " << z() << std::endl;
+    std::cout << "x = " << x() << ", y = " << y() << std::endl;
 }
 
 // ********************************************************************************
 
-std::string Vector3D::index2string( const size_t index )
+std::string Vector2D::index2string( const size_t index )
 {
     switch ( index )
     {
         case 0: return "x";
         case 1: return "y";
-        case 2: return "z";
-        default: throw std::runtime_error( "Vector3D::index2string( const size_t ): out of range." );
+        default: throw std::runtime_error( "Vector2D::index2string( const size_t ): out of range." );
     }
 }
 
 // ********************************************************************************
 
-std::ostream & operator<<( std::ostream & os, const Vector3D & vector3d )
+std::ostream & operator<<( std::ostream & os, const Vector2D & vector2d )
 {
-    os << "[ " << vector3d.x() << ", " << vector3d.y() << ", " << vector3d.z() << " ]" << std::endl;
+    os << "[ " << vector2d.x() << ", " << vector2d.y() << " ]" << std::endl;
     return os;
 }
 
 // ********************************************************************************
 
-bool nearly_equal( const Vector3D & lhs, const Vector3D & rhs, const double tolerance )
+bool nearly_equal( const Vector2D & lhs, const Vector2D & rhs, const double tolerance )
 {
-    return ( nearly_equal( lhs.x(), rhs.x(), tolerance ) && nearly_equal( lhs.y(), rhs.y(), tolerance ) && nearly_equal( lhs.z(), rhs.z(), tolerance ) );
+    return ( nearly_equal( lhs.x(), rhs.x(), tolerance ) && nearly_equal( lhs.y(), rhs.y(), tolerance ) );
 }
 
 // ********************************************************************************
 
-bool nearly_zero( const Vector3D & lhs, const double tolerance )
+bool nearly_zero( const Vector2D & lhs, const double tolerance )
 {
     return lhs.nearly_zero( tolerance );
 }
 
 // ********************************************************************************
 
-Vector3D operator+( const Vector3D & lhs, const Vector3D & rhs )
+Vector2D operator+( const Vector2D & lhs, const Vector2D & rhs )
 {
-    return Vector3D( lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z() );
+    return Vector2D( lhs.x() + rhs.x(), lhs.y() + rhs.y() );
 }
 
 // ********************************************************************************
 
-Vector3D operator-( const Vector3D & lhs, const Vector3D & rhs )
+Vector2D operator-( const Vector2D & lhs, const Vector2D & rhs )
 {
-    return Vector3D( lhs.x() - rhs.x(), lhs.y() - rhs.y(), lhs.z() - rhs.z() );
+    return Vector2D( lhs.x() - rhs.x(), lhs.y() - rhs.y() );
 }
 
 // ********************************************************************************
 
-double operator*( const Vector3D & lhs, const Vector3D & rhs )
+double operator*( const Vector2D & lhs, const Vector2D & rhs )
 {
-    return ( lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z() );
+    return ( lhs.x() * rhs.x() + lhs.y() * rhs.y() );
 }
 
 // ********************************************************************************
 
-Vector3D operator*( const Vector3D & lhs, const double rhs )
+Vector2D operator*( const Vector2D & lhs, const double rhs )
 {
-    return Vector3D( lhs.x() * rhs, lhs.y() * rhs, lhs.z() * rhs );
+    return Vector2D( lhs.x() * rhs, lhs.y() * rhs );
 }
 
 // ********************************************************************************
 
-Vector3D operator/( const Vector3D & lhs, const double rhs )
+Vector2D operator/( const Vector2D & lhs, const double rhs )
 {
-    return Vector3D( lhs.x() / rhs, lhs.y() / rhs, lhs.z() / rhs );
+    return Vector2D( lhs.x() / rhs, lhs.y() / rhs );
 }
 
 // ********************************************************************************
 
-Vector3D operator*( const double lhs, const Vector3D & rhs )
+Vector2D operator*( const double lhs, const Vector2D & rhs )
 {
-    return Vector3D( rhs.x() * lhs, rhs.y() * lhs, rhs.z() * lhs );
+    return Vector2D( rhs.x() * lhs, rhs.y() * lhs );
 }
 
 // ********************************************************************************
 
-Vector3D cross_product( const Vector3D & lhs, const Vector3D & rhs )
+//Vector2D cross_product( const Vector2D & lhs, const Vector2D & rhs )
+//{
+//    return Vector2D( lhs.y() * rhs.z() - lhs.z() * rhs.y(),
+//                     lhs.z() * rhs.x() - lhs.x() * rhs.z() );
+//}
+
+// ********************************************************************************
+
+Vector2D square( const Vector2D & vector2d )
 {
-    return Vector3D( lhs.y() * rhs.z() - lhs.z() * rhs.y(),
-                     lhs.z() * rhs.x() - lhs.x() * rhs.z(),
-                     lhs.x() * rhs.y() - lhs.y() * rhs.x() );
+    return Vector2D( vector2d.x() * vector2d.x(), vector2d.y() * vector2d.y() );
 }
 
 // ********************************************************************************
 
-Vector3D square( const Vector3D & vector3d )
+Vector2D sqrt( const Vector2D & vector2d )
 {
-    return Vector3D( vector3d.x() * vector3d.x(), vector3d.y() * vector3d.y(), vector3d.z() * vector3d.z() );
-}
-
-// ********************************************************************************
-
-Vector3D sqrt( const Vector3D & vector3d )
-{
-    return Vector3D( std::sqrt( vector3d.x() ), std::sqrt( vector3d.y() ), std::sqrt( vector3d.z() ) );
+    return Vector2D( std::sqrt( vector2d.x() ), std::sqrt( vector2d.y() ) );
 }
 
 // ********************************************************************************

@@ -83,7 +83,7 @@ void NormalisedVector3D::show() const
 void NormalisedVector3D::normalise_2()
 {
     double l = data_[0]*data_[0] + data_[1]*data_[1] + data_[2]*data_[2];
-    if ( l < TOLERANCE )
+    if ( nearly_zero( l ) )
         throw std::runtime_error( "NormalisedVector3D::normalise_2(): zero vector" );
     l = sqrt( l );
     data_[0] /= l;
@@ -98,5 +98,14 @@ double operator*( const NormalisedVector3D& lhs, const NormalisedVector3D& rhs )
     return ( lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z() );
 }
 
+// ********************************************************************************
+
+NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const NormalisedVector3D & r )
+{
+    // The expression is ( r - (n*r) * n ), but the intermediate value is a Vector3D, not a NormalisedVector3D,
+    // which leads to dependencies between files.
+    double t = n*r;
+    return NormalisedVector3D( r.x() - t*n.x(), r.y() - t*n.y(), r.z() - t*n.z() );
+}
 // ********************************************************************************
 

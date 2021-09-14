@@ -1,5 +1,5 @@
-#ifndef NORMALISEDVECTOR3D_H
-#define NORMALISEDVECTOR3D_H
+#ifndef COORDINATEFRAME_H
+#define COORDINATEFRAME_H
 
 /* *********************************************
 Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
@@ -28,58 +28,39 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include <cstddef> // For definition of size_t
-#include <string>
+#include "NormalisedVector3D.h"
 
-/*
-  A vector of dimension 3 with a length normalised to 1.0.
-*/
-class NormalisedVector3D
+// A CrystalLattice is a crystallographic unit cell, a CoordinateFrame is a Cartesian coordinate frame
+class CoordinateFrame
 {
 public:
 
-    // Default constructor: [ 1.0, 0.0, 0.0 ]
-    NormalisedVector3D();
+    CoordinateFrame();
 
-    // The vector is normalised upon construction
-    // throws if length = 0.0
-    NormalisedVector3D( const double x, const double y, const double z );
-
-    // This constructor does not exist because it would make it necessary for the NormalisedVector3D to know about the Vector3D class.
-    // This has all been moved to the file 3DCalculations
-    //explicit NormalisedVector3D( const Vector3D & vector_3d );
-
-    double x() const { return data_[0]; }
-    double y() const { return data_[1]; }
-    double z() const { return data_[2]; }
+    // @@ Because I expect this overload to get called with the normal to a plane, the direction that is provided would most naturally be the z-axis
+    // Generates three orthonormal basis vectors based on a single direction. The direction can be e.g. the normal to a plane,
+    // the basis within the plane is then chosen arbitrarily but reproducibly.    
+    explicit CoordinateFrame( const NormalisedVector3D & x_axis );
     
-    double value( const size_t i ) const { return data_[i]; }
+    CoordinateFrame( const NormalisedVector3D & x_axis, const NormalisedVector3D & y_axis );
+    
+    CoordinateFrame( const NormalisedVector3D & x_axis, const NormalisedVector3D & y_axis, const NormalisedVector3D & z_axis );
 
-    NormalisedVector3D operator-() const;
-    NormalisedVector3D operator+() const;
+    NormalisedVector3D x_axis() const { return x_axis_; }
+    NormalisedVector3D y_axis() const { return y_axis_; }
+    NormalisedVector3D z_axis() const { return z_axis_; }
 
-    double norm2() const { return 1.0; }
-
-    double length() const { return 1.0; }
-
-    // Could be const, decided not to make it const to make the signature identical to the signature of Vector3D
-    // Alternatively, since this member function makes no sense, we could make it private
-    void normalise() {}
-
-    std::string to_string() const;
+    void print() const;
 
     void show() const; // For debugging
 
 private:
-    double data_[3];
-
-    void normalise_2();
+    NormalisedVector3D x_axis_;
+    NormalisedVector3D y_axis_;
+    NormalisedVector3D z_axis_;
 };
 
-// The transposition is implied
-double operator*( const NormalisedVector3D & lhs, const NormalisedVector3D & rhs );
+//bool nearly_equal( const CoordinateFrame & lhs, const CoordinateFrame & rhs, double tolerance = TOLERANCE );
 
-NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const NormalisedVector3D & r );
-
-#endif // NORMALISEDVECTOR3D_H
+#endif // COORDINATEFRAME_H
 

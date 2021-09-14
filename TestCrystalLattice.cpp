@@ -34,7 +34,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 void test_crystal_lattice( TestSuite & test_suite )
 {
     std::cout << "Now running tests for CrystalLattice." << std::endl;
-    
+
+    {
+    CrystalLattice crystal_lattice( 1.0, 1.0, 100.0, Angle::from_degrees( 90.0 ), Angle::from_degrees( 100.0 ), Angle::from_degrees( 90.0 ) );
+    test_suite.test_equality_double( crystal_lattice.beta_star().value_in_degrees(), 80.0, "beta_star()" );
+    }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::from_degrees( 89.0 ), Angle::from_degrees( 92.0 ), Angle::from_degrees( 75.6 ) );
     test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::TRICLINIC, "deduce_lattice_system() triclinic" );

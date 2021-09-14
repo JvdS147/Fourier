@@ -28,24 +28,27 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class Vector2D;
+class Vector3D;
+
+#include "CoordinateFrame.h"
 #include "NormalisedVector3D.h"
 
 #include <string>
 #include <vector>
-
-class Vector3D;
 
 /*
   A plane.
 
   Internally represented by Hesse's normal representation of a plane. This implementation detail is relevant
   for signed_distance() which can be used to characterise the inversion geometry of nitrogen atoms.
+
 */
 class Plane
 {
 public:
 
-    // Default constructor
+    // Default constructor.
     Plane();
 
     Plane( const NormalisedVector3D & n, const double c );
@@ -53,7 +56,10 @@ public:
     // The order of the points determines the sign of the normal n.
     Plane( const Vector3D & r1, const Vector3D & r2, const Vector3D & r3 );
     
-    // Least squares plane
+    // Least squares plane.
+    // To reduce the number of dependencies, the Plane class does not know
+    // about the CollectionOfPoints class. Use the corresponding function in
+    // 3DCalculations.
     explicit Plane( const std::vector< Vector3D > & points );
 
     NormalisedVector3D normal() const { return n_; }
@@ -63,18 +69,28 @@ public:
     double signed_distance( const Vector3D & r ) const;
 
     double distance( const Vector3D & r ) const;
+    
+    // Projection along the normal onto the plane, turning a 3D point into a 2D point.
+    Vector3D projection3D( const Vector3D & point ) const;
+
+    // Projection along the normal onto the plane, turning a 3D point into a 2D point.
+//    Vector2D projection2D( const Vector3D & point ) const;
+
+    // The normal is the z-axis, x-axis and y-axis arbitrary but reproducible.
+    CoordinateFrame coordinate_frame() const { return coordinate_frame_; }
 
     std::string to_string() const;
 
-    void show() const; // For debugging
+    void show() const; // For debugging.
 
 // @@ Equality operator: N.B. special case if plane1.normal() == -plane2.normal() and plane1.constant() == -plane2.constant()
 
 private:
-    
     NormalisedVector3D n_;
     double c_;
-
+    CoordinateFrame coordinate_frame_; // Could be cached / mutable, I simply precalculate and store it.
+    
+    void calculate_coordinate_frame();
 };
 
 #endif // PLANE_H

@@ -42,6 +42,7 @@ Plane::Plane() :
 c_(0.0)
 {
     n_ = NormalisedVector3D();
+    calculate_coordinate_frame();
 }
 
 // ********************************************************************************
@@ -50,6 +51,7 @@ Plane::Plane( const NormalisedVector3D & n, const double c ) :
 n_(n),
 c_(c)
 {
+    calculate_coordinate_frame();
 }
 
 // ********************************************************************************
@@ -63,6 +65,7 @@ Plane::Plane( const Vector3D & r1, const Vector3D & r2, const Vector3D & r3 )
     Vector3D normal = cross_product( r2r1, r3r1 );
     n_ = normalised_vector( normal );
     c_ = n_ * ( (r1 + r2 + r3 ) / 3.0 );
+    calculate_coordinate_frame();
 }
 
 // ********************************************************************************
@@ -77,6 +80,7 @@ Plane::Plane( const std::vector< Vector3D > & points )
     n_ = eigenvectors[0];
     // The centre of mass of the points lies in the plane
     c_ = n_ * average( points );
+    calculate_coordinate_frame();
 }
 
 // ********************************************************************************
@@ -95,6 +99,23 @@ double Plane::distance( const Vector3D & r ) const
 
 // ********************************************************************************
 
+// Projection along the normal onto the plane, turning a 3D point into a 2D point.
+Vector3D Plane::projection3D( const Vector3D & point ) const
+{
+    return Vector3D( point + signed_distance( point ) * n_ );
+}
+
+// ********************************************************************************
+
+// Projection along the normal onto the plane, turning a 3D point into a 2D point.
+// Maybe we need a Vector2D class.
+//Vector2D Plane::projection2D( const Vector3D & point ) const
+//{
+//    
+//}
+
+// ********************************************************************************
+
 std::string Plane::to_string() const
 {
    return "n = " + n_.to_string() + " c = " + double2string( c_ );
@@ -105,6 +126,14 @@ std::string Plane::to_string() const
 void Plane::show() const
 {
     std::cout << this->to_string() << std::endl;
+}
+
+// ********************************************************************************
+
+void Plane::calculate_coordinate_frame()
+{
+    coordinate_frame_ = CoordinateFrame( n_ );
+    coordinate_frame_ = CoordinateFrame( coordinate_frame_.y_axis(), coordinate_frame_.z_axis(), coordinate_frame_.x_axis() );
 }
 
 // ********************************************************************************

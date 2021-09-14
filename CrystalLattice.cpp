@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 CrystalLattice::CrystalLattice()
 {
-    *this = CrystalLattice( 10.0, 10.0, 10.0, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
+    *this = CrystalLattice( 1.0, 1.0, 1.0, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
 }
 
 // ********************************************************************************
@@ -82,9 +82,9 @@ alpha_(alpha), beta_(beta), gamma_(gamma)
     c_star_ = c_star_vector_.length();
     N_ = SymmetricMatrix3D( a_star_, b_star_, c_star_, 0.0, 0.0, 0.0 );
     N_inverse_ = SymmetricMatrix3D( 1.0/a_star_, 1.0/b_star_, 1.0/c_star_, 0.0, 0.0, 0.0 );
-    alpha_star_ = arccosine( (b_vector_*c_vector_) / (b*c) ); // ?? @@ Why is this not arccosine( (b_star_vector_*c_star_vector_) / (b_star_*c_star_) ) ??
-    beta_star_  = arccosine( (a_vector_*c_vector_) / (a*c) );
-    gamma_star_ = arccosine( (a_vector_*b_vector_) / (a*b) );
+    alpha_star_ = angle( b_star_vector_, c_star_vector_ );
+    beta_star_  = angle( a_star_vector_, c_star_vector_ );
+    gamma_star_ = angle( a_star_vector_, b_star_vector_ );
     lattice_system_ = deduce_lattice_system( *this );
 }
 
@@ -448,7 +448,6 @@ Matrix3D CrystalLattice::Downs_G_star() const
     return Matrix3D( a_star_ * a_star_                       , a_star_ * b_star_ * gamma_star_.cosine() , a_star_ * c_star_ * beta_star_.cosine() ,
                      a_star_ * b_star_ * gamma_star_.cosine(), b_star_ * b_star_                        , b_star_ * c_star_ * alpha_star_.cosine(),
                      a_star_ * c_star_ * beta_star_.cosine() , b_star_ * c_star_ * alpha_star_.cosine() , c_star_ * c_star_ );
-
 }
 
 // ********************************************************************************

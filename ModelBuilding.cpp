@@ -28,9 +28,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ModelBuilding.h"
 #include "3DCalculations.h"
 #include "BasicMathsFunctions.h"
+#include "CollectionOfPoints.h"
+#include "CoordinateFrame.h"
 #include "CrystalStructure.h"
 #include "NormalisedVector3D.h"
 #include "Plane.h"
+#include "Vector2D.h"
 #include "Vector3D.h"
 
 #include <stdexcept>
@@ -42,12 +45,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3D & atom_2, const Angle angle )
 {
     // The following generates an orthonormal basis based on one direction.
-    Vector3D difference_vector_temp = atom_1 - atom_2;
-    NormalisedVector3D basis_vector_1 = normalised_vector( difference_vector_temp );
-    NormalisedVector3D basis_vector_2;
-    NormalisedVector3D basis_vector_3;
-    generate_basis_1( basis_vector_1, basis_vector_2, basis_vector_3 );
-
+    NormalisedVector3D basis_vector_1 = normalised_vector( atom_1 - atom_2 );
+    CoordinateFrame coordinate_frame( basis_vector_1 );
+    NormalisedVector3D basis_vector_2 = coordinate_frame.y_axis();
+    NormalisedVector3D basis_vector_3 = coordinate_frame.z_axis();
     double XH_bond_length( 1.089 );
     double bx = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).sine();
     double projection = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).cosine();
@@ -67,9 +68,8 @@ std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3
     NormalisedVector3D basis_vector_1 = normalised_vector( difference_vector_temp );
     Vector3D r = atom_3 - atom_2;
     NormalisedVector3D basis_vector_2 = orthogonalise( basis_vector_1, r );
-    NormalisedVector3D basis_vector_3;
-    generate_basis_2( basis_vector_1, basis_vector_2, basis_vector_3 );
-
+    CoordinateFrame coordinate_frame( basis_vector_1, basis_vector_2 );
+    NormalisedVector3D basis_vector_3 = coordinate_frame.z_axis();
     double XH_bond_length( 1.089 );
     double bx = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).sine();
     double projection = XH_bond_length * Angle::from_degrees( 110.5 - 90.0 ).cosine();
@@ -88,9 +88,9 @@ std::vector< Vector3D > add_hydrogen_atoms( const Vector3D & atom_1, const Vecto
     // The following generates an orthonormal basis based on one direction.
     Vector3D difference_vector_temp = atom_1 - atom_2;
     NormalisedVector3D basis_vector_1 = normalised_vector( difference_vector_temp );
-    NormalisedVector3D basis_vector_2;
-    NormalisedVector3D basis_vector_3;
-    generate_basis_1( basis_vector_1, basis_vector_2, basis_vector_3 );
+    CoordinateFrame coordinate_frame( basis_vector_1 );
+    NormalisedVector3D basis_vector_2 = coordinate_frame.y_axis();
+    NormalisedVector3D basis_vector_3 = coordinate_frame.z_axis();
     double target_bond_length( 1.0 );
     double bx = target_bond_length * Angle::from_degrees( 110.5 - 90.0 ).sine();
     double projection = target_bond_length * Angle::from_degrees( 110.5 - 90.0 ).cosine();
@@ -111,9 +111,9 @@ std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & a
 {
     Vector3D difference_vector_temp = atom_N - atom_2;
     NormalisedVector3D basis_vector_1 = normalised_vector( difference_vector_temp );
-    NormalisedVector3D basis_vector_2;
-    NormalisedVector3D basis_vector_3;
-    generate_basis_1( basis_vector_1, basis_vector_2, basis_vector_3 );
+    CoordinateFrame coordinate_frame( basis_vector_1 );
+    NormalisedVector3D basis_vector_2 = coordinate_frame.y_axis();
+    NormalisedVector3D basis_vector_3 = coordinate_frame.z_axis();
     double bx = 1.015 * Angle::from_degrees( 111.0 - 90.0 ).sine();
     double projection = 1.015 * Angle::from_degrees( 111.0 - 90.0 ).cosine();
     std::vector< Vector3D > result;
@@ -391,3 +391,21 @@ void normalise_Cu_Cl_bonds( CrystalStructure & crystal_structure )
 }
 
 // ********************************************************************************
+
+void normalise_benzene_ring( CollectionOfPoints & points )
+{
+    if ( points.size() != 6 )
+        throw std::runtime_error( "normalise_benzene_ring() : number of points != 6." );
+    Plane plane( points.points_wrt_com() );
+    for ( size_t i( 0 ); i != points.size(); ++i )
+    {
+        Vector2D vector2d = projection( plane, points.point_wrt_com( i ) );
+        
+    }
+    
+    
+  
+}
+
+// ********************************************************************************
+

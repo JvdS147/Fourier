@@ -57,9 +57,18 @@ void CollectionOfPoints::add_point( const Vector3D point )
 void CollectionOfPoints::add_points( const std::vector< Vector3D > & points )
 {
     points_.reserve( points_.size() + points.size() );
-    for ( std::vector< Vector3D >::const_iterator it(points.begin()); it != points.end(); ++it )
+    for ( std::vector< Vector3D >::const_iterator it( points.begin() ); it != points.end(); ++it )
         points_.push_back( *it );
     update();
+}
+
+// ********************************************************************************
+
+void CollectionOfPoints::move_to_centre_of_mass()
+{
+    for ( std::vector< Vector3D >::iterator it( points_.begin() ); it != points_.end(); ++it )
+        *it -= average_;
+    average_ = Vector3D();
 }
 
 // ********************************************************************************
@@ -69,7 +78,7 @@ void CollectionOfPoints::update()
     average_ = ::average( points_ );
     points_wrt_com_.clear();
     points_wrt_com_.reserve( points_.size() );
-    for ( std::vector< Vector3D >::const_iterator it(points_.begin()); it != points_.end(); ++it )
+    for ( std::vector< Vector3D >::const_iterator it( points_.begin() ); it != points_.end(); ++it )
         points_wrt_com_.push_back( (*it) - average_ );
 }
 

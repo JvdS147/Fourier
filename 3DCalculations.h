@@ -29,12 +29,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 // A major reason for the existence of this file is that it collects all functions that combine
-// Matrix3D, SymmetricMatrix3D, NormalisedVector3D and Vector3D, so that those classes do not need to know about each other.
+// Matrix3D, SymmetricMatrix3D, NormalisedVector3D, Vector2D and Vector3D, so that those classes do not need to know about each other.
 
 #include "BasicMathsFunctions.h"
 
 class Angle;
 class CollectionOfPoints;
+class CoordinateFrame;
 class CrystalLattice;
 class CrystalStructure;
 class Matrix3D;
@@ -43,6 +44,7 @@ class NormalisedVector3D;
 class Plane;
 class SpaceGroup;
 class SymmetricMatrix3D;
+class Vector2D;
 class Vector3D;
 
 #include <vector>
@@ -68,14 +70,13 @@ NormalisedVector3D reciprocal_lattice_direction( const MillerIndices miller_indi
 // Gram-Schmidt orthogonalisation
 NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const Vector3D & r );
 
-//NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const NormalisedVector3D & r );
+Vector3D change_of_basis( const Vector3D & point, const CoordinateFrame & before, const CoordinateFrame & after );
 
-// Generates three orthonormal basis vectors based on a single direction. The direction can be e.g. the normal to a plane,
-// the basis within the plane is then chosen arbitrarily but reproducibly.
-void generate_basis_1( const NormalisedVector3D & basis_vector_1, NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 );
+// Ambiguity here: do we use the original points or the points w.r.t. the centre of mass?
+Plane plane( const CollectionOfPoints & points );
 
-// Generates three orthonormal basis vectors based two directions.
-void generate_basis_2( const NormalisedVector3D & basis_vector_1, const NormalisedVector3D & basis_vector_2, NormalisedVector3D & basis_vector_3 );
+// The basis in the plane is generated with Plane::coordinate_frame().
+Vector2D projection( const Plane & plane, const Vector3D & point );
 
 double root_mean_square_devation_from_mean_plane( const CollectionOfPoints & points, const Plane & plane );
 
@@ -84,17 +85,18 @@ double root_mean_square_devation_from_mean_plane( const std::vector< Vector3D > 
 // Easier: apply rotational part of symmetry operator to Ucif
 //AnisotropicDisplacementParameters operator*( const SymmetryOperator & lhs, const AnisotropicDisplacementParameters rhs );
 
-// Try to use the overload with CollectionOfPoints
+// Try to use the overload with CollectionOfPoints.
 SymmetricMatrix3D covariance_matrix( const std::vector< Vector3D > & points );
 
 SymmetricMatrix3D covariance_matrix( const CollectionOfPoints & points );
 
-// This implicitly assumes that the vector is in Cartesian coordinates, not fractional coordinates
+// This implicitly assumes that the vector is in Cartesian coordinates, not fractional coordinates.
 NormalisedVector3D normalised_vector( const Vector3D & vector3D );
 Vector3D NormalisedVector3D2Vector3D( const NormalisedVector3D & rhs );
 
 Vector3D operator+( const NormalisedVector3D & lhs, const NormalisedVector3D & rhs );
 Vector3D operator-( const NormalisedVector3D & lhs, const NormalisedVector3D & rhs );
+Vector3D operator-( const NormalisedVector3D & lhs, const Vector3D & rhs );
 
 Vector3D operator*( const double lhs, const NormalisedVector3D & rhs );
 Vector3D operator*( const NormalisedVector3D & lhs, const double rhs );

@@ -34,9 +34,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*
   Main purpose is two things:
-  
+
   - Allow for caching of results of calculations in the future (currently not done)
   - Make it easy and efficient to refer to the points with respect to their centre of mass.
+
+  This is ambiguous: does this class store the points or the points w.r.t. their c.o.m.? In other words,
+  when calculating a Plane from a CollectionOfPoints object, which of the two sets of points does it use?
+
+  I think we should get rid of the ambiguity and instead let the user call move_to_centre_of_mass(); when that is
+  desired. That has one disadvantage: adding more points after a call to move_to_centre_of_mass(); will probably
+  not have the intended effect.
+
+  @@ Maybe should be called SetOfPoints
+  @@ We then also need SetOfDoubles
+  @@ Maybe these should be selected to be low-level classes, so that e.g. Plane is allowed to include SetOfPoints
+     (but not the opposite way round).
+
 */
 class CollectionOfPoints
 {
@@ -50,14 +63,24 @@ public:
     void add_point( const Vector3D point );
     void add_points( const std::vector< Vector3D > & points );
 
+    // Until I have made this class a low-level class, this member function
+    // helps reduce interclass dependencies.
+    std::vector< Vector3D > points() const { return points_; }
+    std::vector< Vector3D > points_wrt_com() const { return points_wrt_com_; }
+
     size_t size() const { return points_.size(); }
     void reserve( const size_t value ) { points_.reserve( value ); }
 
     Vector3D point( const size_t i ) const { return points_[i]; }
     Vector3D point_wrt_com( const size_t i ) const { return points_wrt_com_[i]; }
-    
+
+    void move_to_centre_of_mass();
+
     Vector3D average() const { return average_; }
     Vector3D centre_of_mass() const { return average_; }
+
+    // To reduce the number of dependencies, the CollectionOfPoints class does not know
+    // about the Plane class. Use the corresponding function in 3DCalculations.
 
 private:
     std::vector< Vector3D > points_;

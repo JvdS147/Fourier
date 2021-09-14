@@ -28,6 +28,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class CollectionOfPoints;
 class CrystalStructure;
 class Element;
 class Vector3D;
@@ -77,5 +78,9 @@ void normalise_X_H_bonds( CrystalStructure & crystal_structure );
 void normalise_C_F_bonds( CrystalStructure & crystal_structure );
 
 void normalise_Cu_Cl_bonds( CrystalStructure & crystal_structure );
+
+// Input: a std::vector with six points.
+// Output: a std::vector with six points.
+void normalise_benzene_ring( CollectionOfPoints & points );
 
 #endif // MODELBUILDING_H
