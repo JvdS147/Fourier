@@ -277,13 +277,13 @@ void deal_with_symmetry_loop( TextFileReader & text_file_reader, const std::vect
     bool skip_whitespace_only_lines = text_file_reader.skip_whitespace_only_lines();
     text_file_reader.set_skip_whitespace_only_lines( true );
     size_t symmetry_equiv_pos_as_xyz_index = loop_items.size();
-    for ( size_t i(0); i != loop_items.size(); ++i )
+    for ( size_t i( 0 ); i != loop_items.size(); ++i )
     {
-        if ( loop_items[i] == "_symmetry_equiv_pos_as_xyz" )
+        if ( ( loop_items[i] == "_symmetry_equiv_pos_as_xyz" ) || ( loop_items[i] == "_space_group_symop_operation_xyz" ) )
             symmetry_equiv_pos_as_xyz_index = i;
     }
     if ( symmetry_equiv_pos_as_xyz_index == loop_items.size() )
-        throw std::runtime_error( "read_cif(): _symmetry_equiv_pos_as_xyz must be present." );
+        throw std::runtime_error( "read_cif(): _symmetry_equiv_pos_as_xyz or _space_group_symop_operation_xyz must be present." );
     std::vector< SymmetryOperator > symmetry_operators;
     std::vector< std::string > words;
     bool finished( false );
@@ -387,7 +387,7 @@ void deal_with_loop( TextFileReader & text_file_reader, CrystalStructure & cryst
         deal_with_atom_loop( text_file_reader, loop_items, crystal_structure );
         return;
     }
-    if ( words[0].substr( 0, 9 ) == "_symmetry" )
+    if ( ( words[0].substr( 0, 9 ) == "_symmetry" ) || ( words[0].substr( 0, 18 ) == "_space_group_symop" ) )
     {
         deal_with_symmetry_loop( text_file_reader, loop_items, crystal_structure );
         return;
