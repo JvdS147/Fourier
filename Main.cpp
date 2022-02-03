@@ -58,7 +58,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Histogram.h"
 #include "InpWriter.h"
 #include "LabelsAndShieldings.h"
-#include "MathFunctions.h"
+#include "MathsFunctions.h"
 #include "ModelBuilding.h"
 #include "Plane.h"
 #include "PowderMatchTable.h"
@@ -173,6 +173,26 @@ struct SimulatedPowderPatternCrystalStructure
         FileName input_file_name( argv[ 1 ] ); \
         PowderPattern powder_pattern; \
         powder_pattern.read_xye( input_file_name );
+
+#ifndef BACKGROUND_TOTAL_SIGNAL_NORMALISATION
+#define BACKGROUND_TOTAL_SIGNAL_NORMALISATION 5000.0
+#endif
+
+#ifndef NORMALISE_HIGHEST_PEAK
+#define NORMALISE_HIGHEST_PEAK 10000.0
+#endif
+
+#ifndef ZERO_POINT_ERROR
+#define ZERO_POINT_ERROR 0.02
+#endif
+
+#ifndef PREFERRED_ORIENTATION
+#define PREFERRED_ORIENTATION 0.9
+#endif
+
+#ifndef FULL_WIDTH_HALF_MAX
+#define FULL_WIDTH_HALF_MAX 0.25
+#endif
 
 // Test if .h files compile stand alone
 // FractionalCoordinate / OrthonormalCoordinate
@@ -495,7 +515,7 @@ int main( int argc, char** argv )
         if ( argc != 3 )
             throw std::runtime_error( "Please give the names of two .cif or .cell files." );
         FileName file_name_1( argv[ 1 ] );
-        
+
   //      FileName file_name_1( "C:\\Users\\jacco\\Documents\\For_Data_Archive\\Computational\\fixed_cell\\0028\\ADERIL\\ADERIL.cell" );
         CrystalStructure crystal_structure_1;
         read_cif_or_cell( file_name_1, crystal_structure_1 );
@@ -542,7 +562,8 @@ int main( int argc, char** argv )
     // Simulate an experimental powder diffraction pattern
     try
     {
-      //  MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+
+     //   MACRO_ONE_CIFFILENAME_AS_ARGUMENT
         MACRO_ONE_FILELISTNAME_AS_ARGUMENT
      //   std::vector< SimulatedPowderPatternCrystalStructure > crystal_structures;
 //    total_signal_normalisation_(10000.0),
@@ -555,10 +576,11 @@ int main( int argc, char** argv )
       //  SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
         double wavelength( 1.54056 );
         // ######################## CHANGE THIS ##################################
-        double zero_point_error = 0.02; // 0.06;
+        double zero_point_error = ZERO_POINT_ERROR; // 0.06;
         Angle two_theta_start( 1.0, Angle::DEGREES );
         Angle two_theta_end(  35.0, Angle::DEGREES );
         Angle two_theta_step( 0.015, Angle::DEGREES );
+        //std::cout << NORMALISE_HIGHEST_PEAK << " " << BACKGROUND_TOTAL_SIGNAL_NORMALISATION << std::endl;
         for ( size_t i( 0 ); i != file_list.size(); ++i )
         {
             CrystalStructure crystal_structure;
@@ -566,13 +588,13 @@ int main( int argc, char** argv )
             read_cif( file_list.value( i ), crystal_structure );
             SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
             // ######################## CHANGE THIS ##################################
-            sim_XRPD_crystal_structure.background_total_signal_normalisation_ = 5000.0;
+            sim_XRPD_crystal_structure.background_total_signal_normalisation_ = BACKGROUND_TOTAL_SIGNAL_NORMALISATION;
             sim_XRPD_crystal_structure.include_PO_ = true;
           //  sim_XRPD_crystal_structure.include_PO_ = false;
             if ( sim_XRPD_crystal_structure.include_PO_ )
             {
                 // ######################## CHANGE THIS ##################################
-                sim_XRPD_crystal_structure.PO_extent_= 0.9;
+                sim_XRPD_crystal_structure.PO_extent_= PREFERRED_ORIENTATION;
                 switch ( crystal_structure.crystal_lattice().lattice_system() )
                 {
                     case CrystalLattice::TRICLINIC    :
@@ -602,7 +624,7 @@ int main( int argc, char** argv )
                 }
             }
             // ######################## CHANGE THIS ##################################
-            sim_XRPD_crystal_structure.FWHM_ = 0.25; // 0.2; // ?
+            sim_XRPD_crystal_structure.FWHM_ = FULL_WIDTH_HALF_MAX; // 0.2; // ?
       //      crystal_structures.push_back( sim_XRPD_crystal_structure );
             PowderPattern result( two_theta_start, two_theta_end, two_theta_step );
     //        for ( size_t i( 0 ); i != crystal_structures.size(); ++i )
@@ -643,7 +665,7 @@ int main( int argc, char** argv )
           //  result += background_1;
 
             // ######################## CHANGE THIS ##################################
-            result.normalise_highest_peak( 10000.0 ); // 300.0
+            result.normalise_highest_peak( NORMALISE_HIGHEST_PEAK ); // 300.0
             result.add_constant_background( 20.0 );
             // Next line is partially superfluous: PowderPattern::add_Poisson_noise() converts counts to integers and the result of the Poisson distribution is a size_t.
             // So the final powder pattern does not change, but it changes the values stored in PowderPattern::noise_
@@ -709,7 +731,7 @@ int main( int argc, char** argv )
 
     try // TRIZIN04. The ADPs never worked...
     {
-        
+
         double a = 6.884;
         double b = 9.569;
         double c = 7.093;
@@ -729,8 +751,8 @@ int main( int argc, char** argv )
                                                     arccotangent( beta.cotangent() + 2.0*c/( 3.0*a*beta.sine() ) ),
                                                     Angle::angle_90_degrees() );
    //     std::cout << "crystal_lattice_non_reduced.volume()" << crystal_lattice_non_reduced.volume() << std::endl;
-                                                    
-  //      crystal_lattice_non_reduced.print();                    
+
+  //      crystal_lattice_non_reduced.print();
 
         std::vector< SymmetryOperator > symmetry_operators;
         symmetry_operators.push_back( SymmetryOperator( "x,y,z" ) );
@@ -796,7 +818,7 @@ int main( int argc, char** argv )
         double T33 = from_nm * from_nm * -0.0005;
 
         SymmetricMatrix3D T( T11, T22, T33, T12, T13, T23 );
-        
+
         double L11 = from_rad * 0.05;
         double L12 = from_rad * 0.0;
         double L13 = from_rad * -0.002;
@@ -823,7 +845,7 @@ int main( int argc, char** argv )
         Matrix3D S( S11, S12, S13,
                     S21, S22, S23,
                     S31, S32, S33 );
-        
+
         TLS tls( T, L, S );
 
         std::cout << "Centre of reaction: " << tls.centre_of_reaction() << std::endl;
@@ -834,7 +856,7 @@ int main( int argc, char** argv )
                                         Angle::angle_90_degrees(),
                                         beta,
                                         Angle::angle_90_degrees() );
-                            
+
         Matrix3D orthogonal_to_fractional = crystal_lattice.for_CASTEP();
         orthogonal_to_fractional.transpose();
         orthogonal_to_fractional.invert();
@@ -954,20 +976,20 @@ int main( int argc, char** argv )
     {
         double wavelength( 1.54056 );
         // ######################## CHANGE THIS ##################################
-        double zero_point_error = 0.02; // 0.06;
+        double zero_point_error = ZERO_POINT_ERROR; // 0.06;
         Angle two_theta_start( 1.0, Angle::DEGREES );
         Angle two_theta_end(  35.0, Angle::DEGREES );
         Angle two_theta_step( 0.015, Angle::DEGREES );
-       
+
        CrystalStructure crystal_structure;
             SimulatedPowderPatternCrystalStructure sim_XRPD_crystal_structure( crystal_structure );
             // ######################## CHANGE THIS ##################################
-            sim_XRPD_crystal_structure.background_total_signal_normalisation_ = 5000.0;
+            sim_XRPD_crystal_structure.background_total_signal_normalisation_ = BACKGROUND_TOTAL_SIGNAL_NORMALISATION;
             sim_XRPD_crystal_structure.include_PO_ = true;
             if ( sim_XRPD_crystal_structure.include_PO_ )
             {
                 // ######################## CHANGE THIS ##################################
-                sim_XRPD_crystal_structure.PO_extent_= 0.9;
+                sim_XRPD_crystal_structure.PO_extent_= PREFERRED_ORIENTATION;
                 switch ( crystal_structure.crystal_lattice().lattice_system() )
                 {
                     case CrystalLattice::TRICLINIC    :
@@ -997,7 +1019,7 @@ int main( int argc, char** argv )
                 }
             }
             // ######################## CHANGE THIS ##################################
-            sim_XRPD_crystal_structure.FWHM_ = 0.25; // 0.2; // ?
+            sim_XRPD_crystal_structure.FWHM_ = FULL_WIDTH_HALF_MAX; // 0.2; // ?
             PowderPattern result( two_theta_start, two_theta_end, two_theta_step );
 
             {
@@ -1451,11 +1473,11 @@ int main( int argc, char** argv )
                         throw std::runtime_error( "Number of atom labels must be three." );
                     std::string length = data[i+1];
                     text_file_writer.write_line( pad( words[0], 4 ) + " " + pad( words[1], 4 ) + " " + pad( words[2], 4 ) + " " + length );
-                }                
+                }
             }
         }
     MACRO_END_GAME
-    
+
     try // Insert one hydrogen atom between two atoms.
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
@@ -2768,7 +2790,7 @@ int main( int argc, char** argv )
                                          double2string_2( voids_volumes_per_Z[i], 0 ) + " " +
                                          double2string_2( 100.0 * ( total_void_volumes[i]/unit_cell_volumes[i] ), 2 ) + "%" );
         }
-        std::vector< size_t > sorted_map = sort( voids_volumes_per_Z );
+        Mapping sorted_map = sort( voids_volumes_per_Z );
         size_t iStart;
         for ( iStart = 0; iStart != nfiles; ++iStart )
         {
@@ -5566,7 +5588,7 @@ int main( int argc, char** argv )
 
         for ( size_t i( 0 ); i != adps.size(); ++i )
         {
-            SymmetricMatrix3D U_cif_new = transform_adps( adps[i], transformation_matrix, crystal_lattice );
+            AnisotropicDisplacementParameters U_cif_new = transform_adps( adps[i], transformation_matrix, crystal_lattice );
             output_file.write_line( double2string( U_cif_new.value( 0, 0 ) ) + " " +
                                     double2string( U_cif_new.value( 1, 1 ) ) + " " +
                                     double2string( U_cif_new.value( 2, 2 ) ) + " " +
@@ -5685,7 +5707,7 @@ int main( int argc, char** argv )
                                         Angle::from_degrees( 92.0014 ),
                                         Angle::from_degrees( 90.0 ) );
 
-        SymmetricMatrix3D U_cif_new = transform_adps( U_cif, transformation_matrix, crystal_lattice );
+        AnisotropicDisplacementParameters U_cif_new = transform_adps( U_cif, transformation_matrix, crystal_lattice );
         U_cif_new.show();
     MACRO_END_GAME
 
@@ -6910,7 +6932,7 @@ int main( int argc, char** argv )
         Vector3D r2_1( 5.0, 2.5, 7.5 );
         Vector3D r3_1( 5.0, 7.5, 2.5 );
         Vector3D r4_1( 5.0, 7.5, 7.5 );
-        
+
         Vector3D r1_2( 2.5, 5.0, 2.5 );
         Vector3D r2_2( 2.5, 5.0, 7.5 );
         Vector3D r3_2( 7.5, 5.0, 2.5 );
@@ -6966,7 +6988,7 @@ int main( int argc, char** argv )
             }
         }
         crystal_structure.save_cif( FileName( "C:\\Users\\jacco\\Documents\\disorder_04.cif" ) );
-        
+
         if ( false )
         {
             crystal_structure.apply_space_group_symmetry();
@@ -7016,7 +7038,7 @@ int main( int argc, char** argv )
         atom.set_occupancy( 0.5 );
         crystal_structure.add_atom( atom );
         }
-        
+
         {
         Atom atom( Element( "C" ), Vector3D( 0.25, 0.5, 0.25 ), "C5" );
         atom.set_occupancy( 0.5 );
@@ -7039,7 +7061,7 @@ int main( int argc, char** argv )
         }
         crystal_structure.save_cif( FileName( "C:\\Users\\jacco\\Documents\\disorder_01.cif" ) );
         crystal_structure.apply_space_group_symmetry();
-        
+
         std::cout << "Now calculating powder pattern... " << std::endl;
         PowderPatternCalculator powder_pattern_calculator( crystal_structure );
         Angle two_theta_start( 1.0, Angle::DEGREES );
