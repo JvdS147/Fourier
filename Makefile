@@ -11,7 +11,7 @@ CXXFLAGS = $(CXXINCS) -g -Ofast -Wfatal-errors #\
 CFLAGS   = $(INCS) -g -Ofast -Wfatal-errors
 RM       = rm -f
 
-all: $(BIN) Voids
+all: Voids SimilarityMatrix UnitCellTransformation CentredToPrimitive
 
 .PHONY: clean all clean-all
 

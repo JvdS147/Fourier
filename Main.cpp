@@ -367,78 +367,6 @@ int main( int argc, char** argv )
         crystal_structure.save_cif( replace_extension( append_to_file_name( input_file_name, "_transformed" ) , "cif" ) );
     MACRO_END_GAME
 
-    try // Find unit-cell transformation.
-    {
-        if ( argc != 3 )
-            throw std::runtime_error( "Please give the name of two .cif files." );
-        FileName input_file_name( argv[ 1 ] );
-        CrystalStructure crystal_structure;
-        read_cif_or_cell( input_file_name, crystal_structure );
-        if ( false ) // C-centred to primitive
-        {
-            crystal_structure.transform( Matrix3D(  1.0,  0.0,  0.0,
-                                                    0.0,  0.5, -0.5,
-                                                    0.0,  0.5,  0.5 ) );
-        }
-        CrystalLattice old_crystal_lattice = crystal_structure.crystal_lattice();
-        FileName file_name_2( argv[ 2 ] );
-        CrystalStructure crystal_structure_2;
-        read_cif_or_cell( file_name_2, crystal_structure_2 );
-        if ( false ) // C-centred to primitive
-        {
-            crystal_structure_2.transform( Matrix3D(  0.5,  0.5,  0.0,
-                                                     -0.5,  0.5,  0.0,
-                                                      0.0,  0.0,  1.0 ) );
-        }
-        CrystalLattice target_crystal_lattice = crystal_structure_2.crystal_lattice();
-        double length_tolerance_percent( 10.0 );
-        Angle angle_tolerance = Angle::from_degrees( 10.0 );
-        int limit = 5;
-        for ( int i1( -limit ); i1 != limit+1; ++i1 )
-        {
-            std::cout << " ." << std::endl;
-        for ( int i2( -limit ); i2 != limit+1; ++i2 )
-        {
-            std::cout << " .." << std::endl;
-        for ( int i3( -limit ); i3 != limit+1; ++i3 )
-        {
-            for ( int j1( -limit ); j1 != limit+1; ++j1 )
-            {
-            for ( int j2( -limit ); j2 != limit+1; ++j2 )
-            {
-            for ( int j3( -limit ); j3 != limit+1; ++j3 )
-            {
-                for ( int k1( -limit ); k1 != limit+1; ++k1 )
-                {
-                for ( int k2( -limit ); k2 != limit+1; ++k2 )
-                {
-                for ( int k3( -limit ); k3 != limit+1; ++k3 )
-                {
-                    // Make a copy
-                    CrystalLattice new_lattice( old_crystal_lattice );
-                    // Transform
-                    Matrix3D transformation_matrix( i1, i2, i3, j1, j2, j3, k1, k2, k3 );
-                    if ( ! nearly_equal( transformation_matrix.determinant(), 1.0 ) )
-                        continue;
-                    new_lattice.transform( transformation_matrix );
-                    if ( ! nearly_equal( new_lattice, target_crystal_lattice, length_tolerance_percent, angle_tolerance ) )
-                        continue;
-                    {
-                        transformation_matrix.show();
-                        new_lattice.print();
-                        std::cout << ((target_crystal_lattice.a_vector()+target_crystal_lattice.b_vector()+target_crystal_lattice.c_vector()) - (new_lattice.a_vector()+new_lattice.b_vector()+new_lattice.c_vector())).length() << std::endl;
-                        std::cout << std::endl;
-                    }
-                }
-                }
-                }
-            }
-            }
-            }
-        }
-        }
-        }
-    MACRO_END_GAME
 
     try // Find unit-cell angles close to 90 degrees.
     {
@@ -2733,116 +2661,6 @@ int main( int argc, char** argv )
         powder_pattern.save_xye( FileName( "/Volumes/Staff/jvds/AMS_ModelSystems/EthylenediamineTartrate/powder_pattern.xye" ), false );
     MACRO_END_GAME
 
-    try // Find voids for FileList.txt.
-    {
-        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
-        std::cout << "WARNING: the molecular volume is estimated assuming that the smallest molecular volume corresponds to Z'=1." << std::endl;
-        std::cout << "WARNING: if the smallest molecular volume corresponds to Z'>1 or Z'<1 then the results will be wrong." << std::endl;
-        TextFileWriter text_file_writer( FileName( file_list_file_name.directory(), "Voids", "txt" ) );
-        std::vector< double > total_voids_volumes_per_symmetry_operator;
-        std::vector< std::string > identifiers;
-        std::vector< double > total_void_volumes;
-        std::vector< double > molecular_volumes;
-        std::vector< double > unit_cell_volumes;
-        text_file_writer.write_line( "Identifier | total void volume | ( unit-cell volume - total void volume) / number of symmetry operators" );
-        if ( file_list.empty() )
-            return 0;
-        size_t nfiles = file_list.size();
-        total_voids_volumes_per_symmetry_operator.reserve( nfiles );
-        identifiers.reserve( nfiles );
-        total_void_volumes.reserve( nfiles );
-        molecular_volumes.reserve( nfiles );
-        unit_cell_volumes.reserve( nfiles );
-        double smallest_molecular_volume( 0.0 );
-        for ( size_t i( 0 ); i != nfiles; ++i )
-        {
-            identifiers.push_back( FileName( "", file_list.value( i ).file_name(), file_list.value( i ).extension() ).full_name() );
-            CrystalStructure crystal_structure;
-            std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
-            read_cif( file_list.value( i ), crystal_structure );
-            unit_cell_volumes.push_back( crystal_structure.crystal_lattice().volume() );
-            crystal_structure.apply_space_group_symmetry();
-            double total_void_volume = find_voids( crystal_structure );
-            total_void_volumes.push_back( total_void_volume );
-            total_voids_volumes_per_symmetry_operator.push_back( total_void_volume / crystal_structure.space_group().nsymmetry_operators() );
-            double molecular_volume = ( crystal_structure.crystal_lattice().volume() - total_void_volume ) / crystal_structure.space_group().nsymmetry_operators();
-            molecular_volumes.push_back( molecular_volume );
-            if ( ( i == 0 ) || ( molecular_volume < smallest_molecular_volume ) )
-                smallest_molecular_volume = molecular_volume;
-            text_file_writer.write_line( FileName( "", file_list.value( i ).file_name(), file_list.value( i ).extension() ).full_name() + " " +
-                                         double2string( total_void_volume ) + " " +
-                                         double2string( molecular_volume ) );
-        }
-        std::vector< double > voids_volumes_per_Z;
-        for ( size_t i( 0 ); i != nfiles; ++i )
-        {
-            // round_to_int( molecular_volumes[i] / smallest_molecular_volume ) = Z'
-            voids_volumes_per_Z.push_back( total_voids_volumes_per_symmetry_operator[i] / round_to_int( molecular_volumes[i] / smallest_molecular_volume ) );
-        }
-        text_file_writer.write_line( "##### customer specific #####" );
-        text_file_writer.write_line( "Rank/Form Void volume Void fraction" );
-        text_file_writer.write_line( "              [A3/Z]              " );
-        for ( size_t i( 0 ); i != nfiles; ++i )
-        {
-            if ( voids_volumes_per_Z[i] < 0.000001 )
-                continue;
-            text_file_writer.write_line( FileName( "", file_list.value( i ).file_name(), "" ).full_name() + " " +
-                                         double2string_2( voids_volumes_per_Z[i], 0 ) + " " +
-                                         double2string_2( 100.0 * ( total_void_volumes[i]/unit_cell_volumes[i] ), 2 ) + "%" );
-        }
-        Mapping sorted_map = sort( voids_volumes_per_Z );
-        size_t iStart;
-        for ( iStart = 0; iStart != nfiles; ++iStart )
-        {
-            if ( voids_volumes_per_Z[ sorted_map[iStart] ] > 20.0 )
-                break;
-        }
-
-        if ( iStart == nfiles )
-        {
-            text_file_writer.write_line( "There are no voids greater than 20 A3/Z." );
-        }
-        else
-        {
-            text_file_writer.write_line( "##### sorted #####" );
-            for ( size_t i( iStart ); i != nfiles; ++i )
-                text_file_writer.write_line( identifiers[ sorted_map[i] ] + " " + double2string( voids_volumes_per_Z[ sorted_map[i] ] ) );
-            text_file_writer.write_line();
-            if ( (nfiles - iStart) == 1 )
-            {
-                text_file_writer.write( "Rank " );
-                text_file_writer.write( size_t2string( sorted_map[iStart] + 1 ) );
-                text_file_writer.write( " contains voids amounting to " );
-                text_file_writer.write( double2string_2( voids_volumes_per_Z[sorted_map[iStart]], 0 ) );
-                text_file_writer.write( " A3/Z." );
-            }
-            else
-            {
-//        Ranks 12, 22 5, 17, 1, 9 and 10 contain voids amounting to 20, 21, 21, 24, 28, 40 and 45 �3/Z, respectively.
-                text_file_writer.write( "Ranks " );
-                for ( size_t i( iStart ); i != nfiles; ++i )
-                {
-                    if ( i == nfiles - 1 )
-                        text_file_writer.write( " and "  );
-                    else if ( i != iStart )
-                        text_file_writer.write( ", "  );
-                    text_file_writer.write( size_t2string( sorted_map[i] + 1 ) );
-                }
-                text_file_writer.write( " contain voids amounting to " );
-                for ( size_t i( iStart ); i != nfiles; ++i )
-                {
-                    if ( i == nfiles - 1 )
-                        text_file_writer.write( " and "  );
-                    else if ( i != iStart )
-                        text_file_writer.write( ", "  );
-                    text_file_writer.write( double2string_2( voids_volumes_per_Z[ sorted_map[i] ], 0 ) );
-                }
-                text_file_writer.write( " A3/Z, respectively." );
-            }
-            text_file_writer.write( " Of interest are voids that are greater than about 20 A3/Z: 21.5 A3/Z suffices to store a water molecule (at least in terms of volume), a chloride ion is about 25 A3/Z." );
-            text_file_writer.write_line( " Voids between 15 and 20 A3/Z are quite common, but voids over 25 A3/Z are rare." );
-        }
-    MACRO_END_GAME
 
     // Calculate powder diffraction pattern.
     try
@@ -3659,13 +3477,6 @@ int main( int argc, char** argv )
         crystal_structure.supercell( u, v, w );
         crystal_structure.make_atom_labels_unique();
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_" + size_t2string( u ) + "_" + size_t2string( v ) + "_" + size_t2string( w ) ) );
-    MACRO_END_GAME
-
-    try // Calculate similarity matrix.
-    {
-        MACRO_ONE_FILELISTNAME_AS_ARGUMENT
-        CorrelationMatrix similarity_matrix = calculate_correlation_matrix( file_list );
-        similarity_matrix.save( FileName( file_list_file_name.directory(), "SimilarityMatrix", "txt" ) );
     MACRO_END_GAME
 
     try // Split reflections from SHELX .hkl file into +(hkl) and -(hkl).
