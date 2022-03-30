@@ -754,9 +754,9 @@ double weighted_cross_correlation( const PowderPattern & lhs, const PowderPatter
             if ( ( ( i + j ) >= 0 ) && ( ( i + j ) < lhs.size() ) )
             {
                 if ( (true) )
-                    result += (1.0-std::abs(j)/m) * lhs.intensity( i ) * rhs.intensity( i + j );
+                    result += (1.0-std::abs(j)/static_cast<double>(m)) * lhs.intensity( i ) * rhs.intensity( i + j );
                 else
-                    result += (1.0-std::abs(j)/m) * ( lhs.intensity( i ) / lhs.estimated_standard_deviation( i ) ) * ( rhs.intensity( i + j ) / rhs.estimated_standard_deviation( i + j ) );
+                    result += (1.0-std::abs(j)/static_cast<double>(m)) * ( lhs.intensity( i ) / lhs.estimated_standard_deviation( i ) ) * ( rhs.intensity( i + j ) / rhs.estimated_standard_deviation( i + j ) );
             }
         }
     }

@@ -84,13 +84,22 @@ rotation_matrix_( 0.0, 0.0, 0.0,
         iPos = parts[i].find_first_of( "xX" );
         if ( iPos != std::string::npos )
         {
-            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
-                rotation_matrix_.set_value( i, 0, +1.0 );
-            else if ( parts[i][iPos-1] == '-' )
-                rotation_matrix_.set_value( i, 0, -1.0 );
-            else
-                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"x\" cannot be preceded by character other than + or -: " + original_input );
             parts[i].erase( iPos, 1 );
+            double value = 1.0;
+            if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
+            {
+                // We now have something like 2x,y,z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                value = string2double( parts[i].substr( iPos-1, 1 ) );
+                // We only allow for a single digit, so 10x,y,z is still considered an error
+                --iPos;
+                parts[i].erase( iPos, 1 );
+            }
+            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
+                rotation_matrix_.set_value( i, 0, value );
+            else if ( parts[i][iPos-1] == '-' )
+                rotation_matrix_.set_value( i, 0, -value );
+            else
+                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"x\" cannot be preceded by character other than +, - or digit: " + original_input );
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }
@@ -98,13 +107,22 @@ rotation_matrix_( 0.0, 0.0, 0.0,
         iPos = parts[i].find_first_of( "yY" );
         if ( iPos != std::string::npos )
         {
-            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
-                rotation_matrix_.set_value( i, 1, +1.0 );
-            else if ( parts[i][iPos-1] == '-' )
-                rotation_matrix_.set_value( i, 1, -1.0 );
-            else
-                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"y\" cannot be preceded by character other than + or -: " + original_input );
             parts[i].erase( iPos, 1 );
+            double value = 1.0;
+            if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
+            {
+                // We now have something like x,2y,z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                value = string2double( parts[i].substr( iPos-1, 1 ) );
+                // We only allow for a single digit, so x,10y,z is still considered an error
+                --iPos;
+                parts[i].erase( iPos, 1 );
+            }
+            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
+                rotation_matrix_.set_value( i, 1, value );
+            else if ( parts[i][iPos-1] == '-' )
+                rotation_matrix_.set_value( i, 1, -value );
+            else
+                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"y\" cannot be preceded by character other than +, - or digit: " + original_input );
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }
@@ -112,13 +130,22 @@ rotation_matrix_( 0.0, 0.0, 0.0,
         iPos = parts[i].find_first_of( "zZ" );
         if ( iPos != std::string::npos )
         {
-            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
-                rotation_matrix_.set_value( i, 2, +1.0 );
-            else if ( parts[i][iPos-1] == '-' )
-                rotation_matrix_.set_value( i, 2, -1.0 );
-            else
-                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"z\" cannot be preceded by character other than + or -: " + original_input );
             parts[i].erase( iPos, 1 );
+            double value = 1.0;
+            if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
+            {
+                // We now have something like x,y,2z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                value = string2double( parts[i].substr( iPos-1, 1 ) );
+                // We only allow for a single digit, so x,y,10z is still considered an error
+                --iPos;
+                parts[i].erase( iPos, 1 );
+            }
+            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
+                rotation_matrix_.set_value( i, 2, +value );
+            else if ( parts[i][iPos-1] == '-' )
+                rotation_matrix_.set_value( i, 2, -value );
+            else
+                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"z\" cannot be preceded by character other than +, - or digit: " + original_input );
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }

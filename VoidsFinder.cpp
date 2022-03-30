@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "3DCalculations.h"
 #include "CrystalStructure.h"
 #include "BasicMathsFunctions.h"
-#include "Plane.h"
 #include "RandomNumberGenerator.h"
 
 #include <iostream>
@@ -158,48 +157,9 @@ double find_voids( const CrystalStructure & crystal_structure, const double prob
             void_spheres_final.push_back( position ); // Cartesian coordinates
     }
     std::cout << "Number of final spheres = " << void_spheres_final.size() << std::endl;
-
     // Calculate the volume of the void
     double volume = calculate_volume( crystal_structure, void_spheres_final, probe_radius );
-
-//    for ( size_t i( 0 ); i != void_spheres_final.size(); ++i )
-//        void_spheres_final[i].show();
-
     return volume;
-}
-
-// ********************************************************************************
-
-// This gives the wrong answer
-double find_voids_2( const CrystalStructure & crystal_structure )
-{
- //   double probe_radius( 1.2 );
-    // For each atom, precalculate square( VdW radius + probe_radius )
-    std::vector< double > distances2;
-//    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-//        distances2.push_back( square( crystal_structure.atom( i ).element().Van_der_Waals_radius() + probe_radius ) );
-    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        distances2.push_back( square( crystal_structure.atom( i ).element().Van_der_Waals_radius() ) );
-    RandomNumberGenerator_double random_number_generator;
-    const size_t nprobes( crystal_structure.crystal_lattice().volume() * 100 ); // 5000 sampling points per A^3
-    size_t ninside_voids( 0 );
-    for ( size_t ix( 0 ); ix != nprobes; ++ix )
-    {
-        Vector3D random_vector( random_number_generator.next_number(), random_number_generator.next_number(), random_number_generator.next_number() );
-        bool intersection_found( false );
-        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        {
-            // Both arguments to CrystalLattice::shortest_distance2() must be in fractional coordinates
-            if ( crystal_structure.crystal_lattice().shortest_distance2( crystal_structure.atom( i ).position(), random_vector ) < distances2[i] )
-            {
-                intersection_found = true;
-                break;
-            }
-        }
-        if ( ! intersection_found )
-            ++ninside_voids;
-    }
-    return ( static_cast<double>( ninside_voids ) / static_cast<double>( nprobes ) ) * crystal_structure.crystal_lattice().volume();
 }
 
 // ********************************************************************************

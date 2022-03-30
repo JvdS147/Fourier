@@ -1132,9 +1132,9 @@ void CrystalStructure::save_cif( const FileName & file_name ) const
         text_file_writer.write_line( "_atom_site_aniso_U_11" );
         text_file_writer.write_line( "_atom_site_aniso_U_22" );
         text_file_writer.write_line( "_atom_site_aniso_U_33" );
-        text_file_writer.write_line( "_atom_site_aniso_U_23" ); // U32 U13 U12 is the normal order in .cif files.
-        text_file_writer.write_line( "_atom_site_aniso_U_13" );
         text_file_writer.write_line( "_atom_site_aniso_U_12" );
+        text_file_writer.write_line( "_atom_site_aniso_U_13" );
+        text_file_writer.write_line( "_atom_site_aniso_U_23" );
         for ( size_t i( 0 ); i != atoms_.size(); ++i )
         {
             if ( suppressed_[i] )
@@ -1151,9 +1151,9 @@ void CrystalStructure::save_cif( const FileName & file_name ) const
                                              double2string( Ucif.value( 0, 0 ) ) + " " +
                                              double2string( Ucif.value( 1, 1 ) ) + " " +
                                              double2string( Ucif.value( 2, 2 ) ) + " " +
-                                             double2string( Ucif.value( 1, 2 ) ) + " " +
+                                             double2string( Ucif.value( 0, 1 ) ) + " " +
                                              double2string( Ucif.value( 0, 2 ) ) + " " +
-                                             double2string( Ucif.value( 0, 1 ) ) );
+                                             double2string( Ucif.value( 1, 2 ) ) );
             }
         }
     }
