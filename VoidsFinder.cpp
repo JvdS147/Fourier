@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -157,7 +157,6 @@ double find_voids( const CrystalStructure & crystal_structure, const double prob
             void_spheres_final.push_back( position ); // Cartesian coordinates
     }
     std::cout << "Number of final spheres = " << void_spheres_final.size() << std::endl;
-
     // Calculate the combined volume of the voids
     return calculate_volume( crystal_structure, void_spheres_final, probe_radius );
 }

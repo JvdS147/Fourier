@@ -2,7 +2,7 @@
 #define VOIDSFINDER_H
 
 /* *********************************************
-Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,22 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 class CrystalStructure;
-/*
-
-*/
 
 // Returns the void volume
 // Uses the old algorithm, based on first finding the set of spheres that determine the voids followed by
 // determining the volume of the set of spheres.
 double find_voids( const CrystalStructure & crystal_structure, const double probe_radius = 1.2 );
-
-// DO NOT USE
-// Currently only returns the percentage voids
-// Uses the new algorithm that samples the unit cell and for each sample point determines if it is
-// part of a void or not.
-// This gives the wrong answer, we only find the points where the centre of a sphere would fit, or we find *all* points outside all molecules,
-// including the tiny voids where no solvent can ever reach.
-double find_voids_2( const CrystalStructure & crystal_structure );
 
 // Probe size is 0.0, this is useful for calculating e.g. the packing coefficient.
 double void_volume( const CrystalStructure & crystal_structure );
