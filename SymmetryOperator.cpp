@@ -84,13 +84,22 @@ rotation_matrix_( 0.0, 0.0, 0.0,
         iPos = parts[i].find_first_of( "xX" );
         if ( iPos != std::string::npos )
         {
-            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
-                rotation_matrix_.set_value( i, 0, +1.0 );
-            else if ( parts[i][iPos-1] == '-' )
-                rotation_matrix_.set_value( i, 0, -1.0 );
-            else
-                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"x\" cannot be preceded by character other than + or -: " + original_input );
             parts[i].erase( iPos, 1 );
+            double value = 1.0;
+            if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
+            {
+                // We now have something like 2x,y,z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                value = string2double( parts[i].substr( iPos-1, 1 ) );
+                // We only allow for a single digit, so 10x,y,z is still considered an error
+                --iPos;
+                parts[i].erase( iPos, 1 );
+            }
+            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
+                rotation_matrix_.set_value( i, 0, value );
+            else if ( parts[i][iPos-1] == '-' )
+                rotation_matrix_.set_value( i, 0, -value );
+            else
+                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"x\" cannot be preceded by character other than +, - or digit: " + original_input );
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }
@@ -98,13 +107,22 @@ rotation_matrix_( 0.0, 0.0, 0.0,
         iPos = parts[i].find_first_of( "yY" );
         if ( iPos != std::string::npos )
         {
-            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
-                rotation_matrix_.set_value( i, 1, +1.0 );
-            else if ( parts[i][iPos-1] == '-' )
-                rotation_matrix_.set_value( i, 1, -1.0 );
-            else
-                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"y\" cannot be preceded by character other than + or -: " + original_input );
             parts[i].erase( iPos, 1 );
+            double value = 1.0;
+            if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
+            {
+                // We now have something like x,2y,z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                value = string2double( parts[i].substr( iPos-1, 1 ) );
+                // We only allow for a single digit, so x,10y,z is still considered an error
+                --iPos;
+                parts[i].erase( iPos, 1 );
+            }
+            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
+                rotation_matrix_.set_value( i, 1, value );
+            else if ( parts[i][iPos-1] == '-' )
+                rotation_matrix_.set_value( i, 1, -value );
+            else
+                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"y\" cannot be preceded by character other than +, - or digit: " + original_input );
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }
@@ -112,13 +130,22 @@ rotation_matrix_( 0.0, 0.0, 0.0,
         iPos = parts[i].find_first_of( "zZ" );
         if ( iPos != std::string::npos )
         {
-            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
-                rotation_matrix_.set_value( i, 2, +1.0 );
-            else if ( parts[i][iPos-1] == '-' )
-                rotation_matrix_.set_value( i, 2, -1.0 );
-            else
-                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"z\" cannot be preceded by character other than + or -: " + original_input );
             parts[i].erase( iPos, 1 );
+            double value = 1.0;
+            if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
+            {
+                // We now have something like x,y,2z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                value = string2double( parts[i].substr( iPos-1, 1 ) );
+                // We only allow for a single digit, so x,y,10z is still considered an error
+                --iPos;
+                parts[i].erase( iPos, 1 );
+            }
+            if ( ( iPos == 0 ) || ( parts[i][iPos-1] == '+' ) )
+                rotation_matrix_.set_value( i, 2, +value );
+            else if ( parts[i][iPos-1] == '-' )
+                rotation_matrix_.set_value( i, 2, -value );
+            else
+                throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): \"z\" cannot be preceded by character other than +, - or digit: " + original_input );
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }
@@ -202,11 +229,19 @@ Vector3D SymmetryOperator::location_translation_part() const
 
 // ********************************************************************************
 
-void SymmetryOperator::invert()
+// All elements of a standard symmetry operator are -1, 0 or 1.
+// @@ Only the rotation is checked, in principle it could also be checked if the translation only contains elements that are multiples of 1/8 or 1/3
+bool SymmetryOperator::is_non_standard_symmetry_operator() const
 {
-    rotation_matrix_.invert();
-    translation_vector_ = -1.0 * rotation_matrix_ * translation_vector_;
-    canonicalise();
+    for ( size_t i( 0 ); i != 2; ++i )
+    {
+        for ( size_t j( 0 ); j != 2; ++j )
+        {
+            if ( ! ( nearly_zero( rotation_matrix_.value( i, j ) ) || nearly_equal( rotation_matrix_.value( i, j ), 1.0 ) || nearly_equal( rotation_matrix_.value( i, j ), -1.0 ) ) )
+                return true;
+        }
+    }
+    return false;
 }
 
 // ********************************************************************************
@@ -214,6 +249,15 @@ void SymmetryOperator::invert()
 bool SymmetryOperator::is_nearly_the_identity( const double tolerance ) const
 {
     return ( rotation_matrix_.is_nearly_the_identity( tolerance ) && translation_vector_.nearly_zero( tolerance ) );
+}
+
+// ********************************************************************************
+
+void SymmetryOperator::invert()
+{
+    rotation_matrix_.invert();
+    translation_vector_ = -1.0 * rotation_matrix_ * translation_vector_;
+    canonicalise();
 }
 
 // ********************************************************************************
@@ -296,15 +340,27 @@ bool nearly_equal( const SymmetryOperator & lhs, const SymmetryOperator & rhs, c
 void SymmetryOperator::canonicalise()
 {
     // Check if all rotation entries are -1.0, 0.0 or 1.0
-    for ( size_t i( 0 ); i != 2; ++i )
+    if ( is_non_standard_symmetry_operator() )
     {
-        for ( size_t j( 0 ); j != 2; ++j )
-        {
-            if ( ! ( nearly_equal( rotation_matrix_.value( i, j ), -1.0 ) || nearly_zero( rotation_matrix_.value( i, j ) ) || nearly_equal( rotation_matrix_.value( i, j ), 1.0 ) ) )
-                std::cout << "SymmetryOperator::canonicalise(): warning: rotation matrix element is not -1, 0 or 1." << std::endl;
-        }
+  //      std::cout << "SymmetryOperator::canonicalise(): warning: rotation matrix element is not -1, 0 or 1." << std::endl;
     }
     translation_vector_ = adjust_for_translations( translation_vector_ );
+}
+
+// ********************************************************************************
+
+SymmetryOperator operator*( const Matrix3D & matrix, const SymmetryOperator & symmetry_operator )
+{
+    // Need to be careful with multiplying from the left or from the right.
+    return SymmetryOperator( matrix * symmetry_operator.rotation(), matrix * symmetry_operator.translation() );
+}
+
+// ********************************************************************************
+
+SymmetryOperator operator*( const SymmetryOperator & symmetry_operator, const Matrix3D & matrix )
+{
+    // Need to be careful with multiplying from the left or from the right.
+    return SymmetryOperator( symmetry_operator.rotation() * matrix, symmetry_operator.translation() );
 }
 
 // ********************************************************************************
@@ -312,9 +368,7 @@ void SymmetryOperator::canonicalise()
 SymmetryOperator operator*( const SymmetryOperator & lhs, const SymmetryOperator & rhs )
 {
     // Need to be careful with multiplying from the left or from the right.
-    Matrix3D rotation( lhs.rotation() * rhs.rotation() );
-    Vector3D translation( lhs.rotation() * rhs.translation() + lhs.translation() );
-    return SymmetryOperator( rotation, translation );
+    return SymmetryOperator( lhs.rotation() * rhs.rotation(), lhs.rotation() * rhs.translation() + lhs.translation() );
 }
 
 // ********************************************************************************

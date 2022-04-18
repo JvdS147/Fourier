@@ -56,6 +56,7 @@ public:
         y_coordinate_index_     = loop_items_size_;
         z_coordinate_index_     = loop_items_size_;
         Uiso_index_             = loop_items_size_;
+        Biso_index_             = loop_items_size_;
         charge_index_           = loop_items_size_;
         occupancy_index_        = loop_items_size_;
         for ( size_t i( 0 ); i != loop_items_size_; ++i )
@@ -72,6 +73,8 @@ public:
                 z_coordinate_index_ = i;
             else if ( loop_items[i] == "_atom_site_U_iso_or_equiv" )
                 Uiso_index_ = i;
+            else if ( loop_items[i] == "_atom_site_B_iso_or_equiv" )
+                Biso_index_ = i;
             else if ( loop_items[i] == "_atom_site_charge" )
                 charge_index_ = i;
             else if ( loop_items[i] == "_atom_site_occupancy" )
@@ -129,6 +132,8 @@ public:
             new_atom.set_charge( string2double( words[charge_index_] ) );
         if ( ( Uiso_index_ != loop_items_size_ ) && contains_valid_value( words[Uiso_index_] ) )
             new_atom.set_Uiso( string2double( words[Uiso_index_] ) );
+        if ( ( Biso_index_ != loop_items_size_ ) && contains_valid_value( words[Biso_index_] ) )
+            new_atom.set_Uiso( string2double( words[Biso_index_] ) / ( 8.0 * square( CONSTANT_PI ) ) );
         if ( ( occupancy_index_ != loop_items_size_ ) && contains_valid_value( words[occupancy_index_] ) )
             new_atom.set_occupancy( string2double( words[occupancy_index_] ) );
         crystal_structure.add_atom( new_atom );
@@ -142,6 +147,7 @@ private:
     size_t y_coordinate_index_;
     size_t z_coordinate_index_;
     size_t Uiso_index_;
+    size_t Biso_index_;
     size_t charge_index_;
     size_t occupancy_index_;
     
@@ -212,8 +218,6 @@ public:
         double U13 = string2double( words[U13_index_] );
         double U23 = string2double( words[U23_index_] );
         SymmetricMatrix3D U_cif( U11, U22, U33, U12, U13, U23 );
-    //    crystal_structure.crystal_lattice().print();
-    //    SymmetricMatrix3D U_cart = U_cif_2_U_cart( U_cif, crystal_structure.crystal_lattice() );
     // @@ Quick and dirty hack: we store Ucif here (should be Ucart) because we do not have the lattice yet. We do the transformation later.
         AnisotropicDisplacementParameters adps = AnisotropicDisplacementParameters( U_cif );
         size_t i = crystal_structure.find_label( words[label_index_] );
@@ -329,7 +333,7 @@ void deal_with_aniso_loop( TextFileReader & text_file_reader, const std::vector<
     {
         if ( ! text_file_reader.get_next_line( words ) )
             return;
-        if ( ( words[0][0] == '_' ) || ( words[0] == "loop_" ) || ( words[0] == "#END" ) )
+        if ( ( words[0][0] == '_' ) || ( words[0] == "loop_" ) )
         {
             text_file_reader.push_back_last_line();
             return;
@@ -459,9 +463,7 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
     std::vector< std::string > words;
     while ( text_file_reader.get_next_line( words ) )
     {
-
         // According to the cif standard, data_ and loop_ are case-insensitive.
-
         if ( ( words[0].length() > 4 ) && ( to_lower( words[0].substr( 0, 5 ) ) == "data_" ) )
         {
             if ( words.size() != 1 )

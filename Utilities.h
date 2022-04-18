@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // We must have a separate StringFunctions.h
 
+bool contains( const std::string & input, const std::string & word );
+
 // E.g. initialise_with_sequential_numbers( 5 ) returns { 0, 1, 2, 3, 4 }
 template <class T>
 std::vector< T > initialise_with_sequential_values( const T & end_value )

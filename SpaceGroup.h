@@ -82,11 +82,17 @@ public:
     void set_name( const std::string & name ) { name_ = name; }
 
     bool has_inversion() const { return has_inversion_; }
-    
+
     Vector3D position_of_inversion() const { return position_of_inversion_; }
-    
+
     bool has_inversion_at_origin() const { return has_inversion_at_origin_; }
-    
+
+    // All elements of a standard symmetry operator are -1, 0 or 1.
+    // @@ Only the rotation is checked, in principle it could also be checked if the translation only contains elements that are multiples of 1/8 or 1/3
+    bool contains_non_standard_symmetry_operator() const;
+
+    void apply_similarity_transformation( const Matrix3D & matrix );
+
     void apply_similarity_transformation( const SymmetryOperator & symmetry_operator );
 
     // If you change from C-centred to primitive using the standard transformation [ 0.5, 0.5, 0.0, -0.5, 0.5, 0.0, 0.0, 0.0, 1.0 ],
