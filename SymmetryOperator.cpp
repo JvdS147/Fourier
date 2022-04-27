@@ -229,17 +229,43 @@ Vector3D SymmetryOperator::location_translation_part() const
 
 // ********************************************************************************
 
-// All elements of a standard symmetry operator are -1, 0 or 1.
-// @@ Only the rotation is checked, in principle it could also be checked if the translation only contains elements that are multiples of 1/8 or 1/3
+// All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
+// All elements of the translation vector are multiples of 1/12
 bool SymmetryOperator::is_non_standard_symmetry_operator() const
 {
-    for ( size_t i( 0 ); i != 2; ++i )
+    for ( size_t i( 0 ); i != 3; ++i )
     {
-        for ( size_t j( 0 ); j != 2; ++j )
+        for ( size_t j( 0 ); j != 3; ++j )
         {
             if ( ! ( nearly_zero( rotation_matrix_.value( i, j ) ) || nearly_equal( rotation_matrix_.value( i, j ), 1.0 ) || nearly_equal( rotation_matrix_.value( i, j ), -1.0 ) ) )
                 return true;
         }
+    }
+    for ( size_t i( 0 ); i != 3; ++i )
+    {
+        Fraction fraction = double2fraction( translation_vector_.value( i ), Fraction( 1, 12 ) );
+        if ( 0.01 < std::abs( fraction.to_double() - translation_vector_.value( i ) ) )
+            return true;
+//        if ( fraction.integer_part() != 0 )
+//            return true;
+//        if ( fraction.numerator() < 0 )
+//            return true;
+        if ( fraction == Fraction( 0 ) )
+            continue;
+        if ( fraction == Fraction( 1, 6 ) )
+            continue;
+        if ( fraction == Fraction( 1, 4 ) )
+            continue;
+        if ( fraction == Fraction( 1, 3 ) )
+            continue;
+        if ( fraction == Fraction( 1, 2 ) )
+            continue;
+        if ( fraction == Fraction( 2, 3 ) )
+            continue;
+        if ( fraction == Fraction( 3, 4 ) )
+            continue;
+        if ( fraction == Fraction( 5, 6 ) )
+            continue;
     }
     return false;
 }
@@ -289,7 +315,7 @@ std::string SymmetryOperator::to_string() const
         // Translational part.
         double value = translation_vector_.value( row );
         // Convert to fraction.
-        Fraction fraction = double2fraction( value, Fraction( 1, 24 ) );
+        Fraction fraction = double2fraction( value, Fraction( 1, 12 ) );
         double error = std::abs( fraction.to_double() - value );
         // If conversion to a fraction introduces too great an error, use original value.
         if ( error > 0.01 )

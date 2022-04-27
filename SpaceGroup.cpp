@@ -145,6 +145,15 @@ void SpaceGroup::add_centring_vectors( const std::vector< Vector3D > & centring_
 
 // ********************************************************************************
 
+SymmetryOperator SpaceGroup::symmetry_operator( const size_t i ) const
+{
+    if ( i < symmetry_operators_.size() )
+        return symmetry_operators_[i];
+    throw std::runtime_error( "SpaceGroup::symmetry_operator( size_t ): index out of bounds." );
+}
+
+// ********************************************************************************
+
 // All elements of a standard symmetry operator are -1, 0 or 1.
 // @@ Only the rotation is checked, in principle it could also be checked if the translation only contains elements that are multiples of 1/8 or 1/3
 bool SpaceGroup::contains_non_standard_symmetry_operator() const

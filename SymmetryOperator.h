@@ -78,8 +78,8 @@ public:
     // This is wl in Grosse-Kunstleve
     Vector3D location_translation_part() const;
 
-    // All elements of a standard symmetry operator are -1, 0 or 1.
-    // @@ Only the rotation is checked, in principle it could also be checked if the translation only contains elements that are multiples of 1/8 or 1/3
+    // All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
+    // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6
     bool is_non_standard_symmetry_operator() const;
 
     bool is_nearly_the_identity( const double tolerance = TOLERANCE ) const;

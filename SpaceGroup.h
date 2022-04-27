@@ -71,7 +71,7 @@ public:
 
     size_t nsymmetry_operators() const { return symmetry_operators_.size(); }
 
-    SymmetryOperator symmetry_operator( const size_t i ) const { return symmetry_operators_[i]; }
+    SymmetryOperator symmetry_operator( const size_t i ) const;
     
     std::vector< SymmetryOperator > symmetry_operators() const { return symmetry_operators_; }
 

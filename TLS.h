@@ -171,7 +171,7 @@ public:
     // Note that only intramolecular corrected distances can be trusted, the intermolecular corrected distances have no physical meaning.
     Vector3D corrected_relative_Cartesian_coordinate( const Vector3D & r ) const;
     // To enforce that this function can only be used to correct distances within a rigid body,
-    // the current interface only allows you to calcuate a corrected distance between two points.
+    // the current interface only allows you to calculate a corrected distance between two points.
     // Of course, this is very inefficient, but because we generally only have 60 or so atoms, this should not matter a lot.
     // Other possible implementation: convert a Vector3D to a corrected Vector3D or return the Matrix3D that corrects a Vector3D
 //    double corrected_distance( const Vector3D & lhs, const Vector3D & rhs ) const;

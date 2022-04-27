@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 /*
-    Must be a one-to-one mapping.
+    Must be a one-to-one mapping that maps e.g. 0, 1, 2 to 2, 0, 1.
 */
 class Mapping
 {
