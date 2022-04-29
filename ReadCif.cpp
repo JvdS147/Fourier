@@ -218,8 +218,6 @@ public:
         double U13 = string2double( words[U13_index_] );
         double U23 = string2double( words[U23_index_] );
         SymmetricMatrix3D U_cif( U11, U22, U33, U12, U13, U23 );
-    //    crystal_structure.crystal_lattice().print();
-    //    SymmetricMatrix3D U_cart = U_cif_2_U_cart( U_cif, crystal_structure.crystal_lattice() );
     // @@ Quick and dirty hack: we store Ucif here (should be Ucart) because we do not have the lattice yet. We do the transformation later.
         AnisotropicDisplacementParameters adps = AnisotropicDisplacementParameters( U_cif );
         size_t i = crystal_structure.find_label( words[label_index_] );
@@ -335,7 +333,7 @@ void deal_with_aniso_loop( TextFileReader & text_file_reader, const std::vector<
     {
         if ( ! text_file_reader.get_next_line( words ) )
             return;
-        if ( ( words[0][0] == '_' ) || ( words[0] == "loop_" ) || ( words[0] == "#END" ) )
+        if ( ( words[0][0] == '_' ) || ( words[0] == "loop_" ) )
         {
             text_file_reader.push_back_last_line();
             return;
@@ -465,9 +463,7 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
     std::vector< std::string > words;
     while ( text_file_reader.get_next_line( words ) )
     {
-
         // According to the cif standard, data_ and loop_ are case-insensitive.
-
         if ( ( words[0].length() > 4 ) && ( to_lower( words[0].substr( 0, 5 ) ) == "data_" ) )
         {
             if ( words.size() != 1 )

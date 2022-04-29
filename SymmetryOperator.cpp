@@ -229,11 +229,45 @@ Vector3D SymmetryOperator::location_translation_part() const
 
 // ********************************************************************************
 
-void SymmetryOperator::invert()
+// All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
+// All elements of the translation vector are multiples of 1/12
+bool SymmetryOperator::is_non_standard_symmetry_operator() const
 {
-    rotation_matrix_.invert();
-    translation_vector_ = -1.0 * rotation_matrix_ * translation_vector_;
-    canonicalise();
+    for ( size_t i( 0 ); i != 3; ++i )
+    {
+        for ( size_t j( 0 ); j != 3; ++j )
+        {
+            if ( ! ( nearly_zero( rotation_matrix_.value( i, j ) ) || nearly_equal( rotation_matrix_.value( i, j ), 1.0 ) || nearly_equal( rotation_matrix_.value( i, j ), -1.0 ) ) )
+                return true;
+        }
+    }
+    for ( size_t i( 0 ); i != 3; ++i )
+    {
+        Fraction fraction = double2fraction( translation_vector_.value( i ), Fraction( 1, 12 ) );
+        if ( 0.01 < std::abs( fraction.to_double() - translation_vector_.value( i ) ) )
+            return true;
+//        if ( fraction.integer_part() != 0 )
+//            return true;
+//        if ( fraction.numerator() < 0 )
+//            return true;
+        if ( fraction == Fraction( 0 ) )
+            continue;
+        if ( fraction == Fraction( 1, 6 ) )
+            continue;
+        if ( fraction == Fraction( 1, 4 ) )
+            continue;
+        if ( fraction == Fraction( 1, 3 ) )
+            continue;
+        if ( fraction == Fraction( 1, 2 ) )
+            continue;
+        if ( fraction == Fraction( 2, 3 ) )
+            continue;
+        if ( fraction == Fraction( 3, 4 ) )
+            continue;
+        if ( fraction == Fraction( 5, 6 ) )
+            continue;
+    }
+    return false;
 }
 
 // ********************************************************************************
@@ -241,6 +275,15 @@ void SymmetryOperator::invert()
 bool SymmetryOperator::is_nearly_the_identity( const double tolerance ) const
 {
     return ( rotation_matrix_.is_nearly_the_identity( tolerance ) && translation_vector_.nearly_zero( tolerance ) );
+}
+
+// ********************************************************************************
+
+void SymmetryOperator::invert()
+{
+    rotation_matrix_.invert();
+    translation_vector_ = -1.0 * rotation_matrix_ * translation_vector_;
+    canonicalise();
 }
 
 // ********************************************************************************
@@ -272,7 +315,7 @@ std::string SymmetryOperator::to_string() const
         // Translational part.
         double value = translation_vector_.value( row );
         // Convert to fraction.
-        Fraction fraction = double2fraction( value, Fraction( 1, 24 ) );
+        Fraction fraction = double2fraction( value, Fraction( 1, 12 ) );
         double error = std::abs( fraction.to_double() - value );
         // If conversion to a fraction introduces too great an error, use original value.
         if ( error > 0.01 )
@@ -323,15 +366,27 @@ bool nearly_equal( const SymmetryOperator & lhs, const SymmetryOperator & rhs, c
 void SymmetryOperator::canonicalise()
 {
     // Check if all rotation entries are -1.0, 0.0 or 1.0
-    for ( size_t i( 0 ); i != 2; ++i )
+    if ( is_non_standard_symmetry_operator() )
     {
-        for ( size_t j( 0 ); j != 2; ++j )
-        {
-            if ( ! ( nearly_equal( rotation_matrix_.value( i, j ), -1.0 ) || nearly_zero( rotation_matrix_.value( i, j ) ) || nearly_equal( rotation_matrix_.value( i, j ), 1.0 ) ) )
-                std::cout << "SymmetryOperator::canonicalise(): warning: rotation matrix element is not -1, 0 or 1." << std::endl;
-        }
+  //      std::cout << "SymmetryOperator::canonicalise(): warning: rotation matrix element is not -1, 0 or 1." << std::endl;
     }
     translation_vector_ = adjust_for_translations( translation_vector_ );
+}
+
+// ********************************************************************************
+
+SymmetryOperator operator*( const Matrix3D & matrix, const SymmetryOperator & symmetry_operator )
+{
+    // Need to be careful with multiplying from the left or from the right.
+    return SymmetryOperator( matrix * symmetry_operator.rotation(), matrix * symmetry_operator.translation() );
+}
+
+// ********************************************************************************
+
+SymmetryOperator operator*( const SymmetryOperator & symmetry_operator, const Matrix3D & matrix )
+{
+    // Need to be careful with multiplying from the left or from the right.
+    return SymmetryOperator( symmetry_operator.rotation() * matrix, symmetry_operator.translation() );
 }
 
 // ********************************************************************************
@@ -339,9 +394,7 @@ void SymmetryOperator::canonicalise()
 SymmetryOperator operator*( const SymmetryOperator & lhs, const SymmetryOperator & rhs )
 {
     // Need to be careful with multiplying from the left or from the right.
-    Matrix3D rotation( lhs.rotation() * rhs.rotation() );
-    Vector3D translation( lhs.rotation() * rhs.translation() + lhs.translation() );
-    return SymmetryOperator( rotation, translation );
+    return SymmetryOperator( lhs.rotation() * rhs.rotation(), lhs.rotation() * rhs.translation() + lhs.translation() );
 }
 
 // ********************************************************************************

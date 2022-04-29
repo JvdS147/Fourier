@@ -494,18 +494,15 @@ Fraction operator-( const size_t    lhs, const Fraction & rhs )
 
 // Returns a Fraction from a double. smallest_unit is used for rounding.
 // This is useful e.g. for translation components in space-group symmetry operators,
-// which are multiples of 1/24. Fraction can be anything, e.g. "-1 + -3/4",
-// but in practice only values like "1/24" or "1/100" are likely to make sense.
-// (Note: translation components in space-group symmetry operators are really multiples
-// of 1/24, not of 1/12, because there are cubic space groups like F 41 3 2 that have
-// symmetry operators with translation components like 3/8, 5/8, 7/8.)
+// which are multiples of 1/12. Fraction can be anything, e.g. "-1 + -3/4",
+// but in practice only values like "1/12" or "1/100" are likely to make sense.
 //
 // Examples:
-// Fraction fraction = double2fraction( 0.333, Fraction( 1, 24 ) ); // 1/3
+// Fraction fraction = double2fraction( 0.333, Fraction( 1, 12 ) ); // 1/3
 // Fraction fraction = double2fraction( 0.2, Fraction( 1, 24 ) ); // 5/24 !! = 0.208333
-// Fraction fraction = double2fraction( 0.25, Fraction( 1, 24 ) ); // 1/4
-// Fraction fraction = double2fraction( 0.167, Fraction( 1, 24 ) ); // 1/6
-// Fraction fraction = double2fraction( -0.333, Fraction( 1, 24 ) ); // -1/3
+// Fraction fraction = double2fraction( 0.25, Fraction( 1, 12 ) ); // 1/4
+// Fraction fraction = double2fraction( 0.167, Fraction( 1, 12 ) ); // 1/6
+// Fraction fraction = double2fraction( -0.333, Fraction( 1, 12 ) ); // -1/3
 //
 // We could make this a constructor, but a non-friend non-member function is perhaps better.
 // The rounding error that is introduced can be calculated as follows:

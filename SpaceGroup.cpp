@@ -145,6 +145,46 @@ void SpaceGroup::add_centring_vectors( const std::vector< Vector3D > & centring_
 
 // ********************************************************************************
 
+SymmetryOperator SpaceGroup::symmetry_operator( const size_t i ) const
+{
+    if ( i < symmetry_operators_.size() )
+        return symmetry_operators_[i];
+    throw std::runtime_error( "SpaceGroup::symmetry_operator( size_t ): index out of bounds." );
+}
+
+// ********************************************************************************
+
+// All elements of a standard symmetry operator are -1, 0 or 1.
+// @@ Only the rotation is checked, in principle it could also be checked if the translation only contains elements that are multiples of 1/8 or 1/3
+bool SpaceGroup::contains_non_standard_symmetry_operator() const
+{
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+    {
+        if ( symmetry_operators_[i].is_non_standard_symmetry_operator() )
+            return true;
+    }
+    return false;
+}
+
+// ********************************************************************************
+
+void SpaceGroup::apply_similarity_transformation( const Matrix3D & matrix )
+{
+    Matrix3D inverse = matrix;
+    inverse.invert();
+    std::vector< SymmetryOperator > new_symmetry_operators;
+    new_symmetry_operators.reserve( symmetry_operators_.size() );
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+    {
+        SymmetryOperator new_symmetry_operator = matrix * symmetry_operators_[i] * inverse;
+        new_symmetry_operators.push_back( new_symmetry_operator );
+    }
+    symmetry_operators_ = new_symmetry_operators;
+    decompose();
+}
+
+// ********************************************************************************
+
 void SpaceGroup::apply_similarity_transformation( const SymmetryOperator & symmetry_operator )
 {
     SymmetryOperator inverse = symmetry_operator;

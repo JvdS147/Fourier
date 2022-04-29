@@ -88,6 +88,8 @@ void Mapping::check_consistency() const
     std::vector< bool > done( mapping_.size(), false );
     for ( size_t i( 0 ); i != mapping_.size(); ++i )
     {
+        if ( ! ( mapping_[i] < mapping_.size() ) )
+            throw std::runtime_error( "Mapping::check_consistency(): error: value out of range." );
         if ( done[ mapping_[i] ] )
             throw std::runtime_error( "Mapping::check_consistency(): error: value found more than once." );
         done[ mapping_[i] ] = true;

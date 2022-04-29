@@ -78,9 +78,13 @@ public:
     // This is wl in Grosse-Kunstleve
     Vector3D location_translation_part() const;
 
-    void invert();
+    // All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
+    // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6
+    bool is_non_standard_symmetry_operator() const;
 
     bool is_nearly_the_identity( const double tolerance = TOLERANCE ) const;
+
+    void invert();
 
     // cif format: "x,y,-z+1/2"
     std::string to_string() const;
@@ -95,6 +99,10 @@ private:
 std::ostream & operator<<( std::ostream & os, const SymmetryOperator & symmetry_operator );
 
 bool nearly_equal( const SymmetryOperator & lhs, const SymmetryOperator & rhs, const double tolerance = TOLERANCE );
+
+SymmetryOperator operator*( const Matrix3D & matrix, const SymmetryOperator & symmetry_operator );
+
+SymmetryOperator operator*( const SymmetryOperator & symmetry_operator, const Matrix3D & matrix );
 
 SymmetryOperator operator*( const SymmetryOperator & lhs, const SymmetryOperator & rhs );
 

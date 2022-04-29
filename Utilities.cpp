@@ -34,6 +34,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdexcept>
 #include <string.h> // For strlen()
 
+
+// ********************************************************************************
+
+bool contains( const std::string & input, const std::string & word )
+{
+    return ( input.find( word ) != std::string::npos );
+}
+
 // ********************************************************************************
 
 std::string ASCII_histogram( const double min, const double max, const double value, const size_t max_size, const char c )
@@ -276,10 +284,10 @@ std::vector< std::string > split( const std::string & input )
     while ( i < input.length() )
     {
         // Absorb white space
-        while ( (i < input.length()) && ( (input[i] == ' ') || (input[i] == '\t') ) )
+        while ( ( i < input.length()) && ( (input[i] == ' ') || (input[i] == '\t') ) )
             ++i;
         // Parse "one word"
-        if ( (i < input.length()) && (input[i] == '"') )
+        if ( ( i < input.length()) && (input[i] == '"') )
         {
             ++i;
             while ( ( i < input.length() ) && ( input[i] != '"' ) )
@@ -307,7 +315,7 @@ std::vector< std::string > split( const std::string & input )
                 throw std::runtime_error( "split(): single quote is not terminated properly: |" + input + "|" );
             ++i; // Read past the quote
             // We must now hit the end of the line or whitespace
-            if ( (i < input.length() ) && ( ( input[i] != ' ' ) && ( input[i] != '\t' ) ) )
+            if ( ( i < input.length() ) && ( ( input[i] != ' ' ) && ( input[i] != '\t' ) ) )
                 throw std::runtime_error( "split(): quote inside string is not allowed: |" + input + "|" );
         }
         // Collect non-quoted characters

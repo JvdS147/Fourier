@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace {
 
-// Position is in Fractional coordinates
+// position is in fractional coordinates
 bool intersects_atoms( const CrystalStructure & crystal_structure, const Vector3D & position, const std::vector< double > & distances2 )
 {
     for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
@@ -157,9 +157,8 @@ double find_voids( const CrystalStructure & crystal_structure, const double prob
             void_spheres_final.push_back( position ); // Cartesian coordinates
     }
     std::cout << "Number of final spheres = " << void_spheres_final.size() << std::endl;
-    // Calculate the volume of the void
-    double volume = calculate_volume( crystal_structure, void_spheres_final, probe_radius );
-    return volume;
+    // Calculate the combined volume of the voids
+    return calculate_volume( crystal_structure, void_spheres_final, probe_radius );
 }
 
 // ********************************************************************************
@@ -180,7 +179,6 @@ double void_volume( const CrystalStructure & crystal_structure )
     for ( size_t ix( 0 ); ix != nprobes; ++ix )
     {
         Vector3D random_vector( random_number_generator.next_number(), random_number_generator.next_number(), random_number_generator.next_number() );
-        random_vector = crystal_structure.crystal_lattice().fractional_to_orthogonal( random_vector );
         if ( ! intersects_atoms( crystal_structure, random_vector, distances2 ) )
                 ++ninside_voids;
     }
