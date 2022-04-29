@@ -56,6 +56,7 @@ public:
         y_coordinate_index_     = loop_items_size_;
         z_coordinate_index_     = loop_items_size_;
         Uiso_index_             = loop_items_size_;
+        Biso_index_             = loop_items_size_;
         charge_index_           = loop_items_size_;
         occupancy_index_        = loop_items_size_;
         for ( size_t i( 0 ); i != loop_items_size_; ++i )

@@ -202,18 +202,17 @@ void TLSWriter( const FileName & input_file_name )
     text_file_writer.write_line();
     text_file_writer.write_line( "    ' Unit-cell parameters are assumed to be constant." );
     text_file_writer.write_line();
+
+    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    {
+        std::string label = crystal_structure.atom( i ).label();
+        text_file_writer.write_line( "    prm x" + label + " " + double2string( crystal_structure.atom( i ).position().x() ) );
+        text_file_writer.write_line( "    prm y" + label + " " + double2string( crystal_structure.atom( i ).position().y() ) );
+        text_file_writer.write_line( "    prm z" + label + " " + double2string( crystal_structure.atom( i ).position().z() ) );
+    }
+    text_file_writer.write_line();
+
     Matrix3D f2c = crystal_structure.crystal_lattice().fractional_to_orthogonal_matrix();
-
-   // // Many matrix elements evaluate to e.g. -1.0E-18, these are set to 0.0 here.
-  //  for ( size_t i( 0 ); i < 3; ++i )
-  //  {
-  //      for ( size_t j( 0 ); j < 3; ++j )
-  //      {
-   //         if ( nearly_zero( f2c.value( i, j ) ) )
-   //             f2c.set_value( i, j, 0.0 );
-   //     }
-   // }
-
     if ( is_on_inversion_at_origin )
     {
         for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
@@ -288,22 +287,13 @@ void TLSWriter( const FileName & input_file_name )
     for ( size_t i( 0 ); i < crystal_structure.natoms(); ++i )
     {
         std::string label = crystal_structure.atom( i ).label();
-        std::vector<double> k;
+        std::vector< double > k;
         k.push_back( 1.0 / crystal_structure.crystal_lattice().a_star() );
         k.push_back( 1.0 / crystal_structure.crystal_lattice().b_star() );
         k.push_back( 1.0 / crystal_structure.crystal_lattice().c_star() );
         Matrix3D c2f = crystal_structure.crystal_lattice().orthogonal_to_fractional_matrix();
         size_t r;
         size_t s;
-        // Many matrix elements evaluate to e.g. -1.0E-18, these are set to 0.0 here.
-        for ( r = 0; r < 3; ++r )
-        {
-            for ( s = 0; s < 3; ++s )
-            {
-                if ( nearly_zero( c2f.value( r, s ) ) )
-                    c2f.set_value( r, s, 0.0 );
-            }
-        }
         // TOPAS cannot cope with "prm n = 4 + -2;", a workaround is to write "prm n = 4 + (-2);".
         std::vector< size_t > r_s; // "r's", multiple of "r"
         std::vector< size_t > s_s; // "s's", multiple of "s"
@@ -319,26 +309,121 @@ void TLSWriter( const FileName & input_file_name )
         s_s.push_back( 3 );
         r_s.push_back( 2 );
         s_s.push_back( 3 );
-
-
-//    prm u11H13 = 37.9275 * (
-//        0.160488 * ( ru11H13 * 0.160488 + ru12H13 * 0 + ru13H13 * 0.0246915 ) +
-//        (0) * ( ru12H13 * 0.160488 + ru22H13 * 0 + ru23H13 * 0.0246915 ) +
-//        (0.0246915) * ( ru13H13 * 0.160488 + ru23H13 * 0 + ru33H13 * 0.0246915 ) ); : 0.0
-
-
         for ( size_t j(0); j != r_s.size(); ++j )
         {
             r = r_s[j];
             s = s_s[j];
-            text_file_writer.write_line( "    prm u" + size_t2string(r) + size_t2string(s) + label + " = " + double2string( k[r-1] * k[s-1] ) + " * ( " );
-            text_file_writer.write_line( "        " + double2string( c2f.value(r-1,0) ) + " * ( ru11" + label + " * " + double2string( c2f.value(s-1,0) ) + " + ru12" + label + " * " + double2string( c2f.value(s-1,1) ) + " + ru13" + label + " * " + double2string( c2f.value(s-1,2) ) + " ) + " );
-            text_file_writer.write_line( "        (" + double2string( c2f.value(r-1,1) ) + ") * ( ru12" + label + " * " + double2string( c2f.value(s-1,0) ) + " + ru22" + label + " * " + double2string( c2f.value(s-1,1) ) + " + ru23" + label + " * " + double2string( c2f.value(s-1,2) ) + " ) + " );
-            text_file_writer.write_line( "        (" + double2string( c2f.value(r-1,2) ) + ") * ( ru13" + label + " * " + double2string( c2f.value(s-1,0) ) + " + ru23" + label + " * " + double2string( c2f.value(s-1,1) ) + " + ru33" + label + " * " + double2string( c2f.value(s-1,2) ) + " )" + " ); : 0.0" );
+            double prefactor_1( c2f.value( r-1, 0 ) );
+            double prefactor_2( c2f.value( r-1, 1 ) );
+            double prefactor_3( c2f.value( r-1, 2 ) );
+            std::string line( "    prm u" + size_t2string(r) + size_t2string(s) + label + " = " + double2string( k[r-1] * k[s-1] ) + " * (" );
+            bool we_already_have_at_least_one_1( false );
+            if ( ! nearly_zero( prefactor_1 ) )
+            {
+                bool we_already_have_at_least_one_2( false );
+                line += " " + double2string( prefactor_1 ) + " * ( ";
+                if ( ! nearly_zero( c2f.value(s-1,0) ) )
+                {
+                    line += "ru11" + label + " * " + double2string( c2f.value(s-1,0) );
+                    we_already_have_at_least_one_2 = true;
+                }
+                if ( ! nearly_zero( c2f.value(s-1,1) ) )
+                {
+                    if ( we_already_have_at_least_one_2 )
+                        line += " + ";
+                    line += "ru12" + label + " * " + double2string( c2f.value(s-1,1) );
+                    we_already_have_at_least_one_2 = true;
+                }
+                if ( ! nearly_zero( c2f.value(s-1,2) ) )
+                {
+                    if ( we_already_have_at_least_one_2 )
+                        line += " + ";
+                    line += "ru13" + label + " * " + double2string( c2f.value(s-1,2) );
+                }
+                line += " )";
+                we_already_have_at_least_one_1 = true;
+            }
+            if ( ! nearly_zero( prefactor_2 ) )
+            {
+                bool we_already_have_at_least_one_2( false );
+                line += " ";
+                if ( we_already_have_at_least_one_1 )
+                {
+                    if ( prefactor_2 < 0.0 )
+                        line += "- ";
+                    else
+                        line += "+ ";
+                }
+                else
+                {
+                    if ( prefactor_2 < 0.0 )
+                        line += "-";
+                }
+                line += double2string( fabs( prefactor_2 ) ) + " * ( ";
+                if ( ! nearly_zero( c2f.value(s-1,0) ) )
+                {
+                    line += "ru12" + label + " * " + double2string( c2f.value(s-1,0) );
+                    we_already_have_at_least_one_2 = true;
+                }
+                if ( ! nearly_zero( c2f.value(s-1,1) ) )
+                {
+                    if ( we_already_have_at_least_one_2 )
+                        line += " + ";
+                    line += "ru22" + label + " * " + double2string( c2f.value(s-1,1) );
+                    we_already_have_at_least_one_2 = true;
+                }
+                if ( ! nearly_zero( c2f.value(s-1,2) ) )
+                {
+                    if ( we_already_have_at_least_one_2 )
+                        line += " + ";
+                    line += "ru23" + label + " * " + double2string( c2f.value(s-1,2) );
+                }
+                line += " )";
+                we_already_have_at_least_one_1 = true;                
+            }
+            if ( ! nearly_zero( prefactor_3 ) )
+            {
+                bool we_already_have_at_least_one_2( false );
+                line += " ";
+                if ( we_already_have_at_least_one_1 )
+                {
+                    if ( prefactor_3 < 0.0 )
+                        line += "- ";
+                    else
+                        line += "+ ";
+                }
+                else
+                {
+                    if ( prefactor_3 < 0.0 )
+                        line += "-";
+                }
+                line += double2string( fabs( prefactor_3 ) ) + " * ( ";
+                if ( ! nearly_zero( c2f.value(s-1,0) ) )
+                {
+                    line += "ru13" + label + " * " + double2string( c2f.value(s-1,0) );
+                    we_already_have_at_least_one_2 = true;
+                }
+                if ( ! nearly_zero( c2f.value(s-1,1) ) )
+                {
+                    if ( we_already_have_at_least_one_2 )
+                        line += " + ";
+                    line += "ru23" + label + " * " + double2string( c2f.value(s-1,1) );
+                    we_already_have_at_least_one_2 = true;
+                }
+                if ( ! nearly_zero( c2f.value(s-1,2) ) )
+                {
+                    if ( we_already_have_at_least_one_2 )
+                        line += " + ";
+                    line += "ru33" + label + " * " + double2string( c2f.value(s-1,2) );
+                }
+                line += " )";
+                we_already_have_at_least_one_1 = true;                
+            }
+            line += " ); : 0.0";
+            text_file_writer.write_line( line );
         }
         text_file_writer.write_line();
     }
-
     for ( size_t i( 0 ); i < crystal_structure.natoms(); ++i )
     {
         std::string label = crystal_structure.atom( i ).label();
@@ -389,7 +474,6 @@ void TLSWriter( const FileName & input_file_name )
     }
     if ( write_angle_restraints )
     {
-
         text_file_writer.write_line( "    ' Calculate corrected valence angles." );
         for ( size_t i( 0 ); i < unique_labels_1.size(); ++i )
         {
