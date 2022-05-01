@@ -59,7 +59,7 @@ void Mapping::swap( const size_t i, const size_t j )
 
 void Mapping::push_back()
 {
-    mapping_.push_back( size() - 1 );
+    mapping_.push_back( size() );
 }
 
 // ********************************************************************************
