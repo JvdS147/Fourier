@@ -186,7 +186,7 @@ public:
 
     void convert_to_P1();
 
-    // @@ Atom labels are currently not updated. But uniqueness of atom labels is not enforced anyway (probably should be)
+    // Atom labels are updated.
     void supercell( const size_t u, const size_t v, const size_t w );
 
     // Unit cell, atomic coordinates, ADPs and space group.

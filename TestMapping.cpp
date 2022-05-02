@@ -37,11 +37,17 @@ void test_mapping( TestSuite & test_suite )
 
     {
     Mapping dummy;
-//    test_suite.test_equality( dummy, , "Mapping()" );
+    dummy.push_back();
+    test_suite.test_equality( dummy.size(), 1, "Mapping() 01" );
+    test_suite.test_equality( dummy[0], 0, "Mapping() 02" );
     }
     {
     Mapping dummy( 5 );
-//    test_suite.test_equality( dummy, , "Mapping()" );
+    test_suite.test_equality( dummy[1], 1, "Mapping() 03" );
+    test_suite.test_equality( dummy[4], 4, "Mapping() 04" );
+    dummy.swap( 1, 4 );
+    test_suite.test_equality( dummy[1], 4, "Mapping() 05" );
+    test_suite.test_equality( dummy[4], 1, "Mapping() 06" );
     }
     {
     std::vector< size_t > mapping;
@@ -51,8 +57,11 @@ void test_mapping( TestSuite & test_suite )
     mapping.push_back( 4 );
     mapping.push_back( 2 );
     Mapping dummy( mapping );
+    test_suite.test_equality( dummy[1], 1, "Mapping() 07" );
+    test_suite.test_equality( dummy[4], 4, "Mapping() 08" );
     dummy.invert();
-//    test_suite.test_equality( dummy, , "Mapping()" );
+    test_suite.test_equality( dummy[1], 1, "Mapping() 09" );
+    test_suite.test_equality( dummy[4], 4, "Mapping() 10" );
     }
 
 }
