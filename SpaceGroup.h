@@ -87,8 +87,8 @@ public:
 
     bool has_inversion_at_origin() const { return has_inversion_at_origin_; }
 
-    // All elements of a standard symmetry operator are -1, 0 or 1.
-    // @@ Only the rotation is checked, in principle it could also be checked if the translation only contains elements that are multiples of 1/8 or 1/3
+    // All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
+    // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
     bool contains_non_standard_symmetry_operator() const;
 
     void apply_similarity_transformation( const Matrix3D & matrix );

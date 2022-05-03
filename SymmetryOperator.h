@@ -44,22 +44,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   All of the symmetry must be independent of the existence of molecules.
   
-  The translation vector must be three fractions
+  The translation vector must be three fractions.
 
 */
 class SymmetryOperator
 {
 public:
 
-    // Default constructor: identity operator
+    // Default constructor: identity operator.
     SymmetryOperator();
 
     // Symmetry operator consisting of a rotation matrix (3x3) and a translation vector (3 elements)
     // The elements of the translational part are normalised to be in the range [0,1>,
-    // so this class is only useful for crystal structures
+    // so this class is only useful for crystal structures.
     SymmetryOperator( const Matrix3D & rotation_matrix, const Vector3D & translation_vector );
 
-    // cif style symmetry-operator string, e.g. "0.5+x, -y -1/2, z"
+    // cif style symmetry-operator string, e.g. "0.5+x, -y -1/2, z".
     explicit SymmetryOperator( std::string input );
 
     Matrix3D rotation() const { return rotation_matrix_; }
@@ -67,26 +67,26 @@ public:
     // The elements of the translational part are normalised to be in the range [0,1>.
     Vector3D translation() const { return translation_vector_; }
 
-    // This is the "N" in Grosse-Kunstleve
+    // This is the "N" in Grosse-Kunstleve.
     int rotation_part_type() const;
     
-    // This is wi in Grosse-Kunstleve
+    // This is wi in Grosse-Kunstleve.
     Vector3D intrinsic_translation_part() const;
     
     bool has_intrinsic_translation() const;
     
-    // This is wl in Grosse-Kunstleve
+    // This is wl in Grosse-Kunstleve.
     Vector3D location_translation_part() const;
 
     // All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
-    // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6
+    // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
     bool is_non_standard_symmetry_operator() const;
 
     bool is_nearly_the_identity( const double tolerance = TOLERANCE ) const;
 
     void invert();
 
-    // cif format: "x,y,-z+1/2"
+    // cif format: "x,y,-z+1/2".
     std::string to_string() const;
 
 private:
@@ -106,7 +106,7 @@ SymmetryOperator operator*( const SymmetryOperator & symmetry_operator, const Ma
 
 SymmetryOperator operator*( const SymmetryOperator & lhs, const SymmetryOperator & rhs );
 
-// Careful: multiplication from the left and from the right is very different
+// Careful: multiplication from the left and from the right is very different.
 Vector3D operator*( const SymmetryOperator & symmetry_operator, const Vector3D & vector3D );
 
 #endif // SYMMETRYOPERATOR_H
