@@ -1,3 +1,6 @@
+#ifndef LINEARREGRESSION_H
+#define LINEARREGRESSION_H
+
 /* *********************************************
 Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -25,49 +28,16 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "TestSuite.h"
-#include "RunTests.h"
+#include <stdexcept>
+#include <vector>
 
-#include <iostream>
+// x values, y values, sigmas, returns a+b*x
+void linear_regression( const std::vector< double > & x, const std::vector< double > & y, const std::vector< double > & s, double & a, double & b );
 
-void run_tests()
-{
-    TestSuite test_suite;
-    try
-    {
-        test_angle( test_suite );
-        test_Chebyshev_background( test_suite );
-        test_chemical_formula( test_suite );
-        test_Complex( test_suite );
-        test_Constraints( test_suite );
-        test_ConvexPolygon( test_suite );
-        test_correlation_matrix( test_suite );
-        test_crystal_lattice( test_suite );
-        test_crystal_structure( test_suite );
-        test_file_name( test_suite );
-        test_fraction( test_suite );
-        test_linear_regression( test_suite );
-        test_mapping( test_suite );
-        test_matrix3D( test_suite );
-        test_MatrixFraction3D( test_suite );
-        test_maths( test_suite );
-        test_ModelBuilding( test_suite );
-        test_PowderMatchTable( test_suite );
-        test_PowderPattern( test_suite );
-        test_quaternion( test_suite );
-        test_ReadCell( test_suite );
-        test_sort( test_suite );
-        test_TextFileReader_2( test_suite );
-        test_TLS_ADPs( test_suite );
-        test_utilities( test_suite );
-        test_3D_calculations( test_suite );
-    }
-    catch ( std::exception& e )
-    {
-        std::cout << "An exception was thrown" << std::endl;
-        std::cout << e.what() << std::endl;
-    }
-    test_suite.report();
-    std::cout << "Test suite done" << std::endl;
-}
+void linear_regression( const std::vector< double > & x, const std::vector< double > & y, double & a, double & b );
+
+// x values, y values, returns a*exp(b*x)
+void fit_exponential( const std::vector< double > & x, const std::vector< double > & y, double & a, double & b );
+
+#endif // LINEARREGRESSION_H
 

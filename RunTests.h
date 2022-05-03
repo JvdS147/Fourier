@@ -41,6 +41,7 @@ void test_crystal_lattice( TestSuite & test_suite );
 void test_crystal_structure( TestSuite & test_suite );
 void test_file_name( TestSuite & test_suite );
 void test_fraction( TestSuite & test_suite );
+void test_linear_regression( TestSuite & test_suite);
 void test_mapping( TestSuite & test_suite );
 void test_matrix3D( TestSuite & test_suite );
 void test_MatrixFraction3D( TestSuite & test_suite );

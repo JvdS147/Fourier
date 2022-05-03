@@ -25,49 +25,69 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "LinearRegression.h"
+
 #include "TestSuite.h"
-#include "RunTests.h"
 
 #include <iostream>
+//#include <string>
 
-void run_tests()
+void test_linear_regression( TestSuite & test_suite )
 {
-    TestSuite test_suite;
-    try
+    std::cout << "Now running tests for LinearRegression." << std::endl;
     {
-        test_angle( test_suite );
-        test_Chebyshev_background( test_suite );
-        test_chemical_formula( test_suite );
-        test_Complex( test_suite );
-        test_Constraints( test_suite );
-        test_ConvexPolygon( test_suite );
-        test_correlation_matrix( test_suite );
-        test_crystal_lattice( test_suite );
-        test_crystal_structure( test_suite );
-        test_file_name( test_suite );
-        test_fraction( test_suite );
-        test_linear_regression( test_suite );
-        test_mapping( test_suite );
-        test_matrix3D( test_suite );
-        test_MatrixFraction3D( test_suite );
-        test_maths( test_suite );
-        test_ModelBuilding( test_suite );
-        test_PowderMatchTable( test_suite );
-        test_PowderPattern( test_suite );
-        test_quaternion( test_suite );
-        test_ReadCell( test_suite );
-        test_sort( test_suite );
-        test_TextFileReader_2( test_suite );
-        test_TLS_ADPs( test_suite );
-        test_utilities( test_suite );
-        test_3D_calculations( test_suite );
+    std::vector< double > x;
+    std::vector< double > y;
+    std::vector< double > s;
+    x.push_back( 1.0 );
+    y.push_back( 1.0 );
+    s.push_back( 1.0 );
+    x.push_back( 2.0 );
+    y.push_back( 2.0 );
+    s.push_back( 1.0 );
+    x.push_back( 3.0 );
+    y.push_back( 3.0 );
+    s.push_back( 1.0 );
+    x.push_back( 4.0 );
+    y.push_back( 4.0 );
+    s.push_back( 1.0 );
+    x.push_back( 5.0 );
+    y.push_back( 5.0 );
+    s.push_back( 1.0 );
+    double a;
+    double b;
+    linear_regression( x, y, s, a, b );
+    test_suite.test_equality_double( a, 0.0, "test_linear_regression() a" );
+    test_suite.test_equality_double( b, 1.0, "test_linear_regression() b" );
     }
-    catch ( std::exception& e )
     {
-        std::cout << "An exception was thrown" << std::endl;
-        std::cout << e.what() << std::endl;
+    std::vector< double > x;
+    std::vector< double > y;
+    x.push_back( 0.00278741 );
+    x.push_back( 0.00836223 );
+    x.push_back( 0.0139371 );
+    x.push_back( 0.0195119 );
+    x.push_back( 0.0250867 );
+    x.push_back( 0.0306615 );
+    x.push_back( 0.0362363 );
+    x.push_back( 0.0418112 );
+    x.push_back( 0.047386 );
+    x.push_back( 0.0529608 );
+    y.push_back( 6 );
+    y.push_back( 15 );
+    y.push_back( 38 );
+    y.push_back( 104 );
+    y.push_back( 227 );
+    y.push_back( 397 );
+    y.push_back( 754 );
+    y.push_back( 1351 );
+    y.push_back( 2671 );
+    y.push_back( 4437 );
+    double a;
+    double b;
+    fit_exponential( x, y, a, b );
+    test_suite.test_equality_double( a, 6.0032, "fit_exponential() a", 0.0001 );
+    test_suite.test_equality_double( b, 130.55, "fit_exponential() b", 0.01 );
     }
-    test_suite.report();
-    std::cout << "Test suite done" << std::endl;
 }
 
