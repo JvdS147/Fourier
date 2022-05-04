@@ -57,11 +57,11 @@ void test_mapping( TestSuite & test_suite )
     mapping.push_back( 4 );
     mapping.push_back( 2 );
     Mapping dummy( mapping );
-    test_suite.test_equality( dummy[1], 1, "Mapping() 07" );
-    test_suite.test_equality( dummy[4], 4, "Mapping() 08" );
+    test_suite.test_equality( dummy[1], 0, "Mapping() 07" );
+    test_suite.test_equality( dummy[4], 2, "Mapping() 08" );
     dummy.invert();
-    test_suite.test_equality( dummy[1], 1, "Mapping() 09" );
-    test_suite.test_equality( dummy[4], 4, "Mapping() 10" );
+    test_suite.test_equality( dummy[0], 1, "Mapping() 09" );
+    test_suite.test_equality( dummy[2], 4, "Mapping() 10" );
     }
 
 }

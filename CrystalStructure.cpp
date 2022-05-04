@@ -582,6 +582,77 @@ void CrystalStructure::position_all_atoms_within_unit_cell()
 
 // ********************************************************************************
 
+void CrystalStructure::pack_crystal( const double probe_radius )
+{
+    double maximum_radius( 0.0 );
+    std::set< Element > elements_2 = elements();
+    for ( std::set< Element >::const_iterator it( elements_2.begin() ); it != elements_2.end(); ++it )
+    {
+        if ( it->Van_der_Waals_radius() > maximum_radius )
+            maximum_radius = it->Van_der_Waals_radius();
+    }
+    maximum_radius += probe_radius;
+    if ( ! space_group_symmetry_has_been_applied() )
+        apply_space_group_symmetry();
+    position_all_atoms_within_unit_cell();
+    double margin_a = maximum_radius / crystal_lattice_.a();
+    std::vector< Atom > new_atoms;
+    for ( size_t i( 0 ); i != natoms(); ++i )
+    {
+        if ( atom( i ).position().x() < margin_a )
+        {
+            Atom new_atom( atom( i ) );
+            new_atom.set_position( new_atom.position() + Vector3D( 1.0, 0.0, 0.0 ) );
+            new_atoms.push_back( new_atom );
+        }
+        if ( atom( i ).position().x() > ( 1.0 - margin_a ) )
+        {
+            Atom new_atom( atom( i ) );
+            new_atom.set_position( new_atom.position() - Vector3D( 1.0, 0.0, 0.0 ) );
+            new_atoms.push_back( new_atom );
+        }
+    }
+    add_atoms( new_atoms );
+    new_atoms.clear();
+    double margin_b = maximum_radius / crystal_lattice_.b();
+    for ( size_t i( 0 ); i != natoms(); ++i )
+    {
+        if ( atom( i ).position().y() < margin_b )
+        {
+            Atom new_atom( atom( i ) );
+            new_atom.set_position( new_atom.position() + Vector3D( 0.0, 1.0, 0.0 ) );
+            new_atoms.push_back( new_atom );
+        }
+        if ( atom( i ).position().y() > ( 1.0 - margin_b ) )
+        {
+            Atom new_atom( atom( i ) );
+            new_atom.set_position( new_atom.position() - Vector3D( 0.0, 1.0, 0.0 ) );
+            new_atoms.push_back( new_atom );
+        }
+    }
+    add_atoms( new_atoms );
+    new_atoms.clear();
+    double margin_c = maximum_radius / crystal_lattice_.c();
+    for ( size_t i( 0 ); i != natoms(); ++i )
+    {
+        if ( atom( i ).position().z() < margin_c )
+        {
+            Atom new_atom( atom( i ) );
+            new_atom.set_position( new_atom.position() + Vector3D( 0.0, 0.0, 1.0 ) );
+            new_atoms.push_back( new_atom );
+        }
+        if ( atom( i ).position().z() > ( 1.0 - margin_c ) )
+        {
+            Atom new_atom( atom( i ) );
+            new_atom.set_position( new_atom.position() - Vector3D( 0.0, 0.0, 1.0 ) );
+            new_atoms.push_back( new_atom );
+        }
+    }
+    add_atoms( new_atoms );
+}
+
+// ********************************************************************************
+
 Vector3D CrystalStructure::centre_of_mass() const
 {
     if ( atoms_.empty() )

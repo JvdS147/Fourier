@@ -199,6 +199,9 @@ public:
     // Atoms with coordinates like 0.999999: keep at 0.999999 or move to 0.0 or move to -0.000001?
     void position_all_atoms_within_unit_cell();
 
+    // Needed for volume calculations: all atoms in the unit cell + a thin layer on every surface of thickness (greatest VdW radius + probe_radius).
+    void pack_crystal( const double probe_radius );
+
     // Fractional coordinates.
     Vector3D centre_of_mass() const;
 

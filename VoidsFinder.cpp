@@ -36,12 +36,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace {
 
-// position is in fractional coordinates
-bool intersects_atoms( const CrystalStructure & crystal_structure, const Vector3D & position, const std::vector< double > & distances2 )
+bool intersects_atoms( const std::vector< Vector3D > & positions_Cartesian, const Vector3D & position_Cartesian, const std::vector< double > & distances2 )
 {
-    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    for ( size_t i( 0 ); i != positions_Cartesian.size(); ++i )
     {
-        if ( crystal_structure.crystal_lattice().shortest_distance2( crystal_structure.atom( i ).position(), position ) < distances2[i] )
+        if ( ( positions_Cartesian[i] - position_Cartesian ).norm2() < distances2[i] )
             return true;
     }
     return false;
@@ -56,19 +55,16 @@ double calculate_volume( const CrystalStructure & crystal_structure, const std::
     const size_t nprobes( ( crystal_structure.crystal_lattice().volume() * 1000.0 ) / crystal_structure.space_group().nsymmetry_operators() ); // 1000 sampling points per A^3
     size_t ninside_voids( 0 );
     double probe_radius2 = square( probe_radius );
-    for ( size_t ix( 0 ); ix != nprobes; ++ix )
+    std::vector< double > distances2;
+    distances2.reserve( void_spheres.size() );
+    for ( size_t i( 0 ); i != void_spheres.size(); ++i )
+        distances2.push_back( probe_radius2 );
+    for ( size_t i( 0 ); i != nprobes; ++i )
     {
-        Vector3D random_vector( random_number_generator.next_number(), random_number_generator.next_number(), random_number_generator.next_number() );
-        random_vector = crystal_structure.crystal_lattice().fractional_to_orthogonal( random_vector );
-        for ( size_t i( 0 ); i != void_spheres.size(); ++i )
-        {
-            Vector3D difference_vector = random_vector - void_spheres[i];
-            if ( difference_vector.norm2() < probe_radius2 )
-            {
-                ++ninside_voids;
-                break;
-            }
-        }
+        Vector3D random_vector_fractional( random_number_generator.next_number(), random_number_generator.next_number(), random_number_generator.next_number() );
+        Vector3D random_vector_Cartesian = crystal_structure.crystal_lattice().fractional_to_orthogonal( random_vector_fractional );
+        if ( intersects_atoms( void_spheres, random_vector_Cartesian, distances2 ) )
+            ++ninside_voids;
     }
     return ( static_cast<double>( ninside_voids ) / static_cast<double>( nprobes ) ) * crystal_structure.crystal_lattice().volume();
 }
@@ -77,44 +73,46 @@ double calculate_volume( const CrystalStructure & crystal_structure, const std::
 
 // ********************************************************************************
 
-// @@ Must use symmetry and we must somehow order the spheres to speed things up.
-
 double find_voids( const CrystalStructure & crystal_structure, const double probe_radius )
 {
     if ( crystal_structure.natoms() == 0 )
         return crystal_structure.crystal_lattice().volume();
-    if ( ! crystal_structure.space_group_symmetry_has_been_applied() )
-        throw std::runtime_error( "find_voids(): space-group symmetry has not been applied for input crystal structure." );
+    CrystalStructure crystal_structure_2( crystal_structure );
+    crystal_structure_2.pack_crystal( probe_radius );
     double grid_spacing( 0.15 );
     double probe_reduction = probe_radius * 0.05;
     double probe_radius_intermediate = probe_radius - probe_reduction;
     std::vector< Vector3D > void_spheres_intermediate;
-    std::vector< double > distances2;
     // For each atom, precalculate square( VdW radius + probe_radius )
-    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        distances2.push_back( square( crystal_structure.atom( i ).element().Van_der_Waals_radius() + probe_radius_intermediate ) );
+    std::vector< Vector3D > atom_positions_Cartesian;
+    atom_positions_Cartesian.reserve( crystal_structure_2.natoms() );
+    std::vector< double > distances2;
+    distances2.reserve( crystal_structure_2.natoms() );
+    for ( size_t i( 0 ); i != crystal_structure_2.natoms(); ++i )
+    {
+        atom_positions_Cartesian.push_back( crystal_structure_2.crystal_lattice().fractional_to_orthogonal( crystal_structure_2.atom( i ).position() ) );
+        distances2.push_back( square( crystal_structure_2.atom( i ).element().Van_der_Waals_radius() + probe_radius_intermediate ) );
+    }
     // Our CrystalLattice class uses the a-along-x convention
-
     // We need the enclosing box / bounding box
     Vector3D min_min_min;
     Vector3D max_max_max;
-    crystal_structure.crystal_lattice().enclosing_box( min_min_min, max_max_max );
-
+    crystal_structure_2.crystal_lattice().enclosing_box( min_min_min, max_max_max );
     for ( int ix = round_to_int( min_min_min.x() / grid_spacing ) - 1; ix != round_to_int( max_max_max.x() / grid_spacing ) + 1; ++ix )
     {
         for ( int iy = round_to_int( min_min_min.y() / grid_spacing ) - 1; iy != round_to_int( max_max_max.y() / grid_spacing ) + 1; ++iy )
         {
             for ( int iz = round_to_int( min_min_min.z() / grid_spacing ) - 1; iz != round_to_int( max_max_max.z() / grid_spacing ) + 1; ++iz )
             {
-                Vector3D position( ix * grid_spacing, iy * grid_spacing, iz * grid_spacing ); // Cartesian coordinates
+                Vector3D position_Cartesian( ix * grid_spacing, iy * grid_spacing, iz * grid_spacing );
                 // Check that the probe point lies within the unit cell
-                Vector3D fractional_position = crystal_structure.crystal_lattice().orthogonal_to_fractional( position );
+                Vector3D fractional_position = crystal_structure_2.crystal_lattice().orthogonal_to_fractional( position_Cartesian );
                 if ( ( fractional_position.x() < 0.0 ) || ( fractional_position.x() > 1.0 ) ||
                      ( fractional_position.y() < 0.0 ) || ( fractional_position.y() > 1.0 ) ||
                      ( fractional_position.z() < 0.0 ) || ( fractional_position.z() > 1.0 ) )
                     continue;
-                if ( ! intersects_atoms( crystal_structure, fractional_position, distances2 ) )
-                    void_spheres_intermediate.push_back( position ); // Cartesian coordinates
+                if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+                    void_spheres_intermediate.push_back( position_Cartesian );
             }
         }
     }
@@ -123,42 +121,42 @@ double find_voids( const CrystalStructure & crystal_structure, const double prob
     std::vector< Vector3D > void_spheres_final;
     // For each atom, precalculate square( VdW radius + probe_radius )
     distances2.clear();
-    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        distances2.push_back( square( crystal_structure.atom( i ).element().Van_der_Waals_radius() + probe_radius ) );
+    for ( size_t i( 0 ); i != crystal_structure_2.natoms(); ++i )
+        distances2.push_back( square( crystal_structure_2.atom( i ).element().Van_der_Waals_radius() + probe_radius ) );
     double delta = probe_reduction / sqrt(3.0); // 0.028868 Cartesian coordinates
     for ( size_t i( 0 ); i != void_spheres_intermediate.size(); ++i )
     {
-        Vector3D position( void_spheres_intermediate[i] ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
-        position = Vector3D( void_spheres_intermediate[i] + Vector3D( -delta, -delta, -delta ) ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
-        position = Vector3D( void_spheres_intermediate[i] + Vector3D( -delta, -delta, +delta ) ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
-        position = Vector3D( void_spheres_intermediate[i] + Vector3D( -delta, +delta, -delta ) ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
-        position = Vector3D( void_spheres_intermediate[i] + Vector3D( -delta, +delta, +delta ) ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
-        position = Vector3D( void_spheres_intermediate[i] + Vector3D( +delta, -delta, -delta ) ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
-        position = Vector3D( void_spheres_intermediate[i] + Vector3D( +delta, -delta, +delta ) ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
-        position = Vector3D( void_spheres_intermediate[i] + Vector3D( +delta, +delta, -delta ) ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
-        position = Vector3D( void_spheres_intermediate[i] + Vector3D( +delta, +delta, +delta ) ); // Cartesian coordinates
-        if ( ! intersects_atoms( crystal_structure, crystal_structure.crystal_lattice().orthogonal_to_fractional( position ), distances2 ) )
-            void_spheres_final.push_back( position ); // Cartesian coordinates
+        Vector3D position_Cartesian( void_spheres_intermediate[i] );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
+        position_Cartesian = Vector3D( void_spheres_intermediate[i] + Vector3D( -delta, -delta, -delta ) );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
+        position_Cartesian = Vector3D( void_spheres_intermediate[i] + Vector3D( -delta, -delta, +delta ) );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
+        position_Cartesian = Vector3D( void_spheres_intermediate[i] + Vector3D( -delta, +delta, -delta ) );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
+        position_Cartesian = Vector3D( void_spheres_intermediate[i] + Vector3D( -delta, +delta, +delta ) );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
+        position_Cartesian = Vector3D( void_spheres_intermediate[i] + Vector3D( +delta, -delta, -delta ) );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
+        position_Cartesian = Vector3D( void_spheres_intermediate[i] + Vector3D( +delta, -delta, +delta ) );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
+        position_Cartesian = Vector3D( void_spheres_intermediate[i] + Vector3D( +delta, +delta, -delta ) );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
+        position_Cartesian = Vector3D( void_spheres_intermediate[i] + Vector3D( +delta, +delta, +delta ) );
+        if ( ! intersects_atoms( atom_positions_Cartesian, position_Cartesian, distances2 ) )
+            void_spheres_final.push_back( position_Cartesian );
     }
     std::cout << "Number of final spheres = " << void_spheres_final.size() << std::endl;
     // Calculate the combined volume of the voids
-    return calculate_volume( crystal_structure, void_spheres_final, probe_radius );
+    return calculate_volume( crystal_structure_2, void_spheres_final, probe_radius );
 }
 
 // ********************************************************************************
@@ -167,22 +165,29 @@ double void_volume( const CrystalStructure & crystal_structure )
 {
     if ( crystal_structure.natoms() == 0 )
         return crystal_structure.crystal_lattice().volume();
-    if ( ! crystal_structure.space_group_symmetry_has_been_applied() )
-        throw std::runtime_error( "molecular_volume(): space-group symmetry has not been applied for input crystal structure." );
+    CrystalStructure crystal_structure_2( crystal_structure );
+    crystal_structure_2.pack_crystal( 0.0 );
     RandomNumberGenerator_double random_number_generator;
-    const size_t nprobes( ( crystal_structure.crystal_lattice().volume() * 1000.0 ) / crystal_structure.space_group().nsymmetry_operators() ); // 1000 sampling points per A^3
+    const size_t nprobes( ( crystal_structure_2.crystal_lattice().volume() * 1000.0 ) / crystal_structure_2.space_group().nsymmetry_operators() ); // 1000 sampling points per A^3
     // For each atom, precalculate square( VdW radius )
+    std::vector< Vector3D > atom_positions_Cartesian;
+    atom_positions_Cartesian.reserve( crystal_structure_2.natoms() );
     std::vector< double > distances2;
-    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        distances2.push_back( square( crystal_structure.atom( i ).element().Van_der_Waals_radius() ) );
+    distances2.reserve( crystal_structure_2.natoms() );
+    for ( size_t i( 0 ); i != crystal_structure_2.natoms(); ++i )
+    {
+        distances2.push_back( square( crystal_structure_2.atom( i ).element().Van_der_Waals_radius() ) );
+        atom_positions_Cartesian.push_back( crystal_structure_2.crystal_lattice().fractional_to_orthogonal( crystal_structure_2.atom( i ).position() ) );
+    }
     size_t ninside_voids( 0 );
     for ( size_t ix( 0 ); ix != nprobes; ++ix )
     {
-        Vector3D random_vector( random_number_generator.next_number(), random_number_generator.next_number(), random_number_generator.next_number() );
-        if ( ! intersects_atoms( crystal_structure, random_vector, distances2 ) )
+        Vector3D random_vector_fractional( random_number_generator.next_number(), random_number_generator.next_number(), random_number_generator.next_number() );
+        Vector3D random_vector_Cartesian = crystal_structure_2.crystal_lattice().fractional_to_orthogonal( random_vector_fractional );
+        if ( ! intersects_atoms( atom_positions_Cartesian, random_vector_Cartesian, distances2 ) )
                 ++ninside_voids;
     }
-    return ( static_cast<double>( ninside_voids ) / static_cast<double>( nprobes ) ) * crystal_structure.crystal_lattice().volume();
+    return ( static_cast<double>( ninside_voids ) / static_cast<double>( nprobes ) ) * crystal_structure_2.crystal_lattice().volume();
 }
 
 // ********************************************************************************

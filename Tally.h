@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //#include <iosfwd>
 
 #include <map>
+#include <iostream>
 
 /*
  * Counts number of items
