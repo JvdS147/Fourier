@@ -84,6 +84,21 @@ SpaceGroup SpaceGroup::P21c()
 
 // ********************************************************************************
 
+SpaceGroup SpaceGroup::C2c()
+{
+    std::vector< SymmetryOperator > symmetry_operators;
+    symmetry_operators.push_back( SymmetryOperator( std::string( "x,y,z" ) ) );
+    symmetry_operators.push_back( SymmetryOperator( std::string( "-x,y,1/2-z" ) ) );
+    SpaceGroup result( symmetry_operators, "C2/c" );
+    std::vector< Vector3D > centring_vectors;
+    centring_vectors.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
+    result.add_centring_vectors( centring_vectors );
+    result.add_inversion_at_origin();
+    return result;
+}
+
+// ********************************************************************************
+
 void SpaceGroup::add_inversion_at_origin()
 {
     if ( has_inversion_at_origin_ )

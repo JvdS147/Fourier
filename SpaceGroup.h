@@ -61,6 +61,7 @@ public:
     explicit SpaceGroup( const std::vector< SymmetryOperator > & symmetry_operators, const std::string & name = "" );
 
     static SpaceGroup P21c();
+    static SpaceGroup C2c();
 
     // Allows quick building of space groups
     void add_inversion_at_origin();
