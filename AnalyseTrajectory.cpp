@@ -49,12 +49,12 @@ v_(v),
 w_(w),
 space_group_(space_group),
 transformation_(transformation),
-drift_correction_(USE_FIRST_FRAME),
 write_lean_(false),
 write_average_(true),
 write_average_noH_(false),
 write_average_ESDs_(false),
-write_sum_(false)
+write_sum_(false),
+drift_correction_(USE_FIRST_FRAME)
 {
     analyse();
 }

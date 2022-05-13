@@ -28,6 +28,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+#include "Centring.h"
 #include "SymmetryOperator.h"
 
 #include <vector>
@@ -67,8 +68,7 @@ public:
     void add_inversion_at_origin();
 
     // Allows quick building of space groups
-    // Should not include [ 0, 0, 0 ].
-    void add_centring_vectors( const std::vector< Vector3D > & centring_vectors );
+    void add_centring_vectors( const Centring & centring );
 
     size_t nsymmetry_operators() const { return symmetry_operators_.size(); }
 
@@ -109,11 +109,7 @@ public:
 
     std::string crystal_system() const;
 
-    // Does not include [ 0.0, 0.0, 0.0 ]
-    std::vector< Vector3D > centring_vectors() const { return centring_vectors_; }
-
-    // Returns "P", "A", "B", "C", "I", "R", "F" or "U" for Unknown
-    std::string centring() const { return centring_; }
+    Centring centring() const { return centring_; }
 
     void print_multiplication_table() const;
     
@@ -122,8 +118,7 @@ public:
 private:
     std::vector< SymmetryOperator > symmetry_operators_;
     std::vector< SymmetryOperator > representative_symmetry_operators_;
-    std::vector< Vector3D > centring_vectors_;
-    std::string centring_; // "P", "A", "B", "C", "I", "R", "F" or "U" for Unknown
+    Centring centring_;
     bool has_inversion_;
     bool has_inversion_at_origin_;
     Vector3D position_of_inversion_;

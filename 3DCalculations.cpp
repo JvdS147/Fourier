@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "3DCalculations.h"
 #include "Angle.h"
 #include "BasicMathsFunctions.h"
+#include "Centring.h"
 #include "CollectionOfPoints.h"
 #include "CoordinateFrame.h"
 #include "CrystalLattice.h"
@@ -614,57 +615,34 @@ Angle signed_torsion( const Vector3D & r1, const Vector3D & r2, const Vector3D &
 
 // ********************************************************************************
 
-Matrix3D A_centred_to_primitive()
+Matrix3D centred_to_primitive( const Centring & centring )
 {
-    return Matrix3D(  1.0,  0.0,  0.0,
-                      0.0,  0.5,  0.5,
-                      0.0, -0.5,  0.5 );
-}
-
-// ********************************************************************************
-
-Matrix3D B_centred_to_primitive()
-{
-    return Matrix3D(  0.5,  0.0,  0.5,
-                      0.0,  1.0,  0.0,
-                     -0.5,  0.0,  0.5 );
-}
-
-// ********************************************************************************
-
-Matrix3D C_centred_to_primitive()
-{
-    return Matrix3D(  0.5,  0.5,  0.0,
-                     -0.5,  0.5,  0.0,
-                      0.0,  0.0,  1.0 );
-}
-
-// ********************************************************************************
-
-Matrix3D I_centred_to_primitive()
-{
-    return Matrix3D( -0.5,  0.5,  0.5,
-                      0.5, -0.5,  0.5,
-                      0.5,  0.5, -0.5 );
-}
-
-// ********************************************************************************
-
-Matrix3D F_centred_to_primitive()
-{
+    if ( centring.centring() == "A" )
+        return Matrix3D(  1.0,  0.0,  0.0,
+                          0.0,  0.5,  0.5,
+                          0.0, -0.5,  0.5 );
+    if ( centring.centring() == "B" )
+        return Matrix3D(  0.5,  0.0,  0.5,
+                          0.0,  1.0,  0.0,
+                         -0.5,  0.0,  0.5 );
+    if ( centring.centring() == "C" )
+        return Matrix3D(  0.5,  0.5,  0.0,
+                         -0.5,  0.5,  0.0,
+                          0.0,  0.0,  1.0 );
+    if ( centring.centring() == "I" )
+        return Matrix3D( -0.5,  0.5,  0.5,
+                          0.5, -0.5,  0.5,
+                          0.5,  0.5, -0.5 );
+    if ( centring.centring() == "F" )
     // Why not 0.0 on the diagonal? That involves two row swaps, so coordinate frame should still be right-handed? 
-    return Matrix3D(  0.5,  0.0,  0.5,
-                      0.5,  0.5,  0.0,
-                      0.0,  0.5,  0.5 );
-}
-
-// ********************************************************************************
-
-Matrix3D R_centred_to_primitive()
-{
-    return Matrix3D( 2.0/3.0, 1.0/3.0, 1.0/3.0,
-                     1.0/3.0, 2.0/3.0, 2.0/3.0,
-                       0.0,     0.0,     1.0 );
+        return Matrix3D(  0.5,  0.0,  0.5,
+                          0.5,  0.5,  0.0,
+                          0.0,  0.5,  0.5 );
+    if ( centring.centring() == "R" )
+        return Matrix3D( 2.0/3.0, 1.0/3.0, 1.0/3.0,
+                         1.0/3.0, 2.0/3.0, 2.0/3.0,
+                           0.0,     0.0,     1.0 );
+    return Matrix3D();
 }
 
 // ********************************************************************************
@@ -700,8 +678,6 @@ void add_centring_to_space_group_after_transformation( Matrix3D tranformation_ma
         {
             for ( size_t h( 0 ); h != D; ++h )
             {
-                if ( ( f == 0 ) && ( g == 0 ) && ( h == 0 ) )
-                    continue;
                 Vector3D trial_vector( f/d, g/d, h/d );
                 // I guess it would be more efficient to divide the transformation matrix by d and
                 // to construct the trial vector as [ f, g, h ].
@@ -716,10 +692,9 @@ void add_centring_to_space_group_after_transformation( Matrix3D tranformation_ma
             }
         }
     }
-    // The identity has not been added, and shouldn't have been
-    if ( centring_vectors.size() != D-1 )
+    if ( centring_vectors.size() != D )
         throw std::runtime_error( "add_centring_to_space_group_after_transformation() : centring_vectors.size() != D." );
-    space_group.add_centring_vectors( centring_vectors );
+    space_group.add_centring_vectors( Centring( centring_vectors ) );
 }
 
 // ********************************************************************************

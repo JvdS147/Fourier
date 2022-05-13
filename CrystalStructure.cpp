@@ -1828,12 +1828,13 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
     // Add all combinations of shifts of 1/shift_steps along a, b and c.
     // If the space group contains centring vectors, do not add shifts that duplicate the centring vectors
     // I checked that this should not upset any floating origin corrections
-    std::vector< Vector3D > centring_vectors = space_group.centring_vectors();
     std::vector< Vector3D > shifts;
     if ( ( shift_steps == 0 ) || ( shift_steps == 1 ) )
         shifts.push_back( floating_axes_correction );
     else
     {
+        Centring centring = space_group.centring();
+        std::vector< Vector3D > centring_vectors = centring.centring_vectors();
         shifts.reserve( shift_steps*shift_steps*shift_steps );
         for ( size_t i1( 0 ); i1 != shift_steps; ++i1 )
         {
@@ -1842,17 +1843,7 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
                 for ( size_t i3( 0 ); i3 != shift_steps; ++i3 )
                 {
                     Vector3D shift( static_cast<double>(i1)/static_cast<double>(shift_steps), static_cast<double>(i2)/static_cast<double>(shift_steps), static_cast<double>(i3)/static_cast<double>(shift_steps) );
-                    bool centring_vector_found( false );
-                    for ( size_t k( 0 ); k != centring_vectors.size(); ++k )
-                    {
-                        if ( nearly_equal( shift, centring_vectors[k] ) )
-                        {
-                            centring_vector_found = true;
-                            break;
-                        }
-                        
-                    }
-                    if ( ! centring_vector_found )
+                    if ( ! centring.contains( shift ) )
                         shifts.push_back( floating_axes_correction + shift );
                 }
             }
