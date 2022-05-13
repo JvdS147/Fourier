@@ -33,41 +33,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <cmath>
 #include <stdexcept>
-
 #include <iostream> // for debugging
 
 // ********************************************************************************
 
-SpaceGroup::SpaceGroup()
+SpaceGroup::SpaceGroup():name_("P1")
 {
     symmetry_operators_.push_back( SymmetryOperator() );
     decompose();
-    name_ = "P1";
 }
 
 // ********************************************************************************
 
-SpaceGroup::SpaceGroup( const std::vector< SymmetryOperator > & symmetry_operators, const std::string & name )
+SpaceGroup::SpaceGroup( const std::vector< SymmetryOperator > & symmetry_operators, const std::string & name ):symmetry_operators_(symmetry_operators),name_(name)
 {
-    check_if_closed( symmetry_operators );
-
-    // @@ We should check for duplicates here
-    
-    symmetry_operators_ = symmetry_operators;
-    // Make the identity the first symmetry operator
-    if ( ! symmetry_operators_[0].is_nearly_the_identity() )
+    if ( symmetry_operators_.empty() )
+        throw std::runtime_error( "SpaceGroup::SpaceGroup(): a space group must have at least one symmetry operator." );
+    check_if_closed( symmetry_operators_ );
+    // Make the identity the first symmetry operator.
+    bool identity_found( false );
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
     {
-        for ( size_t i( 1 ); i != symmetry_operators_.size(); ++i )
+        if ( symmetry_operators_[i].is_nearly_the_identity() )
         {
-            if ( symmetry_operators_[i].is_nearly_the_identity() )
-            {
-                std::swap( symmetry_operators_[0], symmetry_operators_[i] );
-                break;
-            }
+            identity_found = true;
+            std::swap( symmetry_operators_[0], symmetry_operators_[i] );
+            break;
         }
     }
+    if ( ! identity_found )
+        throw std::runtime_error( "SpaceGroup::SpaceGroup(): identity not found." );
     decompose();
-    name_ = name;
 }
 
 // ********************************************************************************
@@ -87,7 +83,10 @@ SpaceGroup SpaceGroup::P21c()
 void SpaceGroup::add_inversion_at_origin()
 {
     if ( has_inversion_at_origin_ )
+    {
+        std::cout << "SpaceGroup::add_inversion_at_origin(): warning: space group already has an inversion at the origin, will not add it again." << std::endl;
         return;
+    }
     if ( has_inversion_ )
         std::cout << "SpaceGroup::add_inversion_at_origin(): warning you are adding an inversion to a space group that already has an inversion." << std::endl;
     std::vector< SymmetryOperator > symmetry_operators;
@@ -104,38 +103,27 @@ void SpaceGroup::add_inversion_at_origin()
 
 // ********************************************************************************
 
-void SpaceGroup::add_centring_vectors( const std::vector< Vector3D > & centring_vectors )
+void SpaceGroup::add_centring_vectors( const Centring & centring )
 {
-    if ( centring_vectors.empty() )
+    if ( centring_.size() != 1 )
+        std::cout << "SpaceGroup::add_centring_vectors(): warning you are adding centring vectors to a space group that already has centring vectors." << std::endl;
+    if ( centring.size() == 1 )
     {
-        std::cout << "SpaceGroup::add_centring_vectors(): warning you are adding zero centring vectors." << std::endl;
+        std::cout << "SpaceGroup::add_centring_vectors(): warning you are adding the zero vector, will not add it again." << std::endl;
         return;
     }
-    // Check if any of the centring vectors that is to be added is [ 0, 0, 0 ]
-    for ( size_t j( 0 ); j != centring_vectors.size(); ++j )
+    std::vector< Vector3D > centring_vectors = centring.centring_vectors();
+    for ( size_t i( 1 ); i != centring_vectors.size(); ++i )
     {
-        if ( centring_vectors[j].nearly_zero() )
-            throw std::runtime_error( "SpaceGroup::add_centring_vectors(): the zero vector cannot be added." );
-    }
-    if ( ! centring_vectors_.empty() )
-    {
-        std::cout << "SpaceGroup::add_centring_vectors(): warning you are adding centring vectors to a space group that already has centring vectors." << std::endl;
-        for ( size_t i( 0 ); i != centring_vectors.size(); ++i )
-        {
-            for ( size_t j( 0 ); j != centring_vectors_.size(); ++j )
-            {
-                if ( nearly_equal( centring_vectors[i], centring_vectors_[j] ) )
-                    throw std::runtime_error( "SpaceGroup::add_centring_vectors(): the centring vector you are adding is already present." );
-            }
-        }
+        if ( centring_.contains( centring_vectors[i] ) )
+            throw std::runtime_error( "SpaceGroup::add_centring_vectors(): the centring vector you are adding is already present." );
     }
     std::vector< SymmetryOperator > symmetry_operators;
-    symmetry_operators.reserve( symmetry_operators_.size() * ( centring_vectors.size() + 1 ) );
+    symmetry_operators.reserve( symmetry_operators_.size() * centring_vectors.size() );
     for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
     {
         for ( size_t j( 0 ); j != centring_vectors.size(); ++j )
         {
-            symmetry_operators.push_back( symmetry_operators_[i] );
             symmetry_operators.push_back( SymmetryOperator( Matrix3D(), centring_vectors[j] ) * symmetry_operators_[i] );
         }
     }
@@ -154,8 +142,8 @@ SymmetryOperator SpaceGroup::symmetry_operator( const size_t i ) const
 
 // ********************************************************************************
 
-// All elements of a standard symmetry operator are -1, 0 or 1.
-// @@ Only the rotation is checked, in principle it could also be checked if the translation only contains elements that are multiples of 1/8 or 1/3
+// All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
+// All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
 bool SpaceGroup::contains_non_standard_symmetry_operator() const
 {
     for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
@@ -227,7 +215,7 @@ void SpaceGroup::remove_duplicate_symmetry_operators()
 
 // ********************************************************************************
 
-// The point group of a space group is the sum of all symmetry operators with the translations removed
+// The point group of a space group is the sum of all symmetry operators with the translations removed.
 PointGroup SpaceGroup::point_group() const
 {
     std::vector< Matrix3D > rotations;
@@ -332,31 +320,26 @@ void SpaceGroup::print_multiplication_table() const
 
 // Decomposes the space group into:
 // 1. Presence of inversion yes / no and its position.
-// 2. List of centring vectors
+// 2. List of centring vectors.
 // 3. Whatever is left such that multiplication with all of the above would generate the original set of space-group symmetry operators again.
 void SpaceGroup::decompose()
 {
     representative_symmetry_operators_.clear();
-    centring_vectors_.clear();
     has_inversion_ = false;
     has_inversion_at_origin_ = false;
     std::vector< Vector3D > centring_vectors;
     std::vector< Vector3D > inversion_translation_vectors;
     Matrix3D inversion( -1.0 );
-    size_t nproper( 0 );
-    size_t nimproper( 0 );
     for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
     {
         double determinant = symmetry_operators_[i].rotation().determinant();
         if ( nearly_equal( determinant, 1.0 ) )
         {
-            ++nproper;
             if ( symmetry_operators_[i].rotation().is_nearly_the_identity() )
                 centring_vectors.push_back( symmetry_operators_[i].translation() );
         }
         else if ( nearly_equal( determinant, -1.0 ) )
         {
-            ++nimproper;
             if ( nearly_equal( symmetry_operators_[i].rotation(), inversion ) )
             {
                 has_inversion_ = true;
@@ -366,25 +349,13 @@ void SpaceGroup::decompose()
         else
             throw std::runtime_error( "SpaceGroup::decompose(): unexpected determinant = " + double2string( determinant ) );
     }
-    // Remove [ 0, 0, 0 ] and check for identity.
-    bool identity_found( false );
-    centring_vectors_.reserve( centring_vectors.size() - 1 );
-    for ( size_t i( 0 ); i != centring_vectors.size(); ++i )
-    {
-        if ( centring_vectors[i].nearly_zero() )
-            identity_found = true;
-        else
-            centring_vectors_.push_back( centring_vectors[i] );
-    }
-    if ( ! identity_found )
-        throw std::runtime_error( "SpaceGroup::decompose(): identity not found." );
     if ( has_inversion_ )
     {
         // Add the three translations x, y, and z (they are all [0,1>) and find the smallest value.
         double smallest_value( 4.0 );
         for ( size_t i( 0 ); i != inversion_translation_vectors.size(); ++i )
         {
-            // Basically a Manhattan distance
+            // Basically a Manhattan distance.
             double value = inversion_translation_vectors[i].x() + inversion_translation_vectors[i].y() + inversion_translation_vectors[i].z();
             if ( value < smallest_value )
             {
@@ -401,12 +372,8 @@ void SpaceGroup::decompose()
         bool found( false );
         for ( size_t j( 0 ); j != representative_symmetry_operators_.size(); ++j )
         {
-            if ( nearly_equal( symmetry_operators_[i].rotation(), representative_symmetry_operators_[j].rotation() ) )
-            {
-                 found = true;
-                 break;
-            }
-            if ( nearly_equal( symmetry_operators_[i].rotation(), -1.0*representative_symmetry_operators_[j].rotation() ) )
+            if ( nearly_equal( symmetry_operators_[i].rotation(),      representative_symmetry_operators_[j].rotation() ) ||
+                 nearly_equal( symmetry_operators_[i].rotation(), -1.0*representative_symmetry_operators_[j].rotation() ) )
             {
                  found = true;
                  break;
@@ -416,71 +383,13 @@ void SpaceGroup::decompose()
             representative_symmetry_operators_.push_back( symmetry_operators_[i] );
     }
     // Now determine the centring.
-    centring_ = "U"; // Unknown
-    if ( centring_vectors_.empty() )
-        centring_ = "P";
-    else if ( centring_vectors_.size() == 1 ) // C-centred
-    {
-        if ( nearly_equal( centring_vectors_[0], Vector3D( 0.0, 0.5, 0.5 ) ) )
-            centring_ = "A";
-        else if ( nearly_equal( centring_vectors_[0], Vector3D( 0.5, 0.0, 0.5 ) ) )
-            centring_ = "B";
-        else if ( nearly_equal( centring_vectors_[0], Vector3D( 0.5, 0.5, 0.0 ) ) )
-            centring_ = "C";
-        else if ( nearly_equal( centring_vectors_[0], Vector3D( 0.5, 0.5, 0.5 ) ) )
-            centring_ = "I";
-    }
-    else if ( centring_vectors_.size() == 2 ) // R-centred
-    {
-        bool R1_found( false );
-        bool R2_found( false );
-        for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
-        {
-            if ( nearly_equal( centring_vectors_[i], Vector3D( 2.0/3.0, 1.0/3.0, 1.0/3.0 ) ) )
-            {
-                if ( R1_found )
-                    throw std::runtime_error( "SpaceGroup::decompose(): error: R1 centring found twice." );
-                R1_found = true;
-            }
-            if ( nearly_equal( centring_vectors_[i], Vector3D( 1.0/3.0, 2.0/3.0, 2.0/3.0 ) ) )
-            {
-                if ( R2_found )
-                    throw std::runtime_error( "SpaceGroup::decompose(): error: R2 centring found twice." );
-                R2_found = true;
-            }
-        }
-        if ( R1_found && R2_found )
-            centring_ = "R";
-    }
-    else if ( centring_vectors_.size() == 3 ) // F-centred
-    {
-        bool A_found( false );
-        bool B_found( false );
-        bool C_found( false );
-        for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
-        {
-            if ( nearly_equal( centring_vectors_[i], Vector3D( 0.0, 0.5, 0.5 ) ) )
-            {
-                if ( A_found )
-                    throw std::runtime_error( "SpaceGroup::decompose(): error: A centring found twice." );
-                A_found = true;
-            }
-            if ( nearly_equal( centring_vectors_[i], Vector3D( 0.5, 0.0, 0.5 ) ) )
-            {
-                if ( B_found )
-                    throw std::runtime_error( "SpaceGroup::decompose(): error: B centring found twice." );
-                B_found = true;
-            }
-            if ( nearly_equal( centring_vectors_[i], Vector3D( 0.5, 0.5, 0.0 ) ) )
-            {
-                if ( C_found )
-                    throw std::runtime_error( "SpaceGroup::decompose(): error: C centring found twice." );
-                C_found = true;
-            }
-        }
-        if ( A_found && B_found && C_found )
-            centring_ = "F";
-    }
+    centring_ = Centring( centring_vectors );
+    // Check for duplicates.
+    size_t nexpected_symmetry_operators = representative_symmetry_operators_.size() * centring_.size();
+    if ( has_inversion_ )
+        nexpected_symmetry_operators *= 2;
+    if ( nexpected_symmetry_operators != symmetry_operators_.size() )
+        throw std::runtime_error( "SpaceGroup::decompose(): number of symmetry operators not consistent." );
 }
 
 // ********************************************************************************
@@ -494,8 +403,7 @@ void SpaceGroup::show() const
     for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
         std::cout << representative_symmetry_operators_[i].to_string() << std::endl;
     std::cout << "Centring vectors:" << std::endl;
-    for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
-        std::cout << centring_vectors_[i].to_string() << std::endl;
+    centring_.show();
     if ( has_inversion_ )
     {
         if ( has_inversion_at_origin_ )
@@ -505,7 +413,7 @@ void SpaceGroup::show() const
     }
     else
         std::cout << "No inversion" << std::endl;
-    std::cout << "Name:" << name_ << std::endl;
+    std::cout << "Name: " << name_ << std::endl;
 }
 
 // ********************************************************************************
@@ -526,7 +434,8 @@ bool same_symmetry_operators( const SpaceGroup & lhs, const SpaceGroup & rhs )
 {
     if ( lhs.nsymmetry_operators() != rhs.nsymmetry_operators() )
         return false;
-    // Technically, the following logic is incorrect if lhs contains the same symmetry operator twice, but that should not happen.
+    // Technically, the following logic is incorrect if lhs contains the same symmetry operator twice,
+    // but decompose() contains consistency checks that should prevent this.
     for ( size_t i( 0 ); i != lhs.nsymmetry_operators(); ++i )
     {
         bool found( false );
@@ -564,7 +473,7 @@ void check_if_closed( const std::vector< SymmetryOperator > & symmetry_operators
             }
             if ( ! found )
             {
-                throw std::runtime_error( "check_if_closed( std::vector< SymmetryOperator > ): operator not found." );
+                throw std::runtime_error( "SpaceGroup::check_if_closed( std::vector< SymmetryOperator > ): operator not found." );
             }
         }
     }

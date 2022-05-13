@@ -57,6 +57,7 @@ void run_tests()
         test_quaternion( test_suite );
         test_ReadCell( test_suite );
         test_sort( test_suite );
+        test_space_group( test_suite );
         test_TextFileReader_2( test_suite );
         test_TLS_ADPs( test_suite );
         test_utilities( test_suite );
