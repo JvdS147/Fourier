@@ -87,8 +87,9 @@ SpaceGroup SpaceGroup::C2c()
     symmetry_operators.push_back( SymmetryOperator( std::string( "-x,y,1/2-z" ) ) );
     SpaceGroup result( symmetry_operators, "C2/c" );
     std::vector< Vector3D > centring_vectors;
+    centring_vectors.push_back( Vector3D() );
     centring_vectors.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
-    result.add_centring_vectors( centring_vectors );
+    result.add_centring_vectors( Centring( centring_vectors ) );
     result.add_inversion_at_origin();
     return result;
 }

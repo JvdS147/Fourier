@@ -495,7 +495,7 @@ void CrystalStructure::convert_to_P1()
 void CrystalStructure::supercell( const size_t u, const size_t v, const size_t w )
 {
     if ( ( u == 0 ) || ( v == 0 ) || ( w == 0 ) )
-        throw std::runtime_error( "CrystalStructure::superstructure( u, v, w ): u, v, w cannot be 0." );
+        throw std::runtime_error( "CrystalStructure::supercell( u, v, w ): u, v, w cannot be 0." );
     if ( ! space_group_symmetry_has_been_applied() )
         apply_space_group_symmetry();
     CrystalStructure result;
@@ -578,6 +578,71 @@ void CrystalStructure::position_all_atoms_within_unit_cell()
 {
     for ( size_t i( 0 ); i != atoms_.size(); ++i )
         atoms_[ i ].set_position( adjust_for_translations( atoms_[ i ].position() ) );
+}
+
+// ********************************************************************************
+
+void CrystalStructure::move_com_close_to_origin( const bool allow_inversion )
+{
+    Matrix3D sum( 0.0 );
+    for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
+        sum += space_group_.symmetry_operator( i ).rotation();
+    std::vector< bool > is_floating_axis( 3, false );
+    for ( size_t i( 0 ); i != 3; ++i )
+    {
+        if ( ! nearly_zero( sum.value( i, i ) ) )
+        {
+            std::cout << "Floating axis found " << Vector3D::index2string( i ) << std::endl;
+            is_floating_axis[i] = true;
+        }
+    }
+    Vector3D com = centre_of_mass();
+    std::cout << "Centre of mass = " << std::endl;
+    com.show();
+    size_t best_iSymmOp = 0;
+    double best_distance = ( 1000000.0 );
+    Vector3D best_shift;
+    SpaceGroup space_group( space_group_ );
+    if ( allow_inversion && ( ! space_group.has_inversion_at_origin() ) )
+        space_group.add_inversion_at_origin();
+    for ( size_t iSymmOp( 0 ); iSymmOp != space_group.nsymmetry_operators(); ++iSymmOp )
+    {
+        Vector3D shift;
+        // Calculate c.o.m. with symmetry operator applied to it.
+        Vector3D new_com( com );
+        new_com = space_group.symmetry_operator( iSymmOp ) * new_com;
+        for ( size_t i( 0 ); i != 3; ++i )
+        {
+            if ( is_floating_axis[ i ] )
+                shift.set_value( i, -new_com.value( i ) );
+            else // It should always be possible to set it to a value between -0.5 and +0.5.
+            {
+                while ( new_com.value( i ) > 0.51 )
+                {
+                    new_com.set_value( i, new_com.value( i ) - 1.0 );
+                    shift.set_value( i, shift.value( i ) - 1.0 );
+                }
+                while ( new_com.value( i ) < -0.49 )
+                {
+                    new_com.set_value( i, new_com.value( i ) + 1.0 );
+                    shift.set_value( i, shift.value( i ) + 1.0 );
+                }
+            }
+        }
+        if ( new_com.length() < best_distance )
+        {
+            best_distance = new_com.length();
+            best_iSymmOp = iSymmOp;
+            best_shift = shift;
+        }
+    }
+    std::cout << space_group.symmetry_operator( best_iSymmOp ).to_string() << std::endl;
+    std::cout << best_shift.to_string() << std::endl;
+    for ( size_t j( 0 ); j != atoms_.size(); ++j )
+        atoms_[ j ].set_position( space_group.symmetry_operator( best_iSymmOp ) * atoms_[ j ].position() + best_shift );
+    com = centre_of_mass();
+    std::cout << "Centre of mass = " << std::endl;
+    com.show();
 }
 
 // ********************************************************************************
@@ -1315,7 +1380,7 @@ double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, co
 
 // ********************************************************************************
 
-double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const size_t shift_steps, const bool include_hydrogens )
+double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const size_t shift_steps, const bool add_inversion, const bool include_hydrogens )
 {
     // Some simple checks:
     size_t natoms = rhs.natoms();
@@ -1342,6 +1407,8 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
     if ( ! same_symmetry_operators( lhs.space_group(), rhs.space_group() ) )
         std::cout << "find_match(): WARNING: Space groups are different, this will give non-sensical results." << std::endl;
     SpaceGroup space_group = rhs.space_group();
+    if ( add_inversion && ( ! space_group.has_inversion_at_origin() ) )
+        space_group.add_inversion_at_origin();
     std::vector< Vector3D > shifts;
     if ( ( shift_steps == 0 ) || ( shift_steps == 1 ) )
         shifts.push_back( Vector3D( 0.0, 0.0, 0.0 ) );
@@ -1415,7 +1482,7 @@ double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure
         new_atom.set_position( best_matches[i] );
         reordered_crystal_structure.add_atom( new_atom );
     }
-    reordered_crystal_structure.save_cif( FileName( "C:\\Users\\jacco\\Documents\\reordered.cif" ) );
+//    reordered_crystal_structure.save_cif( FileName( "C:\\Users\\jacco\\Documents\\reordered.cif" ) );
     return root_mean_square_Cartesian_displacement( lhs, reordered_crystal_structure, include_hydrogens );
 }
 

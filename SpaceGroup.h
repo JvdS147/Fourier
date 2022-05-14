@@ -88,6 +88,11 @@ public:
 
     bool has_inversion_at_origin() const { return has_inversion_at_origin_; }
 
+    // i = 0, 1, 2 for x, y, z.
+    // I think that the diagonal in some cubic space groups can be a floating axis, so this
+    // will not always work.
+    bool is_floating_axis( const size_t i ) const;
+
     // All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
     // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
     bool contains_non_standard_symmetry_operator() const;

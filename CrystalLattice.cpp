@@ -260,6 +260,7 @@ double CrystalLattice::shortest_distance2( const Vector3D & lhs, const Vector3D 
     double shortest_distance2 = fractional_to_orthogonal( difference_vector ).norm2();
     // "shortest_distance" may now be something like 0.95, which clearly should have been 0.05. Likewise,
     // with very acute unit-cell angles, it may be necessary to add or subtract +/- 1 (fractional coordinates).
+    Vector3D original_difference_vector( difference_vector );
     bool shortest_distance_changed( false );
     do
     {
@@ -270,7 +271,7 @@ double CrystalLattice::shortest_distance2( const Vector3D & lhs, const Vector3D 
             {
                 for ( int k( -1 ); k != 2; ++k )
                 {
-                    Vector3D new_difference_vector = difference_vector + Vector3D( i, j, k );
+                    Vector3D new_difference_vector = original_difference_vector + Vector3D( i, j, k );
                     double distance2 = fractional_to_orthogonal( new_difference_vector ).norm2();
                     if ( distance2 < shortest_distance2 )
                     {
@@ -297,6 +298,7 @@ void CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & r
     double shortest_distance = fractional_to_orthogonal( difference_vector ).norm2();
     // "shortest_distance" may now be something like 0.95, which clearly should have been 0.05. Likewise,
     // with very acute unit-cell angles, it may be necessary to add or subtract +/- 1 (fractional coordinates).
+    Vector3D original_difference_vector( difference_vector );
     bool shortest_distance_changed( false );
     do
     {
@@ -307,7 +309,7 @@ void CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & r
             {
                 for ( int k( -1 ); k != 2; ++k )
                 {
-                    Vector3D new_difference_vector = difference_vector + Vector3D( i, j, k );
+                    Vector3D new_difference_vector = original_difference_vector + Vector3D( i, j, k );
                     double distance = fractional_to_orthogonal( new_difference_vector ).norm2();
                     if ( distance < shortest_distance )
                     {

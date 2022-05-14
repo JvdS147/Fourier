@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Centring.h"
+#include "Utilities.h"
 
 #include <stdexcept>
 #include <iostream> // for debugging
@@ -43,7 +44,7 @@ Centring::Centring()
 Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_vectors_(centring_vectors)
 {
     if ( centring_vectors_.empty() )
-        throw std::runtime_error( "Centring::Centring(): a centring must have at least one centring vector." );
+        throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): a centring must have at least one centring vector." );
     // Make the zero vector the first centring vector.
     bool zero_vector_found( false );
     for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
@@ -58,8 +59,14 @@ Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_
     if ( ! zero_vector_found )
         throw std::runtime_error( "Centring::Centring(): zero vector not found." );
     // Check for duplicates
-    
-    
+    for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
+    {
+        for ( size_t j( i+1 ); j != centring_vectors_.size(); ++j )
+        {
+            if ( nearly_equal( centring_vectors_[i], centring_vectors_[j] ) )
+                throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): duplicate vector found." );
+        }
+    }
     centring_ = "U"; // Unknown
     if ( centring_vectors_.size() == 1 )
         centring_ = "P";
@@ -84,15 +91,52 @@ Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_
         if ( contains( Vector3D( 0.0, 0.5, 0.5 ) ) && contains( Vector3D( 0.5, 0.0, 0.5 ) ) && contains( Vector3D( 0.5, 0.5, 0.0 ) ) )
             centring_ = "F";
     }
-    else if ( centring_vectors_.size() == 1000 ) // J-centred
+    else if ( centring_vectors_.size() == 7 ) // J-centred
         centring_ = "J";
 }
 
 // ********************************************************************************
 
-Centring::Centring( const std::string & centring )
+Centring::Centring( const std::string & centring ):centring_(centring)
 {
-    
+    if ( to_upper( centring_ ) != centring_ )
+    {
+        std::cout << "Centring::Centring( std::string ): Warning: centring must be uppercase." << std::endl;
+        centring_ = to_upper( centring_ );
+    }
+    if ( centring == "U" )
+        throw std::runtime_error( "Centring::Centring( std::string ): cannot construct unknown centring with this constructor." );
+    centring_vectors_.push_back( Vector3D() );
+    if ( centring_ == "P" )
+        return;
+    if ( centring_ == "A" )
+        centring_vectors_.push_back( Vector3D( 0.0, 0.5, 0.5 ) );
+    else if ( centring_ == "B" )
+        centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.5 ) );
+    else if ( centring_ == "C" )
+        centring_vectors_.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
+    else if ( centring_ == "R" )
+    {
+        centring_vectors_.push_back( Vector3D( 2.0/3.0, 1.0/3.0, 1.0/3.0 ) );
+        centring_vectors_.push_back( Vector3D( 1.0/3.0, 2.0/3.0, 2.0/3.0 ) );
+    }
+    else if ( centring_ == "F" )
+    {
+        centring_vectors_.push_back( Vector3D( 0.0, 0.5, 0.5 ) );
+        centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.5 ) );
+        centring_vectors_.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
+    }
+    else if ( centring_ == "J" )
+    {
+        centring_vectors_.push_back( Vector3D( 0.1, 0.0, 0.0 ) );
+        centring_vectors_.push_back( Vector3D( 0.2, 0.0, 0.0 ) );
+        centring_vectors_.push_back( Vector3D( 0.3, 0.0, 0.0 ) );
+        centring_vectors_.push_back( Vector3D( 0.4, 0.0, 0.0 ) );
+        centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.0 ) );
+        centring_vectors_.push_back( Vector3D( 0.6, 0.0, 0.0 ) );
+    }
+    else
+        throw std::runtime_error( "Centring::Centring( std::string ): centring not recognised." );
 }
 
 // ********************************************************************************

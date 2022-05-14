@@ -199,6 +199,13 @@ public:
     // Atoms with coordinates like 0.999999: keep at 0.999999 or move to 0.0 or move to -0.000001?
     void position_all_atoms_within_unit_cell();
 
+    // Uses floating axes and the symmetry operators, including translations, to move the centre of mass
+    // as close as possible to the origin. Will give irreproducible results if there is more than one
+    // fragment in the asymmetric unit. Will fail if the floating axis is along the diagonal.
+    // If the space group has a polar axis but the molecule is either not chiral or the absolute chirality
+    // was not determined, it may be necessary to allow an inversion.
+    void move_com_close_to_origin( const bool add_inversion );
+
     // Needed for volume calculations: all atoms in the unit cell + a thin layer on every surface of thickness (greatest VdW radius + probe_radius).
     void pack_crystal( const double probe_radius );
 
@@ -304,7 +311,7 @@ private:
 double root_mean_square_Cartesian_displacement( const CrystalStructure & lhs, const CrystalStructure & rhs, const bool include_hydrogens );
 
 // This really should not be used any more, use find_match() followed by root_mean_square_Cartesian_displacement();
-double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const size_t shift_steps, const bool include_hydrogens );
+double RMSCD_with_matching( const CrystalStructure & lhs, const CrystalStructure & rhs, const size_t shift_steps, const bool add_inversion, const bool include_hydrogens );
 
 // Hydrogen / Deuterium is ignored
 // What is returned is not necessarily a symmetry operator, it is a combination of a rotation matrix and a translation vector that may or may not correspond to a symmetry operator.
