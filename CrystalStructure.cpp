@@ -577,22 +577,22 @@ void CrystalStructure::transform( const Matrix3D & transformation_matrix )
 // ********************************************************************************
 
 // Only atomic coordinates and ADPs.
-// Takes output from find_match();
+// Takes output from find_match().
 void CrystalStructure::transform( const SymmetryOperator & symmetry_operator, const std::vector< int > & integer_shifts )
 {
-        Matrix3D rotation = symmetry_operator.rotation();
-        Vector3D shift = symmetry_operator.translation();
-        shift.set_x( shift.x() + integer_shifts[0] );
-        shift.set_y( shift.y() + integer_shifts[1] );
-        shift.set_z( shift.z() + integer_shifts[2] );
-        for ( size_t i( 0 ); i != this->natoms(); ++i )
-        {
-            Atom new_atom( this->atom( i ) );
-            new_atom.set_position( ( rotation * new_atom.position() ) + shift );
-            if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
-                new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_lattice_ ) );
-            this->set_atom( i, new_atom );
-        }
+    Matrix3D rotation = symmetry_operator.rotation();
+    Vector3D shift = symmetry_operator.translation();
+    shift.set_x( shift.x() + integer_shifts[0] );
+    shift.set_y( shift.y() + integer_shifts[1] );
+    shift.set_z( shift.z() + integer_shifts[2] );
+    for ( size_t i( 0 ); i != this->natoms(); ++i )
+    {
+        Atom new_atom( this->atom( i ) );
+        new_atom.set_position( ( rotation * new_atom.position() ) + shift );
+        if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+            new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_lattice_ ) );
+        this->set_atom( i, new_atom );
+    }
 }
 
 // ********************************************************************************
@@ -659,10 +659,16 @@ void CrystalStructure::move_com_close_to_origin( const bool allow_inversion )
             best_shift = shift;
         }
     }
-    std::cout << space_group.symmetry_operator( best_iSymmOp ).to_string() << std::endl;
-    std::cout << best_shift.to_string() << std::endl;
-    for ( size_t j( 0 ); j != atoms_.size(); ++j )
-        atoms_[ j ].set_position( space_group.symmetry_operator( best_iSymmOp ) * atoms_[ j ].position() + best_shift );
+ //   std::cout << space_group.symmetry_operator( best_iSymmOp ).to_string() << std::endl;
+//    std::cout << best_shift.to_string() << std::endl;
+    for ( size_t i( 0 ); i != this->natoms(); ++i )
+    {
+        Atom new_atom( this->atom( i ) );
+        new_atom.set_position( ( space_group.symmetry_operator( best_iSymmOp ) * new_atom.position() ) + best_shift );
+        if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+            new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), space_group.symmetry_operator( best_iSymmOp ).rotation(), crystal_lattice_ ) );
+        this->set_atom( i, new_atom );
+    }
     com = centre_of_mass();
     std::cout << "Centre of mass = " << std::endl;
     com.show();
