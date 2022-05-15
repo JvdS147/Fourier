@@ -189,6 +189,11 @@ public:
     // Atom labels are updated.
     void supercell( const size_t u, const size_t v, const size_t w );
 
+    // Gives warning (but does not throw) if already primitive.
+    // Uses the transformation matrix from centred_to_primitive( Centring ).
+    // No attempt to make the unit-cell angles close to 90 degrees is made.
+    void reduce_to_primitive();
+
     // Unit cell, atomic coordinates, ADPs and space group.
     void transform( const Matrix3D & transformation_matrix );
 

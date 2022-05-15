@@ -28,7 +28,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include <cmath> // for std::abs
 #include <cstddef> // For definition of size_t
 
 const double TOLERANCE = 0.000001;
@@ -56,14 +55,24 @@ int round_to_int( const double x );
 
 size_t round_to_size_t( const double x );
 
+inline double absolute( const double x )
+{
+    return ( x < 0.0 ) ? -x : x;
+}
+
+inline size_t absolute( const int x )
+{
+    return ( x < 0 ) ? -x : x;
+}
+
 inline bool nearly_equal( const double lhs, const double rhs, const double tolerance = TOLERANCE )
 {
-    return ( std::abs( rhs - lhs ) < tolerance );
+    return ( absolute( rhs - lhs ) < tolerance );
 }
 
 inline bool nearly_zero( const double lhs, const double tolerance = TOLERANCE )
 {
-    return ( std::abs( lhs ) < tolerance );
+    return ( absolute( lhs ) < tolerance );
 }
 
 // This has to be here because it uses functions defined in Utilities.h and in MathsFunctions.h

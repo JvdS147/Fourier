@@ -172,6 +172,32 @@ bool SpaceGroup::contains_non_standard_symmetry_operator() const
 
 // ********************************************************************************
 
+void SpaceGroup::reduce_to_primitive()
+{
+    if ( centring().is_primitive() )
+    {
+        std::cout << "SpaceGroup::reduce_to_primitive(): warning: already primitive." << std::endl;
+            return;
+    }
+    Matrix3D matrix = centred_to_primitive( centring_ );
+    matrix.transpose();
+    Matrix3D inverse = matrix;
+    inverse.invert();
+    std::vector< SymmetryOperator > new_symmetry_operators;
+    new_symmetry_operators.reserve( symmetry_operators_.size() );
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+    {
+        SymmetryOperator new_symmetry_operator = inverse * symmetry_operators_[i] * matrix;
+        new_symmetry_operators.push_back( new_symmetry_operator );
+    }
+    symmetry_operators_ = new_symmetry_operators;
+    remove_duplicate_symmetry_operators();
+    decompose();
+    set_name( "" );
+}
+
+// ********************************************************************************
+
 void SpaceGroup::apply_similarity_transformation( const Matrix3D & matrix )
 {
     Matrix3D inverse = matrix;
@@ -272,10 +298,7 @@ std::string SpaceGroup::crystal_system() const
     size_t sum_6( 0 );
     for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
     {
-        // @@ Ugly. std::abs() cannot return an integer type, abs() does not compile on all platforms.
-        size_t absolute_rotation_part_type = representative_symmetry_operators_[i].rotation_part_type();
-        if ( absolute_rotation_part_type < 0 )
-            absolute_rotation_part_type = -absolute_rotation_part_type;
+        size_t absolute_rotation_part_type = absolute( representative_symmetry_operators_[i].rotation_part_type() );
         switch( absolute_rotation_part_type )
         {
             case  2 : ++sum_2; break;

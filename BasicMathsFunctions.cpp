@@ -26,11 +26,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "BasicMathsFunctions.h"
-#include "Angle.h"
-#include "Sort.h"
 
 #include <stdexcept>
-#include <cstdlib>
 #include <iostream> // For debugging
 
 // ********************************************************************************
@@ -76,7 +73,7 @@ bool nearly_integer( const double value, const double tolerance )
 
 double absolute_relative_difference( const double lhs, const double rhs )
 {
-    return std::abs( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
+    return absolute( lhs - rhs ) / ( 0.5 * ( lhs + rhs ) );
 }
 
 // ********************************************************************************

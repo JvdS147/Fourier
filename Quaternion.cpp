@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Quaternion.h"
+#include "BasicMathsFunctions.h"
 #include "Matrix3D.h"
 #include "Utilities.h"
 
@@ -93,7 +94,7 @@ void Quaternion::power( const int n )
     }
     if ( n < 0 )
         reciprocal();
-    int abs_n = std::abs( n );
+    size_t abs_n = absolute( n );
     if ( abs_n == 1 )
         return;
     if ( abs_n == 2 )
@@ -106,7 +107,7 @@ void Quaternion::power( const int n )
     // for Quaternion objects and faster than simply x * x (with x a Quaternion).
     // The current implementation is extremely simple.
     Quaternion quaternion( *this );
-    for ( size_t i(1); i != abs_n; ++i )
+    for ( size_t i( 1 ); i != abs_n; ++i )
         *this *= quaternion;
 }
 

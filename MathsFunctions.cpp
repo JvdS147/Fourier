@@ -160,10 +160,10 @@ double add_squared_doubles( const std::vector< double > & values )
     std::vector< double > squared_values;
     squared_values.reserve( values.size() );
     for ( size_t i( 0 ); i != values.size(); ++i )
-        squared_values.push_back( std::abs( values[ i ] ) );
+        squared_values.push_back( square( values[ i ] ) );
     Mapping sorted_map = sort( squared_values );
     for ( size_t i( 0 ); i != sorted_map.size(); ++i )
-        result += std::abs( squared_values[ sorted_map[ i ] ] );
+        result += squared_values[ sorted_map[ i ] ];
     return result;
 }
 

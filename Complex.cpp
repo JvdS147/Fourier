@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Complex.h"
 #include "BasicMathsFunctions.h"
 
+#include <cmath>
 #include <stdexcept>
 #include <iostream>
 
@@ -75,7 +76,7 @@ void Complex::power( const int n )
     }
     if ( n < 0 )
         reciprocal();
-    size_t abs_n = abs( n );
+    size_t abs_n = absolute( n );
     if ( ( abs_n == 1 ) || nearly_zero() )
         return;
     if ( abs_n == 2 )

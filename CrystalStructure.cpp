@@ -529,6 +529,31 @@ void CrystalStructure::supercell( const size_t u, const size_t v, const size_t w
 
 // ********************************************************************************
 
+void CrystalStructure::reduce_to_primitive()
+{
+    if ( space_group().centring().is_primitive() )
+    {
+        std::cout << "CrystalStructure::reduce_to_primitive(): warning: already primitive." << std::endl;
+            return;
+    }
+    Matrix3D centred2primitive = centred_to_primitive( space_group().centring() );
+    Matrix3D transformation_matrix_inverse_transpose( centred2primitive );
+    transformation_matrix_inverse_transpose.invert();
+    transformation_matrix_inverse_transpose.transpose();
+    for ( size_t i( 0 ); i != this->natoms(); ++i )
+    {
+        Atom new_atom( atoms_[i] );
+        new_atom.set_position( transformation_matrix_inverse_transpose * new_atom.position() );
+        if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+            new_atom.set_anisotropic_displacement_parameters( transform_adps( new_atom.anisotropic_displacement_parameters(), centred2primitive, crystal_lattice_ ) );
+        this->set_atom( i, new_atom );
+    }
+    space_group_.reduce_to_primitive();
+    crystal_lattice_.transform( centred2primitive );
+}
+
+// ********************************************************************************
+
 // Unit cell, atomic coordinates, ADPs and space group.
 void CrystalStructure::transform( const Matrix3D & transformation_matrix )
 {
@@ -537,8 +562,6 @@ void CrystalStructure::transform( const Matrix3D & transformation_matrix )
     Matrix3D transformation_matrix_inverse_transpose( transformation_matrix );
     transformation_matrix_inverse_transpose.invert();
     transformation_matrix_inverse_transpose.transpose();
-    CrystalLattice new_lattice( crystal_lattice_ );
-    new_lattice.transform( transformation_matrix );
     for ( size_t i( 0 ); i != this->natoms(); ++i )
     {
         Atom new_atom( atoms_[i] );
@@ -547,8 +570,8 @@ void CrystalStructure::transform( const Matrix3D & transformation_matrix )
             new_atom.set_anisotropic_displacement_parameters( transform_adps( new_atom.anisotropic_displacement_parameters(), transformation_matrix, crystal_lattice_ ) );
         this->set_atom( i, new_atom );
     }
-    space_group_.apply_similarity_transformation( SymmetryOperator( transformation_matrix_inverse_transpose, Vector3D() ) );
-    crystal_lattice_ = new_lattice;
+    space_group_.apply_similarity_transformation( transformation_matrix_inverse_transpose );
+    crystal_lattice_.transform( transformation_matrix );
 }
 
 // ********************************************************************************

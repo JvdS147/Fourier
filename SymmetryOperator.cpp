@@ -199,7 +199,7 @@ int SymmetryOperator::rotation_part_type() const
 Vector3D SymmetryOperator::intrinsic_translation_part() const
 {
     int N = rotation_part_type();
-    size_t n = std::abs( N );
+    size_t n = absolute( N );
     if ( N == -1 )
         n = 2;
     else if ( N == -3 )
@@ -244,7 +244,7 @@ bool SymmetryOperator::is_non_standard_symmetry_operator() const
     for ( size_t i( 0 ); i != 3; ++i )
     {
         Fraction fraction = double2fraction( translation_vector_.value( i ), Fraction( 1, 12 ) );
-        if ( 0.01 < std::abs( fraction.to_double() - translation_vector_.value( i ) ) )
+        if ( ! nearly_equal( fraction.to_double(), translation_vector_.value( i ), 0.01 ) )
             return true;
 //        if ( fraction.integer_part() != 0 )
 //            return true;
@@ -307,8 +307,8 @@ std::string SymmetryOperator::to_string() const
                 if ( ! is_first_character )
                     result += "+";
             }
-            if ( std::abs( value ) > 1 )
-                result += int2string( std::abs( value ) );
+            if ( absolute( value ) > 1 )
+                result += size_t2string( absolute( value ) );
             result += xyz[col];
             is_first_character = false;
         }
@@ -316,7 +316,7 @@ std::string SymmetryOperator::to_string() const
         double value = translation_vector_.value( row );
         // Convert to fraction.
         Fraction fraction = double2fraction( value, Fraction( 1, 12 ) );
-        double error = std::abs( fraction.to_double() - value );
+        double error = absolute( fraction.to_double() - value );
         // If conversion to a fraction introduces too great an error, use original value.
         if ( error > 0.01 )
         {

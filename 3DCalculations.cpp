@@ -617,6 +617,11 @@ Angle signed_torsion( const Vector3D & r1, const Vector3D & r2, const Vector3D &
 
 Matrix3D centred_to_primitive( const Centring & centring )
 {
+    if ( centring.is_primitive() )
+    {
+        std::cout << "centred_to_primitive( Centring ): warning: centring is primitive." << std::endl;
+        return Matrix3D();
+    }
     if ( centring.centring() == "A" )
         return Matrix3D(  1.0,  0.0,  0.0,
                           0.0,  0.5,  0.5,
@@ -634,15 +639,14 @@ Matrix3D centred_to_primitive( const Centring & centring )
                           0.5, -0.5,  0.5,
                           0.5,  0.5, -0.5 );
     if ( centring.centring() == "F" )
-    // Why not 0.0 on the diagonal? That involves two row swaps, so coordinate frame should still be right-handed? 
-        return Matrix3D(  0.5,  0.0,  0.5,
-                          0.5,  0.5,  0.0,
-                          0.0,  0.5,  0.5 );
+        return Matrix3D(  0.0,  0.5,  0.5,
+                          0.5,  0.0,  0.5,
+                          0.5,  0.5,  0.0 );
     if ( centring.centring() == "R" )
         return Matrix3D( 2.0/3.0, 1.0/3.0, 1.0/3.0,
                          1.0/3.0, 2.0/3.0, 2.0/3.0,
                            0.0,     0.0,     1.0 );
-    return Matrix3D();
+    throw std::runtime_error( "centred_to_primitive( Centring ): centring " + centring.centring() + "  not recognised." );
 }
 
 // ********************************************************************************
@@ -659,11 +663,13 @@ void add_centring_to_space_group_after_transformation( Matrix3D tranformation_ma
     double d = tranformation_matrix.determinant();
     if ( ! nearly_integer( d ) )
         throw std::runtime_error( "add_centring_to_space_group_after_transformation() : determinant is not an integer." );
-    int D = round_to_int( tranformation_matrix.determinant() );
+    if ( nearly_zero( d ) )
+        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : determinant is zero." );
+    if ( d < 0.0 )
+        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : determinant is negative." );
+    size_t D = round_to_int( tranformation_matrix.determinant() );
     if ( D == 1 )
         return;
-    if ( D < 1 )
-        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : D < 1." );
     // I have not been able to find a smart way to extract the possible additional lattice points
     // from the transformation matrix, so we simply try them all.
     // We want to find the points [ f/D, g/D, h/D ], with D the determinant, that lie within the unit cell

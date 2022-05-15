@@ -743,6 +743,8 @@ bool same_range( const PowderPattern & lhs, const PowderPattern & rhs )
 
 double weighted_cross_correlation( const PowderPattern & lhs, const PowderPattern & rhs, Angle l )
 {
+    if ( l < Angle() )
+        throw std::runtime_error( "weighted_cross_correlation( PowderPattern, PowderPattern, Angle ): l must be non-negative." );
     int m = round_to_int( l / lhs.average_two_theta_step() );
     if ( m == 0 )
         m = 1;
@@ -753,7 +755,7 @@ double weighted_cross_correlation( const PowderPattern & lhs, const PowderPatter
         {
             if ( ( ( i + j ) >= 0 ) && ( ( i + j ) < lhs.size() ) )
             {
-                double w = 1.0 - std::abs( j ) / static_cast<double>( m );
+                double w = 1.0 - absolute( j ) / static_cast<double>( m );
                 if ( (true) )
                     result += w * lhs.intensity( i ) * rhs.intensity( i + j );
                 else
@@ -769,7 +771,7 @@ double weighted_cross_correlation( const PowderPattern & lhs, const PowderPatter
 double normalised_weighted_cross_correlation( const PowderPattern & lhs, const PowderPattern & rhs, Angle l )
 {
     if ( ! same_range( lhs, rhs ) )
-        throw std::runtime_error( "normalised_weighted_cross_correlation( const PowderPattern &, const PowderPattern & ): ranges not same" );
+        throw std::runtime_error( "normalised_weighted_cross_correlation( const PowderPattern &, const PowderPattern & ): ranges not same." );
     return weighted_cross_correlation( lhs, rhs, l ) / sqrt( weighted_cross_correlation( lhs, lhs, l ) * weighted_cross_correlation( rhs, rhs, l ) );
 }
 

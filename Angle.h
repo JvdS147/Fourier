@@ -125,7 +125,7 @@ public:
     double tangent() const { return tan( angle_ ); }
     double cotangent() const { return 1.0/this->tangent(); }
     
-    void absolute() { angle_ = std::abs( angle_ ); }
+    void absolute() { if ( angle_ < 0.0 ) angle_ = -angle_; }
 
     friend Angle absolute( const Angle angle );
 
@@ -140,7 +140,7 @@ private:
     explicit Angle( const double value ) : angle_(value) {}
 };
 
-inline Angle absolute( const Angle angle ) { return Angle( std::abs( angle.angle_ ) ); }
+inline Angle absolute( const Angle angle ) { return ( angle.angle_ < 0.0 ) ? Angle( -angle.angle_ ) : angle; }
 
 std::ostream & operator<<( std::ostream & os, const Angle angle );
 

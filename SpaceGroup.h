@@ -97,18 +97,22 @@ public:
     // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
     bool contains_non_standard_symmetry_operator() const;
 
+    // Gives warning (but does not throw) if already primitive.
+    // Uses the transformation matrix from centred_to_primitive( Centring ).
+    void reduce_to_primitive();
+
     void apply_similarity_transformation( const Matrix3D & matrix );
 
     void apply_similarity_transformation( const SymmetryOperator & symmetry_operator );
 
-    // If you change from C-centred to primitive using the standard transformation [ 0.5, 0.5, 0.0, -0.5, 0.5, 0.0, 0.0, 0.0, 1.0 ],
-    // the unit cell volume is halved and so is the number of symmetry operators, because half of the
+    // If you change from centred to primitive,
+    // the unit-cell volume is halved and so is the number of symmetry operators, because half of the
     // symmetry operators transform to the other half. This function removes the duplicate symmetry operators.
     void remove_duplicate_symmetry_operators();
 
     // The point group of a space group is the sum of all symmetry operators with the translations removed
     PointGroup point_group() const;
-    
+
     // The point group augmented with the inversion.
     PointGroup laue_class() const;
 
@@ -117,7 +121,7 @@ public:
     Centring centring() const { return centring_; }
 
     void print_multiplication_table() const;
-    
+
     void show() const;
 
 private:

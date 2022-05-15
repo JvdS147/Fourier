@@ -45,8 +45,8 @@ WriteCASTEPFile::WriteCASTEPFile( const CrystalStructure & crystal_structure,
                                   const std::string & directory,
                                   const std::string & base_name ) :
 job_type_(UNIT_CELL_FIXED),
-crystal_structure_(crystal_structure),
 base_name_(base_name),
+crystal_structure_(crystal_structure),
 cut_off_energy_(520.0)
 {
     directory_ = append_backslash( directory );
