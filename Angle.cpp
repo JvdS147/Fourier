@@ -68,3 +68,17 @@ void sincos( Angle angle, double & sine, double & cosine )
 
 // ********************************************************************************
 
+bool triquality( const Angle x1, const Angle x2, const Angle x3, const Angle tolerance )
+{
+    Angle average = ( x1 + x2 + x3 ) / 3.0;
+    if ( ! nearly_equal( x1, average, tolerance ) )
+        return false;
+    if ( ! nearly_equal( x2, average, tolerance ) )
+        return false;
+    if ( ! nearly_equal( x3, average, tolerance ) )
+        return false;
+    return true;
+}
+
+// ********************************************************************************
+

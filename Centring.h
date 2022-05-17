@@ -46,36 +46,43 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     Also, the SpaceGroup class does contain the identity, so this class should also do that.
     And if [ 0.0, 0.0, 0.0 ] is included, you can simply do nsymmetry_operators = ncentrings * nrepresentative_symmetry_operators
 
+    R comes in two flavours: obverse and reverse.
+    
+    D (for Diagonal) is rare.
 */
 class Centring
 {
 public:
 
-  //  enum CentringType { P, A, B, C, I, R, F, U, J };
+    enum CentringType { P, A, B, C, D, F, I, R_OBVERSE, R_REVERSE, U, J };
 
     // Default constructor
     Centring();
 
     explicit Centring( const std::vector< Vector3D > & centring_vectors );
 
-    explicit Centring( const std::string & centring );
-    
+    explicit Centring( std::string centring_name );
+
     size_t size() const { return centring_vectors_.size(); }
-    
+
     bool is_primitive() const { return size() == 1; }
-    
+
     bool contains( const Vector3D & centring_vector, const double tolerance = 0.000001 ) const;
-    
+
     std::vector< Vector3D > centring_vectors() const { return centring_vectors_; }
-    
-    std::string centring() const { return centring_; }
-    
+
+    CentringType centring_type() const { return centring_type_; }
+
+    std::string centring_name() const;
+
     void show() const;
 
 private:
     std::vector< Vector3D > centring_vectors_;
-    std::string centring_;  // "P", "A", "B", "C", "I", "R", "F" or "U" for Unknown, "J" for Joke/Jacco
+    CentringType centring_type_;
 };
 
 #endif // CENTRING_H
+
+std::string centring_type_to_string( const Centring::CentringType centring_type );
 

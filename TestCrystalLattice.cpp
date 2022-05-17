@@ -45,15 +45,15 @@ void test_crystal_lattice( TestSuite & test_suite )
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::from_degrees( 92.0 ), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC, "deduce_lattice_system() monoclinic 1" );
+    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC_A, "deduce_lattice_system() monoclinic 1" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::angle_90_degrees(), Angle::from_degrees( 92.0 ), Angle::angle_90_degrees() );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC, "deduce_lattice_system() monoclinic 2" );
+    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC_B, "deduce_lattice_system() monoclinic 2" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::from_degrees( 92.0 ) );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC, "deduce_lattice_system() monoclinic 3" );
+    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC_C, "deduce_lattice_system() monoclinic 3" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() );

@@ -62,7 +62,12 @@ public:
     Angle alpha() const { return alpha_; }
     Angle beta()  const { return beta_; }
     Angle gamma() const { return gamma_; }
-    
+
+    // Always <= 1.0, the smaller, the more acute the angles.
+    double orthogonality_defect() const;
+
+    Vector3D lattice_vector( const size_t index ) const;
+
     // a along x
     Vector3D a_vector() const { return a_vector_; }
     Vector3D b_vector() const { return b_vector_; }
@@ -110,11 +115,17 @@ public:
     // Returns the shortest distance (in Angstrom) and the shortest difference vector (defined as rhs - lhs, in fractional coordinates).
     void shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & distance, Vector3D & difference_vector ) const;
 
-    enum LatticeSystem { TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC };
-    
+    enum LatticeSystem { TRICLINIC, MONOCLINIC_A, MONOCLINIC_B, MONOCLINIC_C, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC };
+
     // The lattice system is initialised by deducing it from the unit-cell parameters
     LatticeSystem lattice_system() const { return lattice_system_; }
     void set_lattice_system( const LatticeSystem lattice_system ) { lattice_system_ = lattice_system; }
+
+    // There are many things we can do to make a lattice more "beautiful": order a, b and c by size,
+    // make alpha, beta and gamma all greater than or all less than 90.
+    // And the transformation matrix that is chosen can also be chosen from
+    // many candidates, we can e.g. choose the one that is as close as possible to the identity matrix.
+    Matrix3D choose_angles_close_to_90() const;
 
     void transform( const Matrix3D & transformation_matrix );
 
@@ -123,9 +134,9 @@ public:
 
     // Shows the full vectors and reciprocal vectors
     void show() const; // For debugging
-    
+
     // Some matrices necessary for the formulae given by R. T. Downs / G. V. Gibbs
-    
+
     Matrix3D Downs_D() const;
     Matrix3D Downs_D_star() const;
     Matrix3D Downs_G() const;

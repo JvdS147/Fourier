@@ -70,6 +70,8 @@ inline bool nearly_equal( const double lhs, const double rhs, const double toler
     return ( absolute( rhs - lhs ) < tolerance );
 }
 
+bool triquality( const double x1, const double x2, const double x3, const double tolerance = TOLERANCE );
+
 inline bool nearly_zero( const double lhs, const double tolerance = TOLERANCE )
 {
     return ( absolute( lhs ) < tolerance );

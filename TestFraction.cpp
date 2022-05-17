@@ -1013,7 +1013,6 @@ void test_fraction( TestSuite & test_suite )
 }
 {
     double maximum_error( 0.0 );
-    int worst_i = -1;
     for ( int i( 0 ); i <= 24; ++i )
     {
         // We generate 0/24, 1/24 etc. as doubles rounded to three decimal places:
@@ -1025,10 +1024,7 @@ void test_fraction( TestSuite & test_suite )
         Fraction fraction = double2fraction( original_value, Fraction( 1, 24 ) );
         double error_i = fabs( fraction.to_double() - original_value );
         if ( maximum_error < error_i )
-        {
-            worst_i = i;
             maximum_error = error_i;
-        }
     }
     test_suite.test_equality_double( maximum_error, 1.0/3000.0, "Fraction from_floating_point() : maximum error has changed" );
 }

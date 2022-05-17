@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Centring::Centring()
 {
     centring_vectors_.push_back( Vector3D() );
-    centring_ = "P";
+    centring_type_ = P;
 }
 
 // ********************************************************************************
@@ -67,66 +67,75 @@ Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_
                 throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): duplicate vector found." );
         }
     }
-    centring_ = "U"; // Unknown
+    centring_type_ = U; // Unknown
     if ( centring_vectors_.size() == 1 )
-        centring_ = "P";
+        centring_type_ = P;
     else if ( centring_vectors_.size() == 2 ) // C-centred
     {
         if ( nearly_equal( centring_vectors_[1], Vector3D( 0.0, 0.5, 0.5 ) ) )
-            centring_ = "A";
+            centring_type_ = A;
         else if ( nearly_equal( centring_vectors_[1], Vector3D( 0.5, 0.0, 0.5 ) ) )
-            centring_ = "B";
+            centring_type_ = B;
         else if ( nearly_equal( centring_vectors_[1], Vector3D( 0.5, 0.5, 0.0 ) ) )
-            centring_ = "C";
+            centring_type_ = C;
         else if ( nearly_equal( centring_vectors_[1], Vector3D( 0.5, 0.5, 0.5 ) ) )
-            centring_ = "I";
+            centring_type_ = I;
     }
     else if ( centring_vectors_.size() == 3 ) // R-centred
     {
         if ( contains( Vector3D( 2.0/3.0, 1.0/3.0, 1.0/3.0 ) ) && contains( Vector3D( 1.0/3.0, 2.0/3.0, 2.0/3.0 ) ) )
-            centring_ = "R";
+            centring_type_ = R_OBVERSE;
+        else if ( contains( Vector3D( 1.0/3.0, 2.0/3.0, 1.0/3.0 ) ) && contains( Vector3D( 2.0/3.0, 1.0/3.0, 2.0/3.0 ) ) )
+            centring_type_ = R_REVERSE;
+        else if ( contains( Vector3D( 1.0/3.0, 1.0/3.0, 1.0/3.0 ) ) && contains( Vector3D( 2.0/3.0, 2.0/3.0, 2.0/3.0 ) ) )
+            centring_type_ = D;
     }
     else if ( centring_vectors_.size() == 4 ) // F-centred
     {
         if ( contains( Vector3D( 0.0, 0.5, 0.5 ) ) && contains( Vector3D( 0.5, 0.0, 0.5 ) ) && contains( Vector3D( 0.5, 0.5, 0.0 ) ) )
-            centring_ = "F";
+            centring_type_ = F;
     }
     else if ( centring_vectors_.size() == 7 ) // J-centred
-        centring_ = "J";
+        centring_type_ = J;
 }
 
 // ********************************************************************************
 
-Centring::Centring( const std::string & centring ):centring_(centring)
+Centring::Centring( std::string centring_name )
 {
-    if ( to_upper( centring_ ) != centring_ )
+    if ( to_upper( centring_name ) != centring_name )
     {
-        std::cout << "Centring::Centring( std::string ): Warning: centring must be uppercase." << std::endl;
-        centring_ = to_upper( centring_ );
+        std::cout << "Centring::Centring( std::string ): Warning: centring name must be uppercase." << std::endl;
+        centring_name = to_upper( centring_name );
     }
-    if ( centring == "U" )
+    if ( centring_name == "U" )
         throw std::runtime_error( "Centring::Centring( std::string ): cannot construct unknown centring with this constructor." );
     centring_vectors_.push_back( Vector3D() );
-    if ( centring_ == "P" )
+    if ( centring_name == "P" )
         return;
-    if ( centring_ == "A" )
+    if ( centring_name == "A" )
         centring_vectors_.push_back( Vector3D( 0.0, 0.5, 0.5 ) );
-    else if ( centring_ == "B" )
+    else if ( centring_name == "B" )
         centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.5 ) );
-    else if ( centring_ == "C" )
+    else if ( centring_name == "C" )
         centring_vectors_.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
-    else if ( centring_ == "R" )
+    else if ( centring_name == "D" )
+    {
+        centring_vectors_.push_back( Vector3D( 1.0/3.0, 1.0/3.0, 1.0/3.0 ) );
+        centring_vectors_.push_back( Vector3D( 2.0/3.0, 2.0/3.0, 2.0/3.0 ) );
+    }
+    else if ( centring_name == "R" )
     {
         centring_vectors_.push_back( Vector3D( 2.0/3.0, 1.0/3.0, 1.0/3.0 ) );
         centring_vectors_.push_back( Vector3D( 1.0/3.0, 2.0/3.0, 2.0/3.0 ) );
     }
-    else if ( centring_ == "F" )
+    else if ( centring_name == "F" )
     {
         centring_vectors_.push_back( Vector3D( 0.0, 0.5, 0.5 ) );
         centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.5 ) );
         centring_vectors_.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
     }
-    else if ( centring_ == "J" )
+    else if ( centring_name == "J" )
     {
         centring_vectors_.push_back( Vector3D( 0.1, 0.0, 0.0 ) );
         centring_vectors_.push_back( Vector3D( 0.2, 0.0, 0.0 ) );
@@ -136,7 +145,7 @@ Centring::Centring( const std::string & centring ):centring_(centring)
         centring_vectors_.push_back( Vector3D( 0.6, 0.0, 0.0 ) );
     }
     else
-        throw std::runtime_error( "Centring::Centring( std::string ): centring not recognised." );
+        throw std::runtime_error( "Centring::Centring( std::string ): centring name not recognised." );
 }
 
 // ********************************************************************************
@@ -153,10 +162,39 @@ bool Centring::contains( const Vector3D & centring_vector, const double toleranc
 
 // ********************************************************************************
 
+std::string Centring::centring_name() const
+{
+    return centring_type_to_string( centring_type_ );
+}
+
+// ********************************************************************************
+
 void Centring::show() const
 {
+    std::cout << centring_name() << std::endl;
     for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
         std::cout << centring_vectors_[i].to_string() << std::endl;
+}
+
+// ********************************************************************************
+
+std::string centring_type_to_string( const Centring::CentringType centring_type )
+{
+    switch ( centring_type )
+    {
+        case Centring::P : return "P";
+        case Centring::A : return "A";
+        case Centring::B : return "B";
+        case Centring::C : return "C";
+        case Centring::D : return "D";
+        case Centring::F : return "F";
+        case Centring::I : return "I";
+        case Centring::R_OBVERSE : return "R_OBVERSE";
+        case Centring::R_REVERSE : return "R_REVERSE";
+        case Centring::U : return "U";
+        case Centring::J : return "J";
+        default : return "Error";
+    }
 }
 
 // ********************************************************************************

@@ -622,31 +622,41 @@ Matrix3D centred_to_primitive( const Centring & centring )
         std::cout << "centred_to_primitive( Centring ): warning: centring is primitive." << std::endl;
         return Matrix3D();
     }
-    if ( centring.centring() == "A" )
+    if ( centring.centring_type() == Centring::A )
         return Matrix3D(  1.0,  0.0,  0.0,
                           0.0,  0.5,  0.5,
                           0.0, -0.5,  0.5 );
-    if ( centring.centring() == "B" )
+    if ( centring.centring_type() == Centring::B )
         return Matrix3D(  0.5,  0.0,  0.5,
                           0.0,  1.0,  0.0,
                          -0.5,  0.0,  0.5 );
-    if ( centring.centring() == "C" )
+    if ( centring.centring_type() == Centring::C )
         return Matrix3D(  0.5,  0.5,  0.0,
                          -0.5,  0.5,  0.0,
                           0.0,  0.0,  1.0 );
-    if ( centring.centring() == "I" )
-        return Matrix3D( -0.5,  0.5,  0.5,
-                          0.5, -0.5,  0.5,
-                          0.5,  0.5, -0.5 );
-    if ( centring.centring() == "F" )
+    if ( centring.centring_type() == Centring::D )
+        throw std::runtime_error( "centred_to_primitive( Centring ): centring D not yet implemented." );
+    if ( centring.centring_type() == Centring::F )
         return Matrix3D(  0.0,  0.5,  0.5,
                           0.5,  0.0,  0.5,
                           0.5,  0.5,  0.0 );
-    if ( centring.centring() == "R" )
+    if ( centring.centring_type() == Centring::I )
+        return Matrix3D( -0.5,  0.5,  0.5,
+                          0.5, -0.5,  0.5,
+                          0.5,  0.5, -0.5 );
+    if ( centring.centring_type() == Centring::R_OBVERSE )
         return Matrix3D( 2.0/3.0, 1.0/3.0, 1.0/3.0,
                          1.0/3.0, 2.0/3.0, 2.0/3.0,
                            0.0,     0.0,     1.0 );
-    throw std::runtime_error( "centred_to_primitive( Centring ): centring " + centring.centring() + "  not recognised." );
+    if ( centring.centring_type() == Centring::R_REVERSE )
+        return Matrix3D( 1.0/3.0, 2.0/3.0, 2.0/3.0,
+                         2.0/3.0, 1.0/3.0, 1.0/3.0,
+                           0.0,     0.0,     1.0 );
+    if ( centring.centring_type() == Centring::U )
+        throw std::runtime_error( "centred_to_primitive( Centring ): error: no transformation matrix for centring U." );
+    if ( centring.centring_type() == Centring::J )
+        throw std::runtime_error( "centred_to_primitive( Centring ): centring J not yet implemented." );
+    throw std::runtime_error( "centred_to_primitive( Centring ): centring not yet implemented." );
 }
 
 // ********************************************************************************

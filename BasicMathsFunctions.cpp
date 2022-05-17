@@ -64,6 +64,20 @@ size_t round_to_size_t( const double x )
 
 // ********************************************************************************
 
+bool triquality( const double x1, const double x2, const double x3, const double tolerance )
+{
+    double average = ( x1 + x2 + x3 ) / 3.0;
+    if ( ! nearly_equal( x1, average, tolerance ) )
+        return false;
+    if ( ! nearly_equal( x2, average, tolerance ) )
+        return false;
+    if ( ! nearly_equal( x3, average, tolerance ) )
+        return false;
+    return true;
+}
+
+// ********************************************************************************
+
 bool nearly_integer( const double value, const double tolerance )
 {
     return nearly_equal( value, round_to_int( value ), tolerance );

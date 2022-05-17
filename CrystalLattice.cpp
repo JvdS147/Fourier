@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CrystalLattice.h"
 #include "3DCalculations.h"
 #include "BasicMathsFunctions.h"
+#include "Sort.h"
 #include "Utilities.h"
 
 #include <iostream>
@@ -107,11 +108,22 @@ void CrystalLattice::from_CASTEP( const Matrix3D & matrix )
 
 // ********************************************************************************
 
-Matrix3D CrystalLattice::metric_matrix() const
+double CrystalLattice::orthogonality_defect() const
 {
-    return Matrix3D( a_ * a_                  , a_ * b_ * gamma_.cosine() , a_ * c_ * beta_.cosine() ,
-                     a_ * b_ * gamma_.cosine(), b_ * b_                   , b_ * c_ * alpha_.cosine(),
-                     a_ * c_ * beta_.cosine() , b_ * c_ * alpha_.cosine() , c_ * c_ );
+    return ( a_ * b_ * c_ ) / volume_;
+}
+
+// ********************************************************************************
+
+Vector3D CrystalLattice::lattice_vector( const size_t index ) const
+{
+    switch( index )
+    {
+        case  0 : return a_vector_;
+        case  1 : return b_vector_;
+        case  2 : return c_vector_;
+        default : throw std::runtime_error( "CrystalLattice::lattice_vector( size_t ): error: index out of range." );
+    }
 }
 
 // ********************************************************************************
@@ -185,6 +197,15 @@ void CrystalLattice::enclosing_box( Vector3D & min_min_min, Vector3D & max_max_m
     max_max_max.set_y( std::max( max_max_max.y(), current_point.y() ) );
     max_max_max.set_z( std::max( max_max_max.z(), current_point.z() ) );
 
+}
+
+// ********************************************************************************
+
+Matrix3D CrystalLattice::metric_matrix() const
+{
+    return Matrix3D( a_ * a_                  , a_ * b_ * gamma_.cosine() , a_ * c_ * beta_.cosine() ,
+                     a_ * b_ * gamma_.cosine(), b_ * b_                   , b_ * c_ * alpha_.cosine(),
+                     a_ * c_ * beta_.cosine() , b_ * c_ * alpha_.cosine() , c_ * c_ );
 }
 
 // ********************************************************************************
@@ -328,6 +349,93 @@ void CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & r
 
 // ********************************************************************************
 
+Matrix3D CrystalLattice::choose_angles_close_to_90() const
+{
+    Matrix3D result;
+    // TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC
+    if ( lattice_system_ == CUBIC || lattice_system_ == HEXAGONAL || lattice_system_ == TETRAGONAL || lattice_system_ == ORTHORHOMBIC )
+    {
+        std::cout << "CrystalLattice::choose_angles_close_to_90(): warning: lattice was already known to be optimal." << std::endl;
+        return result;
+    }
+    // TRICLINIC, MONOCLINIC, RHOMBOHEDRAL
+    CrystalLattice new_lattice( *this );
+ //   if ( lattice_system_ == MONOCLINIC )
+  //  {
+
+//        while ()
+//        {
+//        }
+ //   }
+    // TRICLINIC, RHOMBOHEDRAL
+
+  //  {
+        double best_orthogonality_defect = orthogonality_defect();
+        std::cout << "orthogonality defect before = " << best_orthogonality_defect << std::endl;
+        int limit = 3;
+        for ( int i1( -limit ); i1 != limit+1; ++i1 )
+        {
+        for ( int i2( -limit ); i2 != limit+1; ++i2 )
+        {
+        for ( int i3( -limit ); i3 != limit+1; ++i3 )
+        {
+            for ( int j1( -limit ); j1 != limit+1; ++j1 )
+            {
+            for ( int j2( -limit ); j2 != limit+1; ++j2 )
+            {
+            for ( int j3( -limit ); j3 != limit+1; ++j3 )
+            {
+                for ( int k1( -limit ); k1 != limit+1; ++k1 )
+                {
+                for ( int k2( -limit ); k2 != limit+1; ++k2 )
+                {
+                for ( int k3( -limit ); k3 != limit+1; ++k3 )
+                {
+                    // Make a copy.
+                    CrystalLattice new_lattice( *this );
+                    // Transform.
+                    Matrix3D transformation_matrix( i1, i2, i3, j1, j2, j3, k1, k2, k3 );
+                    if ( ! nearly_equal( transformation_matrix.determinant(), 1.0 ) )
+                        continue;
+                    new_lattice.transform( transformation_matrix );
+                    if ( new_lattice.orthogonality_defect() < best_orthogonality_defect )
+                    {
+                        result = transformation_matrix;
+                        best_orthogonality_defect = new_lattice.orthogonality_defect();
+                    }
+                }
+                }
+                }
+            }
+            }
+            }
+        }
+        }
+        }
+
+//        std::vector< double > unit_cell_lengths;
+//        unit_cell_lengths.push_back( new_lattice.a() );
+//        unit_cell_lengths.push_back( new_lattice.b() );
+//        unit_cell_lengths.push_back( new_lattice.c() );
+//        Mapping sorted_map = sort( unit_cell_lengths );
+//        Vector3D r_s = new_lattice.lattice_vector( sorted_map[0] ); // s = short
+//        Vector3D r_l = new_lattice.lattice_vector( sorted_map[2] ); // l = long
+//        double omega = ( r_l * r_s ) / ( r_s * r_s ); // r_s*r_s is just a^2, b^2 or c^2.
+//        int nomegas = round_to_int( omega );
+//        if ( nomegas != 0 )
+//        {
+//            Matrix3D transformation_matrix; // Identity.
+//            transformation_matrix.set_value( sorted_map[2], sorted_map[0], -nomegas );
+//            result = transformation_matrix * result;
+//            new_lattice.transform( transformation_matrix );
+//        }
+//    }
+    std::cout << "orthogonality defect after = " << best_orthogonality_defect << std::endl;
+    return result;
+}
+
+// ********************************************************************************
+
 void CrystalLattice::transform( const Matrix3D & m )
 {
     // In practice, the elements of the transformation matrix will be integers like 0, -1, 1 and it would be cleaner
@@ -368,34 +476,37 @@ void CrystalLattice::show() const
 
 CrystalLattice::LatticeSystem deduce_lattice_system( const CrystalLattice & crystal_lattice )
 {
-    bool angles_equal = nearly_equal( crystal_lattice.alpha(), crystal_lattice.beta() ) && nearly_equal( crystal_lattice.alpha(), crystal_lattice.gamma() );
+    bool angles_equal = triquality( crystal_lattice.alpha(), crystal_lattice.beta(), crystal_lattice.gamma() );
     bool ab_equal = nearly_equal( crystal_lattice.a(), crystal_lattice.b() );
-    bool alpha_is_90 = nearly_equal( crystal_lattice.alpha(), Angle::angle_90_degrees() );
+    bool alpha_is_90 = crystal_lattice.alpha().nearly_90();
 // { TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC }
     if ( angles_equal )
     {
+        bool lengths_equal = triquality( crystal_lattice.a(), crystal_lattice.b(), crystal_lattice.c() );
         if ( alpha_is_90 )
         {
-            if ( ab_equal )
-            {
-                if ( nearly_equal( crystal_lattice.a(), crystal_lattice.c() ) )
-                    return CrystalLattice::CUBIC;
-                return CrystalLattice::TETRAGONAL;
-            }
-            return CrystalLattice::ORTHORHOMBIC;
+            if ( lengths_equal )
+                return CrystalLattice::CUBIC;
+            if ( ! ab_equal )
+                return CrystalLattice::ORTHORHOMBIC;
+            return CrystalLattice::TETRAGONAL;
         }
-        else if ( ab_equal && nearly_equal( crystal_lattice.a(), crystal_lattice.c() ) )
+        else if ( lengths_equal )
             return CrystalLattice::RHOMBOHEDRAL;
         std::cout << "deduce_lattice_system( CrystalLattice & ): Warning: angles are all equal, but system is monoclinic or triclinic." << std::endl;
     }
 // { TRICLINIC, MONOCLINIC, TRIGONAL, HEXAGONAL }
-    bool beta_is_90  = nearly_equal( crystal_lattice.beta() , Angle::angle_90_degrees() );
+    bool beta_is_90  = crystal_lattice.beta().nearly_90();
     if ( ab_equal && alpha_is_90 && beta_is_90 && nearly_equal( crystal_lattice.gamma(), Angle::angle_120_degrees() ) )
         return CrystalLattice::HEXAGONAL;
-    bool gamma_is_90 = nearly_equal( crystal_lattice.gamma(), Angle::angle_90_degrees() );
+    bool gamma_is_90 = crystal_lattice.gamma().nearly_90();
 // { TRICLINIC, MONOCLINIC }
-    if ( ( alpha_is_90 && beta_is_90 ) || ( alpha_is_90 && gamma_is_90 ) || ( beta_is_90 && gamma_is_90 ) )
-        return CrystalLattice::MONOCLINIC;
+    if ( beta_is_90 && gamma_is_90 )
+        return CrystalLattice::MONOCLINIC_A;
+    if ( alpha_is_90 && gamma_is_90 )
+        return CrystalLattice::MONOCLINIC_B;
+    if ( alpha_is_90 && beta_is_90 )
+        return CrystalLattice::MONOCLINIC_C;
 // { TRICLINIC }
     return CrystalLattice::TRICLINIC;
 }
@@ -407,7 +518,9 @@ std::string LatticeSystem2string( const CrystalLattice::LatticeSystem lattice_sy
     switch ( lattice_system )
     {
         case CrystalLattice::TRICLINIC    : return "Triclinic";
-        case CrystalLattice::MONOCLINIC   : return "Monoclinic";
+        case CrystalLattice::MONOCLINIC_A : return "Monoclinic";
+        case CrystalLattice::MONOCLINIC_B : return "Monoclinic";
+        case CrystalLattice::MONOCLINIC_C : return "Monoclinic";
         case CrystalLattice::ORTHORHOMBIC : return "Orthorhombic";
         case CrystalLattice::TRIGONAL     : return "Trigonal";
         case CrystalLattice::TETRAGONAL   : return "Tetragonal";

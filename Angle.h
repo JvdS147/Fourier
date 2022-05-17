@@ -31,6 +31,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <iosfwd>
 
+class Angle;
+
+inline Angle absolute( const Angle angle );
+
 const double CONSTANT_PI = 4.0*atan(1.0);
 
 const double degrees2radians = CONSTANT_PI / 180.0;
@@ -76,6 +80,9 @@ public:
 
     double value_in_radians() const { return angle_; }
     double value_in_degrees() const { return angle_ * radians2degrees; }
+
+    bool nearly_zero( const Angle tolerance = Angle::from_radians( 0.000001 ) ) const { return ::absolute( *this ) < tolerance; }
+    bool nearly_90( const Angle tolerance = Angle::from_radians( 0.000001 ) ) const { return ::absolute( *this - angle_90_degrees() ) < tolerance; }
 
     Angle operator+( const Angle rhs ) const { return Angle(*this) += rhs; }
     Angle operator-( const Angle rhs ) const { return Angle(*this) -= rhs; }
@@ -164,6 +171,8 @@ inline bool nearly_equal( const Angle lhs, const Angle rhs, const Angle toleranc
 {
     return ( absolute( rhs - lhs ) < tolerance );
 }
+
+bool triquality( const Angle x1, const Angle x2, const Angle x3, const Angle tolerance = Angle::from_radians( 0.000001 ) );
 
 #endif // ANGLE_H
 
