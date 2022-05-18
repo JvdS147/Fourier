@@ -63,5 +63,21 @@ void test_crystal_structure( TestSuite & test_suite )
     crystal_structure.reduce_to_asymmetric_unit();
     test_suite.test_equality( crystal_structure.natoms(), static_cast<size_t>(1), "CrystalStructure::reduce_to_asymmetric_unit() : Error 2." );
     }
+    {
+    CrystalStructure crystal_structure;
+    CrystalLattice crystal_lattice( 13.173, 51.417, 6.4553, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
+    crystal_structure.set_crystal_lattice( crystal_lattice );
+    SpaceGroup space_group;
+    Centring centring( "F" );
+    space_group.add_centring( centring );
+    crystal_structure.set_space_group( space_group );
+    crystal_structure.reduce_to_primitive();
+    test_suite.test_equality_double( crystal_structure.crystal_lattice().orthogonality_defect(), 4.6142, "CrystalStructure::choose_angles_close_to_90() : Error 1.", 0.0001 );
+    Matrix3D transformation_matrix = crystal_structure.crystal_lattice().choose_angles_close_to_90();
+    crystal_structure.transform( transformation_matrix );
+    crystal_structure.crystal_lattice().show();
+    test_suite.test_equality_double( crystal_structure.crystal_lattice().orthogonality_defect(), 1.12236, "CrystalStructure::choose_angles_close_to_90() : Error 2.", 0.0001 );
+    }
+
 }
 

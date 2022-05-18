@@ -710,7 +710,7 @@ void add_centring_to_space_group_after_transformation( Matrix3D tranformation_ma
     }
     if ( centring_vectors.size() != D )
         throw std::runtime_error( "add_centring_to_space_group_after_transformation() : centring_vectors.size() != D." );
-    space_group.add_centring_vectors( Centring( centring_vectors ) );
+    space_group.add_centring( Centring( centring_vectors ) );
 }
 
 // ********************************************************************************

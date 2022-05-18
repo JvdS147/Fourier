@@ -68,7 +68,7 @@ public:
     void add_inversion_at_origin();
 
     // Allows quick building of space groups
-    void add_centring_vectors( const Centring & centring );
+    void add_centring( const Centring & centring );
 
     size_t nsymmetry_operators() const { return symmetry_operators_.size(); }
 

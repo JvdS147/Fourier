@@ -112,28 +112,46 @@ Centring::Centring( std::string centring_name )
         throw std::runtime_error( "Centring::Centring( std::string ): cannot construct unknown centring with this constructor." );
     centring_vectors_.push_back( Vector3D() );
     if ( centring_name == "P" )
-        return;
-    if ( centring_name == "A" )
+        centring_type_ = P;
+    else if ( centring_name == "A" )
+    {
         centring_vectors_.push_back( Vector3D( 0.0, 0.5, 0.5 ) );
+        centring_type_ = A;
+    }
     else if ( centring_name == "B" )
+    {
         centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.5 ) );
+        centring_type_ = B;
+    }
     else if ( centring_name == "C" )
+    {
         centring_vectors_.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
+        centring_type_ = C;
+    }
     else if ( centring_name == "D" )
     {
         centring_vectors_.push_back( Vector3D( 1.0/3.0, 1.0/3.0, 1.0/3.0 ) );
         centring_vectors_.push_back( Vector3D( 2.0/3.0, 2.0/3.0, 2.0/3.0 ) );
+        centring_type_ = D;
     }
-    else if ( centring_name == "R" )
+    else if ( ( centring_name == "R_OBVERSE" ) || ( centring_name == "R" ) )
     {
         centring_vectors_.push_back( Vector3D( 2.0/3.0, 1.0/3.0, 1.0/3.0 ) );
         centring_vectors_.push_back( Vector3D( 1.0/3.0, 2.0/3.0, 2.0/3.0 ) );
+        centring_type_ = R_OBVERSE;
+    }
+    else if ( centring_name == "R_REVERSE" )
+    {
+        centring_vectors_.push_back( Vector3D( 1.0/3.0, 2.0/3.0, 1.0/3.0 ) );
+        centring_vectors_.push_back( Vector3D( 2.0/3.0, 1.0/3.0, 2.0/3.0 ) );
+        centring_type_ = R_REVERSE;
     }
     else if ( centring_name == "F" )
     {
         centring_vectors_.push_back( Vector3D( 0.0, 0.5, 0.5 ) );
         centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.5 ) );
         centring_vectors_.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
+        centring_type_ = F;
     }
     else if ( centring_name == "J" )
     {
@@ -143,6 +161,7 @@ Centring::Centring( std::string centring_name )
         centring_vectors_.push_back( Vector3D( 0.4, 0.0, 0.0 ) );
         centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.0 ) );
         centring_vectors_.push_back( Vector3D( 0.6, 0.0, 0.0 ) );
+        centring_type_ = J;
     }
     else
         throw std::runtime_error( "Centring::Centring( std::string ): centring name not recognised." );

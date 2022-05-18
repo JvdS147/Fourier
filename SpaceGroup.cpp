@@ -86,10 +86,7 @@ SpaceGroup SpaceGroup::C2c()
     symmetry_operators.push_back( SymmetryOperator( std::string( "x,y,z" ) ) );
     symmetry_operators.push_back( SymmetryOperator( std::string( "-x,y,1/2-z" ) ) );
     SpaceGroup result( symmetry_operators, "C2/c" );
-    std::vector< Vector3D > centring_vectors;
-    centring_vectors.push_back( Vector3D() );
-    centring_vectors.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
-    result.add_centring_vectors( Centring( centring_vectors ) );
+    result.add_centring( Centring( "C" ) );
     result.add_inversion_at_origin();
     return result;
 }
@@ -119,20 +116,20 @@ void SpaceGroup::add_inversion_at_origin()
 
 // ********************************************************************************
 
-void SpaceGroup::add_centring_vectors( const Centring & centring )
+void SpaceGroup::add_centring( const Centring & centring )
 {
     if ( centring_.size() != 1 )
-        std::cout << "SpaceGroup::add_centring_vectors(): warning you are adding centring vectors to a space group that already has centring vectors." << std::endl;
+        std::cout << "SpaceGroup::add_centring(): warning you are adding centring vectors to a space group that already has centring vectors." << std::endl;
     if ( centring.size() == 1 )
     {
-        std::cout << "SpaceGroup::add_centring_vectors(): warning you are adding the zero vector, will not add it again." << std::endl;
+        std::cout << "SpaceGroup::add_centring(): warning you are adding the zero vector, will not add it again." << std::endl;
         return;
     }
     std::vector< Vector3D > centring_vectors = centring.centring_vectors();
     for ( size_t i( 1 ); i != centring_vectors.size(); ++i )
     {
         if ( centring_.contains( centring_vectors[i] ) )
-            throw std::runtime_error( "SpaceGroup::add_centring_vectors(): the centring vector you are adding is already present." );
+            throw std::runtime_error( "SpaceGroup::add_centring(): the centring vector you are adding is already present." );
     }
     std::vector< SymmetryOperator > symmetry_operators;
     symmetry_operators.reserve( symmetry_operators_.size() * centring_vectors.size() );
@@ -167,6 +164,8 @@ bool SpaceGroup::contains_non_standard_symmetry_operator() const
         if ( symmetry_operators_[i].is_non_standard_symmetry_operator() )
             return true;
     }
+    if ( centring_.centring_type() == Centring::U )
+        return true;
     return false;
 }
 

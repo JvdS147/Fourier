@@ -222,11 +222,17 @@ public:
         AnisotropicDisplacementParameters adps = AnisotropicDisplacementParameters( U_cif );
         size_t i = crystal_structure.find_label( words[label_index_] );
         if ( i == crystal_structure.natoms() )
-            throw std::runtime_error( "read_cif(): atom not found." );
-        Atom new_atom = crystal_structure.atom( i );
-        // Check if the atom already has ADPs?
-        new_atom.set_anisotropic_displacement_parameters( adps );
-        crystal_structure.set_atom( i, new_atom );
+        {
+            std::cout << "read_cif(): warning: atom " + words[label_index_] + " is in aniso list but not in the list of atoms." << std::endl;
+    //        throw std::runtime_error( "read_cif(): atom " + words[label_index_] + " is in aniso list but not in the list of atoms." );
+        }
+        else
+        {
+            Atom new_atom = crystal_structure.atom( i );
+            // Check if the atom already has ADPs?
+            new_atom.set_anisotropic_displacement_parameters( adps );
+            crystal_structure.set_atom( i, new_atom );
+        }
     }
 
 private:

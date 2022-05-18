@@ -628,8 +628,8 @@ void PowderPattern::convert_to_fixed_slit()
 {
     for ( size_t i( 0 ); i != size(); ++i )
     {
-        intensities_[i] = intensities_[i] / ( two_theta_values_[i] / 2.0 ).sine(); // @@ We should check for divide by zero
-        estimated_standard_deviations_[i] = estimated_standard_deviations_[i] / ( two_theta_values_[i] / 2.0 ).sine();
+        intensities_[i] /= ( two_theta_values_[i] / 2.0 ).sine(); // @@ We should check for divide by zero
+        estimated_standard_deviations_[i] /= ( two_theta_values_[i] / 2.0 ).sine();
     }
 }
 
@@ -640,8 +640,8 @@ void PowderPattern::convert_to_variable_slit()
 {
     for ( size_t i( 0 ); i != size(); ++i )
     {
-        intensities_[i] = intensities_[i] * ( two_theta_values_[i] / 2.0 ).sine();
-        estimated_standard_deviations_[i] = estimated_standard_deviations_[i] * ( two_theta_values_[i] / 2.0 ).sine();
+        intensities_[i] *= ( two_theta_values_[i] / 2.0 ).sine();
+        estimated_standard_deviations_[i] *= ( two_theta_values_[i] / 2.0 ).sine();
     }
 }
 
