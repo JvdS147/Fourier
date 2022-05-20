@@ -655,7 +655,9 @@ Matrix3D centred_to_primitive( const Centring & centring )
     if ( centring.centring_type() == Centring::U )
         throw std::runtime_error( "centred_to_primitive( Centring ): error: no transformation matrix for centring U." );
     if ( centring.centring_type() == Centring::J )
-        throw std::runtime_error( "centred_to_primitive( Centring ): centring J not yet implemented." );
+        return Matrix3D(  0.1,  0.0,  0.0,
+                          0.0,  0.1,  0.0,
+                          0.0,  0.0,  0.1 );
     throw std::runtime_error( "centred_to_primitive( Centring ): centring not yet implemented." );
 }
 

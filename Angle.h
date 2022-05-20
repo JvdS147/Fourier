@@ -167,6 +167,26 @@ inline Angle operator*( const double lhs, const Angle rhs ) { return Angle::from
 
 inline Angle ATAN2( const double y, const double x ) { return Angle::from_radians( atan2( y, x ) ); }
 
+// To calculate the average of four values:
+// Angle average = average( value_1, value_2 );
+// average = average( value_3, average, 2.0 );
+// average = average( value_4, average, 3.0 );
+// Even this works:
+//    Angle prev_estimate; // No need to initialise...
+//    Angle next_estimate; // No need to initialise...
+//    size_t iStep( 0 );
+//    while ( iStep < 1000000 )
+//    {
+//        prev_estimate = next_estimate;
+//        Angle current_value = some_function();
+//        next_estimate = average( current_value, prev_estimate, iStep );
+//        ++iStep;
+//    }
+inline Angle average( const Angle lhs, const Angle rhs, const double weight = 1.0 )
+{
+    return ( lhs + weight * rhs ) / ( 1.0 + weight );
+}
+
 inline bool nearly_equal( const Angle lhs, const Angle rhs, const Angle tolerance = Angle::from_radians( 0.000001 ) )
 {
     return ( absolute( rhs - lhs ) < tolerance );

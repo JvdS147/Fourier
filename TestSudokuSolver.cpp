@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "SudokuSolver.h"
+#include "Sudoku.h"
 
 #include "TestSuite.h"
 
@@ -36,8 +37,23 @@ void test_SudokuSolver( TestSuite & test_suite )
     std::cout << "Now running tests for SudokuSolver." << std::endl;
 
     {
- //   SudokuSolver dummy();
- //   test_suite.test_equality( dummy, , "SudokuSolver()" );
+        // Toughest
+        std::vector< std::string > sudoku_string;
+        sudoku_string.push_back( "800000000" );
+        sudoku_string.push_back( "003600000" );
+        sudoku_string.push_back( "070090200" );
+        sudoku_string.push_back( "050007000" );
+        sudoku_string.push_back( "000045700" );
+        sudoku_string.push_back( "000100030" );
+        sudoku_string.push_back( "001000068" );
+        sudoku_string.push_back( "008500010" );
+        sudoku_string.push_back( "090000400" );
+        Sudoku sudoku( sudoku_string );
+        Sudoku solved_sudoku = solve( sudoku );
+        test_suite.test_equality( solved_sudoku.row( 0 ).square( 1 ).value(), 1, "SudokuSolver: ." );
+        test_suite.test_equality( solved_sudoku.row( 0 ).square( 2 ).value(), 2, "SudokuSolver: ." );
+        test_suite.test_equality( solved_sudoku.row( 0 ).square( 3 ).value(), 7, "SudokuSolver: ." );
+        test_suite.test_equality( solved_sudoku.row( 0 ).square( 4 ).value(), 5, "SudokuSolver: ." );
     }
 
 }

@@ -95,7 +95,7 @@ Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_
         if ( contains( Vector3D( 0.0, 0.5, 0.5 ) ) && contains( Vector3D( 0.5, 0.0, 0.5 ) ) && contains( Vector3D( 0.5, 0.5, 0.0 ) ) )
             centring_type_ = F;
     }
-    else if ( centring_vectors_.size() == 7 ) // J-centred
+    else if ( centring_vectors_.size() == 1000 ) // J-centred
         centring_type_ = J;
 }
 
@@ -110,6 +110,22 @@ Centring::Centring( std::string centring_name )
     }
     if ( centring_name == "U" )
         throw std::runtime_error( "Centring::Centring( std::string ): cannot construct unknown centring with this constructor." );
+    if ( centring_name == "J" )
+    {
+        centring_vectors_.reserve( 1000 );
+        for ( size_t i1( 0 ); i1 != 10; ++i1 )
+        {
+            for ( size_t i2( 0 ); i2 != 10; ++i2 )
+            {
+                for ( size_t i3( 0 ); i3 != 10; ++i3 )
+                {
+                    centring_vectors_.push_back( Vector3D( i1/10.0, i2/10.0, i3/10.0 ) );
+                }
+            }
+        }
+        centring_type_ = J;
+        return;
+    }
     centring_vectors_.push_back( Vector3D() );
     if ( centring_name == "P" )
         centring_type_ = P;
@@ -152,16 +168,6 @@ Centring::Centring( std::string centring_name )
         centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.5 ) );
         centring_vectors_.push_back( Vector3D( 0.5, 0.5, 0.0 ) );
         centring_type_ = F;
-    }
-    else if ( centring_name == "J" )
-    {
-        centring_vectors_.push_back( Vector3D( 0.1, 0.0, 0.0 ) );
-        centring_vectors_.push_back( Vector3D( 0.2, 0.0, 0.0 ) );
-        centring_vectors_.push_back( Vector3D( 0.3, 0.0, 0.0 ) );
-        centring_vectors_.push_back( Vector3D( 0.4, 0.0, 0.0 ) );
-        centring_vectors_.push_back( Vector3D( 0.5, 0.0, 0.0 ) );
-        centring_vectors_.push_back( Vector3D( 0.6, 0.0, 0.0 ) );
-        centring_type_ = J;
     }
     else
         throw std::runtime_error( "Centring::Centring( std::string ): centring name not recognised." );

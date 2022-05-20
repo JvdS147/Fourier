@@ -47,11 +47,11 @@ public:
 
     // Default constructor
     Sudoku();
-    
+
     Sudoku( const std::vector< std::string > & rows );
 
     static size_t number_of_slices() { return 27; }
-    
+
     OneSudokuSlice slice( const size_t i ) const;
 
     // 0 based
@@ -64,9 +64,9 @@ public:
     OneSudokuSlice block( const size_t i ) const;
 
     size_t nsquares() const { return values_.size(); }
-    
+
     OneSudokuSquare square( const size_t index ) const { return values_[index]; }
-    
+
     // Could be called set_square(), I guess    
     bool update_square( const size_t i, OneSudokuSquare square );
 
@@ -75,10 +75,10 @@ public:
 
     // Consistency checking is performed
     void update_slice( const OneSudokuSlice & slice );
-    
+
     // i is the index of the square
     bool unset( const size_t i, const size_t value );
-    
+
     size_t number_of_trans_square_dependencies() const { return 54; }
 
     TransSquareDependency next_trans_square_dependency();
@@ -87,9 +87,9 @@ public:
     void update_trans_square_dependency( const TransSquareDependency & tsd );
 
     bool solved() const;
-    
+
     bool there_are_contradictions() const;
-    
+
     // Returns the three slices that contain this quare
     // index 0 is ROW, index 1 is COLUMN and index 2 is SQUARE
     static std::vector< size_t > square2slices( const size_t square_index );
@@ -97,15 +97,15 @@ public:
     void show() const;
 
     void show_statistics() const;
-    
+
     static void initialise_trans_square_dependency_mappings();
 
 private:
-    
+
     std::vector< OneSudokuSquare > values_;
     CyclicInteger current_slice_;
     CyclicInteger current_trans_square_dependency_;
-    
+
     OneSudokuSlice::SudokuSliceType slice_id2type( const size_t i ) const;
     std::vector< OneSudokuSquare > get_slice_values( const size_t i ) const;
 };

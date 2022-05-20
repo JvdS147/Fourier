@@ -567,32 +567,19 @@ Matrix3D CrystalLattice::Downs_G_star() const
 
 // ********************************************************************************
 
-CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs )
+CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs, const double weight )
 {
-    if ( ! nearly_equal( lhs, rhs ) )
-        std::cout << "average( CrystalLattice, CrystalLattice ): warning: lattices differ."<< std::endl;
-    return CrystalLattice( ( lhs.a() + rhs.a() ) / 2.0,
-                           ( lhs.b() + rhs.b() ) / 2.0,
-                           ( lhs.c() + rhs.c() ) / 2.0,
-                           ( lhs.alpha() + rhs.alpha() ) / 2.0,
-                           ( lhs.beta()  + rhs.beta()  ) / 2.0,
-                           ( lhs.gamma() + rhs.gamma() ) / 2.0 );
-}
-
-// ********************************************************************************
-
-CrystalLattice average( const CrystalLattice & cl_1, const CrystalLattice & cl_2, const CrystalLattice & cl_3 )
-{
-    if ( ! ( nearly_equal( cl_1, cl_2 ) &&
-             nearly_equal( cl_1, cl_3 ) &&
-             nearly_equal( cl_2, cl_3 ) ) )
-        std::cout << "average( CrystalLattice, CrystalLattice ): warning: lattices differ."<< std::endl;
-    return CrystalLattice( ( cl_1.a() + cl_2.a() + cl_3.a() ) / 3.0,
-                           ( cl_1.b() + cl_2.b() + cl_3.b() ) / 3.0,
-                           ( cl_1.c() + cl_2.c() + cl_3.c() ) / 3.0,
-                           ( cl_1.alpha() + cl_2.alpha() + cl_3.alpha() ) / 3.0,
-                           ( cl_1.beta()  + cl_2.beta()  + cl_3.beta()  ) / 3.0,
-                           ( cl_1.gamma() + cl_2.gamma() + cl_3.gamma() ) / 3.0 );
+    if ( ! nearly_integer( weight ) )
+        std::cout << "average(): warning: weight is not an integer, is that intended?" << std::endl;
+    CrystalLattice result( average( lhs.a(), rhs.a(), weight ),
+                           average( lhs.b(), rhs.b(), weight ),
+                           average( lhs.c(), rhs.c(), weight ),
+                           average( lhs.alpha(), rhs.alpha(), weight ),
+                           average( lhs.beta() , rhs.beta() , weight ),
+                           average( lhs.gamma(), rhs.gamma(), weight ) );
+    if ( ! nearly_equal( lhs, result ) )
+        std::cout << "average( CrystalLattice, CrystalLattice, double ): warning: lattices differ."<< std::endl;
+    return result;
 }
 
 // ********************************************************************************

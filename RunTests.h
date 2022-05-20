@@ -53,6 +53,7 @@ void test_quaternion( TestSuite & test_suite );
 void test_ReadCell( TestSuite & test_suite );
 void test_sort( TestSuite & test_suite );
 void test_space_group( TestSuite & test_suite );
+void test_SudokuSolver( TestSuite & test_suite );
 void test_TextFileReader_2( TestSuite & test_suite );
 void test_TLS_ADPs( TestSuite & test_suite );
 void test_utilities( TestSuite & test_suite );

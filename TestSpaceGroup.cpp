@@ -37,6 +37,7 @@ void test_space_group( TestSuite & test_suite )
     std::cout << "Now running tests for SpaceGroup." << std::endl;
     {
     std::vector< SymmetryOperator > symmetry_operators;
+    symmetry_operators.push_back( SymmetryOperator() );
     SpaceGroup space_group( symmetry_operators );
     
     }

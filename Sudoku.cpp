@@ -35,24 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdexcept>
 #include <iostream>
 
-namespace {
-
-// ********************************************************************************
-
-// For debugging
-void show( const std::vector< size_t > & values )
-{
-    std::cout << "vector< size_t > = ";
-    for ( size_t i( 0 ); i != values.size(); ++i )
-    {
-        std::cout << values[i] << " ";
-    }
-    std::cout << std::endl;
-}
-
-// ********************************************************************************
-} // namespace
-
 static const size_t sudoku_slice_mapping[27][9] =
                    {
                        {  0,  1,  2,  3,  4,  5,  6,  7,  8 },
@@ -306,29 +288,6 @@ void Sudoku::update_slice( const OneSudokuSlice & slice )
         throw std::runtime_error( "Sudoku::update_slice( OneSudokuSlice ): slice should have size() == 9." );    
     for ( size_t i( 0 ); i != slice.size(); ++i )
         update_square( sudoku_slice_mapping[slice.id()][i], slice.square( i ) );
-        
-//    // Check if one value is possible in only one unsolved square
-//    OneSudokuSlice slice_2 = this->slice( slice.id() );
-//    std::vector< size_t > unsolved_squares_indices = slice_2.indices_of_unsolved_squares();
-//    SetOfNumbers set_of_numbers;
-//    for ( size_t i( 0 ); i != unsolved_squares_indices.size(); ++i )
-//        set_of_numbers.add( SetOfNumbers( slice_2.square( unsolved_squares_indices[i] ).values() ) );
-//    SetOfNumbers unique_values = set_of_numbers.unique_values();
-//    for ( size_t i( 0 ); i != unique_values.size(); ++i )
-//    {
-//        if ( set_of_numbers.frequency( unique_values.value( i ) ) == 1 )
-//        {
-//            for ( size_t j( 0 ); j != unsolved_squares_indices.size(); ++j )
-//            {
-//                if ( slice_2.square( unsolved_squares_indices[j] ).contains( unique_values.value( i ) ) )
-//                {
-//                    update_square( sudoku_slice_mapping[slice.id()][unsolved_squares_indices[j]], OneSudokuSquare( unique_values.value( i ) ) );
-//                    break;
-//                }
-//            }
-//        }
-//    }
-    
 }
 
 // ********************************************************************************

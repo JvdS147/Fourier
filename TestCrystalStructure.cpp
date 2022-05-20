@@ -75,7 +75,7 @@ void test_crystal_structure( TestSuite & test_suite )
     test_suite.test_equality_double( crystal_structure.crystal_lattice().orthogonality_defect(), 4.6142, "CrystalStructure::choose_angles_close_to_90() : Error 1.", 0.0001 );
     Matrix3D transformation_matrix = crystal_structure.crystal_lattice().choose_angles_close_to_90();
     crystal_structure.transform( transformation_matrix );
-    crystal_structure.crystal_lattice().show();
+    crystal_structure.crystal_lattice().print();
     test_suite.test_equality_double( crystal_structure.crystal_lattice().orthogonality_defect(), 1.12236, "CrystalStructure::choose_angles_close_to_90() : Error 2.", 0.0001 );
     }
 

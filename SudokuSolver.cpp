@@ -58,10 +58,10 @@ bool contains( const std::vector< size_t > & values, const size_t target )
 bool check_if_we_are_the_only_possibility( OneSudokuSlice & slice )
 {
     bool something_changed_on_first_pass( false );
-    bool something_changed( true );
+ //   bool something_changed( true );
  //   while ( something_changed ) // @@ Using this causes errors, I do not understand why
     {
-        something_changed = false;
+  //      something_changed = false;
         
         // If there are N (or more) numbers with a frequency of N, and they are in the same N squares, regardless of what else is in those squares,
         // those N numbers cannot be anywhere else, and those N squares can only contain those N numbers. E.g. | 12 | 129 | with no other squares with 1 or 2.
@@ -122,7 +122,7 @@ bool check_if_we_are_the_only_possibility( OneSudokuSlice & slice )
                                     {
                                         slice.set_square( unsolved_squares_indices[i], isolated_values );
                                         something_changed_on_first_pass = true;
-                                        something_changed = true;
+                        //                something_changed = true;
             //                            std::cout << "2. We did something for N = " << N << ", slice ID = " << slice.id() << ", values are ";
             //                            isolated_values.show();
             //                            std::cout << std::endl;
@@ -164,7 +164,7 @@ bool check_if_we_are_the_only_possibility( OneSudokuSlice & slice )
                         {
                             slice.set_square( i, square );
                             something_changed_on_first_pass = true;
-                            something_changed = true;
+                  //          something_changed = true;
         //                    std::cout << "3. We did something for N = " << N << ", slice ID = " << slice.id() << ", values are ";
         //                    merged.show();
         //                    std::cout << std::endl;
@@ -780,9 +780,9 @@ Sudoku solve( const Sudoku & sudoku )
         }
         
         // When we are here, there are three options:
-        // 1. the sudoku is solved
-        // 2. The is not solved, but there are no errors or contradictions
-        // 3. the sudoku has errors / contradictions
+        // 1. The sudoku is solved
+        // 2. The sudoku is not solved, but there are no errors or contradictions
+        // 3. The sudoku has errors / contradictions
         if ( error_caught || ( ! result.solved() ) || result.there_are_contradictions() )
         {
             ++nguesses;

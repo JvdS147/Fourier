@@ -42,6 +42,8 @@ class CrystalLattice
 {
 public:
 
+    enum LatticeSystem { TRICLINIC, MONOCLINIC_A, MONOCLINIC_B, MONOCLINIC_C, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC };
+
     CrystalLattice();
 
     CrystalLattice( const double a,
@@ -115,8 +117,6 @@ public:
     // Returns the shortest distance (in Angstrom) and the shortest difference vector (defined as rhs - lhs, in fractional coordinates).
     void shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & distance, Vector3D & difference_vector ) const;
 
-    enum LatticeSystem { TRICLINIC, MONOCLINIC_A, MONOCLINIC_B, MONOCLINIC_C, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC };
-
     // The lattice system is initialised by deducing it from the unit-cell parameters
     LatticeSystem lattice_system() const { return lattice_system_; }
     void set_lattice_system( const LatticeSystem lattice_system ) { lattice_system_ = lattice_system; }
@@ -174,12 +174,22 @@ CrystalLattice::LatticeSystem deduce_lattice_system( const CrystalLattice & crys
 
 std::string LatticeSystem2string( const CrystalLattice::LatticeSystem lattice_system );
 
-CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs );
-
-CrystalLattice average( const CrystalLattice & cl_1, const CrystalLattice & cl_2, const CrystalLattice & cl_3 );
-
-// This would be an alternative solution. The main question is: does the weight more naturally apply to lhs or to rhs?
-// CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs, const double weight = 1.0 );
+// To calculate the average of four values:
+// CrystalLattice average = average( value_1, value_2 );
+// average = average( value_3, average, 2.0 );
+// average = average( value_4, average, 3.0 );
+// Even this works:
+//    CrystalLattice prev_estimate; // No need to initialise...
+//    CrystalLattice next_estimate; // No need to initialise...
+//    size_t iStep( 0 );
+//    while ( iStep < 1000000 )
+//    {
+//        prev_estimate = next_estimate;
+//        CrystalLattice current_value = some_function();
+//        next_estimate = average( current_value, prev_estimate, iStep );
+//        ++iStep;
+//    }
+CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs, const double weight = 1.0 );
 
 // Length tolerance is relative, angle tolerance is absolute
 bool nearly_equal( const CrystalLattice & lhs, const CrystalLattice & rhs, double length_tolerance_percentage = 10.0, const Angle angle_tolerance = Angle::from_degrees( 10.0 ) );
