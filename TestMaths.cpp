@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 double function_01( const double x )
 {
-    return 1.0;
+    return exp( x );
 }
 
 void test_maths( TestSuite & test_suite )
@@ -60,7 +60,28 @@ void test_maths( TestSuite & test_suite )
     test_suite.test_equality_double( crystal_lattice_non_reduced.gamma().value_in_degrees(), 90.0, "test_maths() gamma" );
     }
     {
-    test_suite.test_equality_double( integral( &function_01, -1.0, 5.0, 0.1 ), 6.0, "integral 01" );
+    test_suite.test_equality_double( integral( function_01, -2.0, 1.5, 30 ), 4.35163, "integral 01", 0.00001 );
+ //   test_suite.integral_Monte_Carlo( integral( function_01, -2.0, 1.5, 30 ), 6.0, "integral 02" );
+    test_suite.test_equality_double( integral_Gauss_Legendre_quadrature( function_01, -2.0, 1.5, 30 ), 4.34635, "integral 03", 0.00001 );
+    }
+    {
+    std::vector< double > x;
+    std::vector< double > w;
+    Gauss_Legendre_quadrature( -1.0,  1.0, 3, x, w );
+    test_suite.test_equality_double( x[0], -sqrt(3.0/5.0), "Gauss_Legendre_quadrature 01" );
+    test_suite.test_equality_double( x[1],            0.0, "Gauss_Legendre_quadrature 02" );
+    test_suite.test_equality_double( x[2],  sqrt(3.0/5.0), "Gauss_Legendre_quadrature 03" );
+    test_suite.test_equality_double( w[0], 5.0/9.0, "Gauss_Legendre_quadrature 04" );
+    test_suite.test_equality_double( w[1], 8.0/9.0, "Gauss_Legendre_quadrature 05" );
+    test_suite.test_equality_double( w[2], 5.0/9.0, "Gauss_Legendre_quadrature 06" );
+    }
+    {
+        double x = -3.0/17.0;
+        double y1 = ( 231.0 * std::pow( x, 6 ) - 315.0 * std::pow( x, 4 ) + 105.0 * square( x ) - 5.0 ) / 16.0;
+        double y2;
+        double dydx;
+        Legendre_polynomial_and_derivative( 6, x, y2, dydx );
+        test_suite.test_equality_double( y1, y2, "Legendre_polynomial_and_derivative 01" );
     }
 }
 

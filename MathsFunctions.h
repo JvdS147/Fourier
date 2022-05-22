@@ -36,19 +36,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 typedef double (*Function)( const double x );
 
+// Returns the x-values and weights necessary for Gauss-Legaendre quadrature.
+// x1 is the lower limit for integration, x2 the upper limit. npoints is the number of points.
+// x contains the x values, w contains the weights
+void Gauss_Legendre_quadrature( const double x1, const double x2, const size_t npoints, std::vector< double > & x, std::vector< double > & w );
+
 double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance = TOLERANCE );
 
-double integral( const Function f, const double start, const double end, const double step_size );
+// Simple linear interpolation between sampling points.
+double integral( const Function f, const double start, const double end, const size_t npoints );
 
 // Evaluates the integral by drawing random values for x
 // This has a minor advantage that you if you want to double the number of sampling points
 // to improve the accuracy, you can simply call the function twice with the same number
 // of points and average the results. If you do that with integral(), you would
 // recalculate everything you have done before or you would need
-// sophisticated bookkeeping of what you have and have not yet done
+// sophisticated bookkeeping of what you have and have not yet done.
+// Some quick numerical tests with sin(x), exp(x) and f(x) = constant show that this is a really poor way
+// to calculate an integral and the function integral() gives vastly superior results, especially
+// if very few points (say, 10) are used.
 double integral_Monte_Carlo( const Function f, const double start, const double end, const size_t npoints );
 
-double Legendre_polynomial( const size_t order, const double cosine_theta );
+double integral_Gauss_Legendre_quadrature( const Function f, const double start, const double end, const size_t npoints );
+
+double Legendre_polynomial( const size_t order, const double x );
+void Legendre_polynomial_and_derivative( const size_t order, const double x, double & y, double & dydx );
 
 // Must return size_t, because we use recursion
 // Simplistic algorithm, will overflow very quickly.

@@ -35,6 +35,40 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ********************************************************************************
 
+// Returns the x-values and weights necessary for Gauss-Legaendre quadrature.
+// x1 is the lower limit for integration, x2 the upper limit. npoints is the number of points.
+// x contains the x values, w contains the weights
+void Gauss_Legendre_quadrature( const double x1, const double x2, const size_t npoints, std::vector< double > & x, std::vector< double > & w )
+{
+    double tolerance = 1.0e-14;
+    size_t m = (npoints+1)/2;
+    double xm = 0.5 * ( x2 + x1 );
+    double xl = 0.5 * ( x2 - x1 );
+    x = std::vector< double >( npoints, 0.0 );
+    w = std::vector< double >( npoints, 0.0 );
+    for ( size_t i( 0 ); i < m; ++i )
+    {
+        double dydx;
+        double z1;
+        // The following estimates the root. The estimate is pretty accuracte.
+        // Note that I have also seen cos( CONSTANT_PI * ( i - 0.25 ) / ( npoints + 0.5 ) ) on the internet, but that is not a good approximation at all.
+        double z = cos( CONSTANT_PI * ( i + 0.75 ) / ( npoints + 0.5 ) );
+        do
+        {
+            double y;
+            Legendre_polynomial_and_derivative( npoints, z, y, dydx );
+            z1 = z;
+            z = z1 - y/dydx;
+        } while ( absolute( z - z1 ) > tolerance );
+        x[i] = xm - xl*z;
+        x[npoints-1-i] = xm + xl*z;
+        w[i] = 2.0 * xl / ( ( 1.0 - square( z ) ) * square( dydx ) );
+        w[npoints-1-i] = w[i];
+    }
+}
+
+// ********************************************************************************
+
 double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance )
 {
     double increment( 0.01 );
@@ -60,20 +94,22 @@ double bisection( const Function f, const double target_y_value, const double in
 
 // ********************************************************************************
 
-double integral( const Function f, const double start, const double end, const double step_size )
+double integral( const Function f, const double start, const double end, const size_t npoints )
 {
-    double result( 0.0 );
-    size_t nintervals = round_to_int( ( end - start ) / step_size );
-    if ( nintervals == 0 )
-        throw std::runtime_error( "integral(): step_size too big." );
-    double interval = ( end - start ) / nintervals;
-    double lhs = f( start );
-    for ( size_t i( 0 ); i != nintervals; ++i )
-    {
-        double rhs = f( start + ( i + 1 ) * interval );
-        result += ( ( lhs + rhs ) / 2.0 ) * interval;
-        lhs = rhs;
-    }
+    if ( npoints == 0 )
+        throw std::runtime_error( "integral(): npoints == 0." );
+    // The algorithm inherently requires at the very least the two end points,
+    // so f(x) needs to be evaluated at least for x = start and x = end.
+    // So for npoints == 1 we must either throw or provide a specialised implementation.
+    // We only want to evaluate f( x ) at one point, this must be the midpoint of the interval.
+    if ( npoints == 1 )
+        return f( ( start + end ) / 2.0 ) * ( end - start);
+    double interval = ( end - start ) / ( npoints - 1.0 );
+    double result = f( start ) / 2.0;
+    for ( size_t i( 1 ); i != npoints-1; ++i )
+        result += f( start + i * interval );
+    result += f( end ) / 2.0;
+    result *= interval;
     return result;
 }
 
@@ -86,27 +122,48 @@ double integral_Monte_Carlo( const Function f, const double start, const double 
         throw std::runtime_error( "integral_Monte_Carlo(): npoints == 0." );
     double interval = ( end - start ) / npoints;
     for ( size_t i( 0 ); i != npoints; ++i )
-    {
         result += f( start + uniform_distribution_1() * ( end - start ) ) * interval;
-    }
     return result;
 }
 
 // ********************************************************************************
 
-double Legendre_polynomial( const size_t order, const double cosine_theta )
+double integral_Gauss_Legendre_quadrature( const Function f, const double start, const double end, const size_t npoints )
 {
-    switch ( order )
+    if ( npoints == 0 )
+        throw std::runtime_error( "integral_Gauss_Legendre_quadrature(): npoints == 0." );
+    std::vector< double > x;
+    std::vector< double > w;
+    Gauss_Legendre_quadrature( start, end, npoints, x, w );
+    double result = w[0] * f( x[0] );
+    for ( size_t i( 1 ); i != npoints; ++i )
+        result += w[i] * f( x[i] );
+    return result;
+}
+
+// ********************************************************************************
+
+double Legendre_polynomial( const size_t order, const double x )
+{
+    double y;
+    double dydx;
+    Legendre_polynomial_and_derivative( order, x, y, dydx );
+    return y;
+}
+
+// ********************************************************************************
+
+void Legendre_polynomial_and_derivative( const size_t order, const double x, double & y, double & dydx )
+{
+    y = 1.0;
+    double p2 = 0.0;
+    for ( size_t j( 0 ); j != order; ++j )
     {
-        case 0 : return 1.0;
-        case 1 : return cosine_theta;
-        case 2 : return (   3.0 * square( cosine_theta ) - 1.0 ) / 2.0;
-        case 3 : return (   5.0 * std::pow( cosine_theta, 3 ) -   3.0 * cosine_theta ) / 2.0;
-        case 4 : return (  35.0 * std::pow( cosine_theta, 4 ) -  30.0 * square( cosine_theta ) + 3.0 ) / 8.0;
-        case 5 : return (  63.0 * std::pow( cosine_theta, 5 ) -  70.0 * std::pow( cosine_theta, 3 ) + 15.0 * cosine_theta ) / 8.0;
-        case 6 : return ( 231.0 * std::pow( cosine_theta, 6 ) - 315.0 * std::pow( cosine_theta, 4 ) + 105.0 * square( cosine_theta ) - 5.0 ) / 16.0;
-        default : throw std::runtime_error( "Legendre_polynomial(): order not yet implemented." );
+        double p3 = p2;
+        p2 = y;
+        y = ( ( 2.0 * j + 1.0 ) * x * p2 - j * p3 ) / ( j + 1.0 );
     }
+    dydx = order * ( x * y - p2 ) / ( square( x ) - 1.0 );
 }
 
 // ********************************************************************************
