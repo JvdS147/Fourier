@@ -46,7 +46,7 @@ public:
 
     void reserve( const size_t nvalues );
 
-    // ESD is initialised to std::max( sqrt( intensity ), intensity / 100.0 )
+    // ESD is initialised to std::max( sqrt( intensity ), intensity / 100.0 ).
     void push_back( const Angle two_theta, const double intensity );
     
     void push_back( const Angle two_theta, const double intensity, const double estimated_standard_deviation );
@@ -58,10 +58,10 @@ public:
     // 2theta and intensity are recalculated as averages, the ESDs are recalculated as the square root of the sum of the squares.
     void rebin( const size_t bin_size );
 
-    // Returns the *nearest* 2theta value
+    // Returns the *nearest* 2theta value.
     size_t find_two_theta( const Angle two_theta_value ) const;
 
-    // Multiplies intensities and ESDs by factor
+    // Multiplies intensities and ESDs by factor.
     void scale( const double factor );
 
     Angle two_theta( const size_t i ) const { return two_theta_values_[i]; }
@@ -90,7 +90,7 @@ public:
     // Uses average_two_theta_step() to add new points. Intensities and ESDs are initialised to 0.0.
     void set_two_theta_end( const Angle two_theta_end ) const;
 
-    // Area under the pattern
+    // Area under the pattern.
     double cumulative_intensity() const;
 
     void read_xye( const FileName & file_name );
@@ -116,7 +116,7 @@ public:
     // Returns the scale factor.
     double normalise_total_signal( const double total_signal = 10000 );
 
-    // Simply subtracts the value from each 2theta value
+    // Simply subtracts the value from each 2theta value.
     void correct_zero_point_error( const Angle two_theta_value );
 
     // ESD is initialised to std::max( sqrt( intensity ), intensity / 100.0 ), or to 4.4 if intensity < 20.
@@ -149,17 +149,17 @@ private:
     std::vector< double > estimated_standard_deviations_;
 };
 
-// Assumes uniform 2theta step size
+// Assumes uniform 2theta step size.
 bool same_range( const PowderPattern & lhs, const PowderPattern & rhs );
 
 // This is NOT Rene de Gelder's normalised weighted cross correlation!
 // normalised_weighted_cross_correlation( A, B ) =  weighted_cross_correlation( A, B ) / sqrt( weighted_cross_correlation( A, A ) * weighted_cross_correlation( B, B ) )
 // This function is only public to enable speeding up the calculation of multiple weighted cross correlation functions (which would all need the same normalisation constants)
-// Assumes uniform 2theta step size
+// Assumes uniform 2theta step size.
 double weighted_cross_correlation( const PowderPattern & lhs, const PowderPattern & rhs, Angle l = Angle( 3.0, Angle::DEGREES ) );
 
-// Because powder patterns are always positive, returns a value between 0.0 and 1.0
-// Assumes uniform 2theta step size
+// Because powder patterns are always positive, returns a value between 0.0 and 1.0.
+// Assumes uniform 2theta step size.
 double normalised_weighted_cross_correlation( const PowderPattern & lhs, const PowderPattern & rhs, Angle l = Angle( 3.0, Angle::DEGREES ) );
 
 // The first pattern is supposed to be the experimental pattern, and its ESDs are used as "the" weights. The ESDs of the second pattern are ignored.
@@ -172,14 +172,18 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
                                               const bool apply_smoothing,
                                               const size_t smoothing_window );
 
-// It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
+// It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0.
 // For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
 // makes all points of the pattern behave as Gaussian.
 // Note that Poisson noise is only defined for positive integer values, so the noise consists of integers.
 // The noise can be positive or negative. ESDs are set to 0.0.
+// @@ I guess this should just return a std::vector< double > but I probably did not do that because we have an
+// @@ PowderPattern & operator+=( const PowderPattern & rhs );
+// @@ but we do not have an
+// @@ PowderPattern & operator+=( const std::vector< double > & rhs );
 PowderPattern calculate_Poisson_noise( const PowderPattern & powder_pattern );
 
-// Useful for Variable Count Time schemes
+// Useful for Variable Count Time schemes.
 // The 2theta values must currently be the same.
 // @@ Currently does not allow the "monitor" to be passed, so only suitable for laboratory data.
 // For each powder pattern the "number of seconds counted per 2theta step" (noscp2ts) must be provided to allow the intensities to be put onto the same scale.

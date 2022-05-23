@@ -718,12 +718,11 @@ Sudoku solve( const Sudoku & sudoku )
     {
         if ( sudoku_guesses.stack_pointer() > max_sp )
             max_sp = sudoku_guesses.stack_pointer();
- //       std::cout << "stack pointer = " << sudoku_guesses.stack_pointer() << ", max. stack pointer = " << max_sp << std::endl;
+    //    std::cout << "stack pointer = " << sudoku_guesses.stack_pointer() << ", max. stack pointer = " << max_sp << std::endl;
         ++niterations;
 
         solve_without_guessing( result, error_caught );
 
-    //    if ( false )
         if ( ( ! error_caught ) && ( ! result.there_are_contradictions() ) )
         {
             // There were no more changes with our normal methods.
@@ -746,13 +745,15 @@ Sudoku solve( const Sudoku & sudoku )
                     // Undo last guess
                     result = sudoku_guesses.pop();
                     OneSudokuSquare square = result.square( square_index );
-                    square = OneSudokuSquare( square.value( 1 ) );
+                    square.unset( square.value( 0 ) );
                     result.update_square( square_index, square );
-         //           std::cout << "We solved a square by contradiction." << std::endl;
+    //                std::cout << "We solved a square by contradiction." << std::endl;
                     solve_without_guessing( result, error_caught_2 );
                 }
                 else // Try the second value
                 {
+                    if ( result.solved() )
+                        throw std::runtime_error( "Programming error 1." );
                     // Undo last guess
                     result = sudoku_guesses.pop();
                     sudoku_guesses.push( result );
@@ -765,7 +766,7 @@ Sudoku solve( const Sudoku & sudoku )
                         // Undo last guess
                         result = sudoku_guesses.pop();
                         OneSudokuSquare square = result.square( square_index );
-                        square = OneSudokuSquare( square.value( 0 ) );
+                        square.unset( square.value( 1 ) );
                         result.update_square( square_index, square );
             //            std::cout << "We solved a square by contradiction." << std::endl;
                         solve_without_guessing( result, error_caught_2 );

@@ -68,7 +68,7 @@ public:
     bool unset( const size_t value );
     
     // The version with the OneSudokuSquare argument is less versatile (it does not allow for the vector to be empty)
-    // and the two can probably be merged and replaced by the std::vector< int > version.
+    // and the two can probably be merged and replaced by the SetOfNumbers version.
     // Returns true if something has changed
     bool unset( const OneSudokuSquare & sudoku_square );
     
