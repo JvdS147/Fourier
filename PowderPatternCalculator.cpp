@@ -314,12 +314,12 @@ void PowderPatternCalculator::calculate_powder_pattern( PowderPattern & powder_p
 void PowderPatternCalculator::calculate( const ReflectionList & reflection_list, PowderPattern & powder_pattern )
 {
     powder_pattern = PowderPattern( two_theta_start_, two_theta_end_, two_theta_step_ );
-    // Calculate one peak with area 1.0
+    // Calculate one peak with area 1.0.
     std::vector< double > peak_points = peak_shape( two_theta_step_, FWHM_ );
     Vector3D PO_vector;
     if ( include_preferred_orientation_ )
         PO_vector = reciprocal_lattice_point( preferred_orientation_direction_, crystal_structure_.crystal_lattice() );
-    // For each reflection, convolute it with a peak shape
+    // For each reflection, convolute it with a peak shape.
     for ( size_t i( 0 ); i != reflection_list.size(); ++i )
     {
         double d = reflection_list.d_spacing( i );
@@ -342,12 +342,12 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
         else
             multiplicity = reflection_list.multiplicity( i );
         double peak_intensity = reflection_list.F_squared( i ) * multiplicity;
-        // Multiply by the LP factor
+        // Multiply by the LP factor.
         double LP_factor = ( 1.0 + square( two_theta.cosine() ) ) / ( 2.0 * two_theta.sine() * theta.sine() );
         peak_intensity *= LP_factor;
         for ( size_t j ( 0 ); j != peak_points.size(); ++j )
         {
-            // Calculate new index
+            // Calculate new index.
             int index = index_offset + j;
             if ( ( index < 0 ) || ( index >= powder_pattern.size() ) )
                 continue;
@@ -355,51 +355,6 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
             intensity += peak_intensity * peak_points[j];
             powder_pattern.set_intensity( index, intensity );
         }
-    }
-    powder_pattern.normalise_highest_peak();
-    powder_pattern.recalculate_estimated_standard_deviations();
-    powder_pattern.set_wavelength( wavelength_ );
-}
-
-// ********************************************************************************
-
-void PowderPatternCalculator::calculate_for_testing( PowderPattern & powder_pattern )
-{
-    powder_pattern = PowderPattern( two_theta_start_, two_theta_end_, two_theta_step_ );
-    // Calculate one peak with area 1.0
-    std::vector< double > peak_points = peak_shape( two_theta_step_, FWHM_ );
-    // For each reflection, convolute it with a peak shape
-    {
-    Angle two_theta = Angle::from_degrees( 12.5 );
-    int peak_centre = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
-    int index_offset = peak_centre - ((static_cast<int>(peak_points.size())-1)/2);
-    double peak_intensity = 100.0;
-    for ( int j ( 0 ); j != peak_points.size(); ++j )
-    {
-        // Calculate new index
-        int index = index_offset + j;
-        if ( ( index < 0 ) || ( index >= powder_pattern.size() ) )
-            continue;
-        double intensity = powder_pattern.intensity( index );
-        intensity += peak_intensity * peak_points[j];
-        powder_pattern.set_intensity( index, intensity );
-    }
-    }
-    {
-    Angle two_theta = Angle::from_degrees( 27.5 );
-    int peak_centre = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
-    int index_offset = peak_centre - ((static_cast<int>(peak_points.size())-1)/2);
-    double peak_intensity = 10.0;
-    for ( int j ( 0 ); j != peak_points.size(); ++j )
-    {
-        // Calculate new index
-        int index = index_offset + j;
-        if ( ( index < 0 ) || ( index >= powder_pattern.size() ) )
-            continue;
-        double intensity = powder_pattern.intensity( index );
-        intensity += peak_intensity * peak_points[j];
-        powder_pattern.set_intensity( index, intensity );
-    }
     }
     powder_pattern.normalise_highest_peak();
     powder_pattern.recalculate_estimated_standard_deviations();

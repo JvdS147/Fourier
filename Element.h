@@ -38,14 +38,14 @@ public:
 
     Element() : id_(6) {}
 
-    // atomic_number must be smaller than 95
+    // atomic_number must be smaller than 113.
     // atomic number 1 defaults to hydrogen, deuterium cannot be constructed with this constructor,
-    // use the std::string based constructor instead
+    // use the std::string based constructor instead.
     explicit Element( const size_t atomic_number );
 
     explicit Element( std::string symbol );
 
-    // D = 0, others are atomic number
+    // D = 0, others are atomic number.
     size_t id() const { return id_; }
 
     size_t atomic_number() const;
@@ -58,7 +58,7 @@ public:
 
     double atomic_weight() const;
 
-    // Uses Hofmann's values
+    // Uses Hofmann's values.
     double solid_state_volume() const;
 
     double scattering_factor( const double sine_theta_over_lambda ) const;
@@ -72,10 +72,10 @@ private:
 
 };
 
-// The ususal order of elements: C, H, D, rest alphabetical
+// The ususal order of elements: C, H, D, rest alphabetical.
 bool elements_less( const Element & lhs, const Element & rhs );
 
-// The distance is the distance squared, to avoid the necessity of an expensive sqrt.
+// The distance is the distance squared, to avoid the necessity of an expensive sqrt().
 bool are_bonded( const Element & lhs, const Element & rhs, const double distance2 );
 
 // Helper function, assumes atom label of the type "C3  ".
@@ -87,8 +87,6 @@ inline bool operator==( const Element & lhs, const Element & rhs ) { return ( lh
 
 // H and D test as different.
 inline bool operator!=( const Element & lhs, const Element & rhs ) { return ! ( lhs == rhs ); }
-
-//double scattering_factor( const Element element, const double sine_theta_over_lambda );
 
 #endif // ELEMENT_H
 

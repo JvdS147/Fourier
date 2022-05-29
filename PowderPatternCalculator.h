@@ -86,7 +86,6 @@ public:
 
     void calculate_powder_pattern( PowderPattern & powder_pattern );
     void calculate( const ReflectionList & reflection_list, PowderPattern & powder_pattern );
-    void calculate_for_testing( PowderPattern & powder_pattern );
 
 private:
     Wavelength wavelength_;
@@ -105,7 +104,5 @@ private:
     bool is_systematic_absence( const MillerIndices miller_indices ) const;
     std::set< MillerIndices > calculate_equivalent_reflections( const MillerIndices miller_indices ) const;
 };
-
-void test_FWHM();
 
 #endif // POWDERPATTERNCALCULATOR_H
