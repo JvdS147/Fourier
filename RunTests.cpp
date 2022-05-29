@@ -58,6 +58,7 @@ void run_tests()
         test_ReadCell( test_suite );
         test_sort( test_suite );
         test_space_group( test_suite );
+        test_StringFunctions( test_suite );
         test_SudokuSolver( test_suite );
         test_TextFileReader_2( test_suite );
         test_TLS_ADPs( test_suite );

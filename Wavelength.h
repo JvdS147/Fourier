@@ -40,6 +40,8 @@ public:
     Wavelength();
 
     explicit Wavelength( const double wavelength );
+
+//    explicit Wavelength( const std::string & anode_material );
     
     Wavelength( const double wavelength_1, const double wavelength_2 );
     
@@ -54,8 +56,7 @@ public:
     void set_monochromated( const bool b ) { monochromated_ = b; }
 
     bool is_lab_source() const { return is_lab_source_; }
-    // Major problem here is the user sets it to true... (setting to false is fine and may be necessary, e.g. if synchrotron wavelength happens to 1.54 A ).
-    void set_is_lab_source( const bool b ) { is_lab_source_ = b; }
+    void unset_is_lab_source() { is_lab_source_ = false; }
 
     // For "_diffrn_radiation_type", e.g. 'Cu K\a~1~' or "Synchrotron"
     std::string cif_style() const;
@@ -67,6 +68,8 @@ private:
     bool is_lab_source_;
 
 };
+
+bool nearly_equal( const Wavelength & lhs, const Wavelength & rhs );
 
 #endif // WAVELENGTH_H
 

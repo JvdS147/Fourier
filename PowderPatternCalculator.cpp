@@ -43,24 +43,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // instantiations like "pseudo_Voigt"
 
 namespace
-{
 
-// Centered around 0.0, area normalised to 1.0.
-// Needs: FWHM (in degrees 2theta), eta, 2theta w.r.t. 0.0
-// eta should probably be 0.68 for the FWHM of the pseudo-Voigt to be the same as the
-// FWHM of the individual Lorentzian and Gaussian.
-double pseudo_Voigt_2( const double x )
 {
-    double eta( 0.5 );
-    double FWHM( 0.2 );
-// For a *full* Voigt, when the FWHM is set to the same value for the Gaussian and the Lorentzian part, the FWHM of the
-// resulting full Voigt is also that same FWHM. This is no longer true for our pseudo Voigt, so we
-// must calculate the correct FWHM.
-//    FWHM = bisection( &calculate_FWHM, FWHM, FWHM );
-//    std::cout << "FWHM = " << FWHM << std::endl;
-    return eta * Lorentzian( x, FWHM ) + (1.0-eta) * Gaussian( x, FWHM );
-}
-
 // ********************************************************************************
 
 // Precalculating the peak shape is a speed optimisation
@@ -99,22 +83,6 @@ std::vector< double > peak_shape( const Angle two_theta_step, const double FWHM 
 
 // ********************************************************************************
 
-void test_FWHM()
-{
-    double eta = 0.5;
-    double FWHM = 0.1;
-    // Calculate the FWHM. That requires first calculating the maximum, which is at x = 0.0.
-    double target_FWHM = 0.1;
-    double maximum = pseudo_Voigt_2( 0.0 );
-    std::cout << "maximum = " << maximum << std::endl;
-//double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance = TOLERANCE );
-    double x_half_maximum = bisection( &pseudo_Voigt_2, maximum/2.0, 0.05 );
-    std::cout << "x_half_maximum = " << x_half_maximum << std::endl;
-    double actual_FWHM = 2.0 * x_half_maximum;
-}
-
-// ********************************************************************************
-
 PowderPatternCalculator::PowderPatternCalculator( const CrystalStructure & crystal_structure ):
 wavelength_(1.54056),
 two_theta_start_(5.0,Angle::DEGREES),
@@ -150,16 +118,16 @@ void PowderPatternCalculator::set_preferred_orientation( const MillerIndices & m
     preferred_orientation_direction_ = miller_indices;
     r_ = r;
     // Check that the PO direction is commensurate with the space-group symmetry
-    MillerIndices reflection( 37, -117, 3 );
+    MillerIndices reflection( 37, -23, 3 );
     Vector3D PO_vector = reciprocal_lattice_point( preferred_orientation_direction_, crystal_structure_.crystal_lattice() );
     Vector3D H = reciprocal_lattice_point( reflection, crystal_structure_.crystal_lattice() );
-    double reference_dot_product = std::fabs( PO_vector * H );
+    double reference_dot_product = absolute( PO_vector * H );
     for ( size_t i( 0 ); i != laue_class_.nsymmetry_operators(); ++i )
     {
         MillerIndices equivalent_reflection = reflection * laue_class_.symmetry_operator( i );
         // Now check that the March-Dollase PO corrections are the same for all of them
         Vector3D H = reciprocal_lattice_point( equivalent_reflection, crystal_structure_.crystal_lattice() );
-        double current_dot_product = std::fabs( PO_vector * H );
+        double current_dot_product = absolute( PO_vector * H );
         if ( ! nearly_equal( current_dot_product, reference_dot_product ) )
         {
             std::cout << "PowderPatternCalculator::set_preferred_orientation(): Warning: PO direction is not commensurate with space-group symmetry." << std::endl;
@@ -186,7 +154,7 @@ void PowderPatternCalculator::calculate_reflection_list( const bool exact )
 //    std::cout << "Now generating reflection list... " << std::endl;
     // We add a little extra at the end to avoid cut-off effects
     Angle theta_end( ( two_theta_end_ / 2.0 ) + Angle::from_degrees( 1.0 ) );
-    double one_over_d_min = ( 2.0 * theta_end.sine() ) / wavelength_;
+    double one_over_d_min = ( 2.0 * theta_end.sine() ) / wavelength_.wavelength_1();
     double l_max_z = one_over_d_min / crystal_structure_.crystal_lattice().c_star_vector().z();
     double k_max_y = one_over_d_min / crystal_structure_.crystal_lattice().b_star_vector().y();
     double l_max_y = -k_max_y * ( crystal_structure_.crystal_lattice().b_star_vector().z() / crystal_structure_.crystal_lattice().c_star_vector().z() );
@@ -228,9 +196,9 @@ void PowderPatternCalculator::calculate_reflection_list( const bool exact )
                 Vector3D H = reciprocal_lattice_point( current_reflection, crystal_structure_.crystal_lattice() );
                 double d = 1.0 / ( H.length() );
                 // Some of the reflections that are generated lead to asin( x ) with x > 1.0, which is an ERROR.
-                if ( wavelength_ > 2.0 * d )
+                if ( wavelength_.wavelength_1() > 2.0 * d )
                     continue;
-                Angle two_theta = 2.0 * arcsine( wavelength_ / ( 2.0 * d ) );
+                Angle two_theta = 2.0 * arcsine( wavelength_.wavelength_1() / ( 2.0 * d ) );
                 if ( exact )
                 {
                     if ( ( two_theta >= two_theta_start_ ) && ( two_theta <= two_theta_end_ ) )
@@ -355,7 +323,7 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
     for ( size_t i( 0 ); i != reflection_list.size(); ++i )
     {
         double d = reflection_list.d_spacing( i );
-        Angle theta = arcsine( wavelength_ / ( 2.0 * d ) );
+        Angle theta = arcsine( wavelength_.wavelength_1() / ( 2.0 * d ) );
         Angle two_theta = 2.0 * theta;
         int peak_centre = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
         int index_offset = peak_centre - ((static_cast<int>(peak_points.size())-1)/2);
@@ -445,13 +413,10 @@ bool PowderPatternCalculator::is_systematic_absence( const MillerIndices H ) con
     // Note that we skip the first symmetry operator, which is guaranteed to be the identity
     for ( size_t i( 1 ); i != crystal_structure_.space_group().nsymmetry_operators(); ++i )
     {
-        if ( H*crystal_structure_.space_group().symmetry_operator(i).rotation() == H )
+        if ( H * crystal_structure_.space_group().symmetry_operator(i).rotation() == H )
         {
-            double HT( H * crystal_structure_.space_group().symmetry_operator(i).translation() );
-            if ( ! nearly_equal( HT, round_to_int( HT ), 0.05 ) )
-            {
+            if ( ! nearly_integer( H * crystal_structure_.space_group().symmetry_operator(i).translation(), 0.05 ) )
                 return true;
-            }
         }
     }
     return false;

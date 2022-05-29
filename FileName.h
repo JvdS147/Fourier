@@ -115,6 +115,8 @@ FileName replace_extension( const FileName & file_name, const std::string & new_
 // append_to_file_name( "C:/directory/file.txt", "_2" ) => "C:/directory/file_2.txt"
 FileName append_to_file_name( const FileName & file_name, const std::string & addition );
 
+std::string append_backslash( const std::string & input );
+
 //std::string change_all_slashes_to( std::string & input,  );
 
 // Uses FileName::exists() and append_to_file_name( FileName ) to generate file names like

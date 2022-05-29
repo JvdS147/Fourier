@@ -52,6 +52,7 @@ void Gauss_Legendre_quadrature( const double x1, const double x2, const size_t n
         double z1;
         // The following estimates the root. The estimate is pretty accuracte.
         // Note that I have also seen cos( CONSTANT_PI * ( i - 0.25 ) / ( npoints + 0.5 ) ) on the internet, but that is not a good approximation at all.
+        // In fact, that approximation is poor enough that it may converge to the wrong root.
         double z = cos( CONSTANT_PI * ( i + 0.75 ) / ( npoints + 0.5 ) );
         do
         {
@@ -81,7 +82,7 @@ double bisection( const Function f, const double target_y_value, const double in
         //increment *= 2.0;
     }
     double result = initial_x_value;
-    while ( std::abs( f( result ) - target_y_value ) > tolerance )
+    while ( absolute( f( result ) - target_y_value ) > tolerance )
     {
         if ( sign( f( result ) - target_y_value ) * sign( f( right_bracket ) - target_y_value ) < 0 )
             left_bracket = result;
@@ -310,21 +311,15 @@ double Lorentzian( const double x, const double FWHM )
 double Gaussian( const double x, const double FWHM )
 {
     double sigma = FWHM / 2.35482; // 2.35482 = 2*sqrt(2*ln(2))
-    return exp( -square(x) / (2.0*square( sigma )) ) / ( sigma*sqrt(2.0*CONSTANT_PI) );
+    return exp( -square(x) / ( 2.0*square( sigma ) ) ) / ( sigma*sqrt( 2.0 * CONSTANT_PI ) );
 }
 
 // ********************************************************************************
 
 // Centered around 0.0, area normalised to 1.0.
 // Needs: FWHM (in degrees 2theta), eta, 2theta w.r.t. 0.0
-// eta should probably be 0.68 for the FWHM of the pseudo-Voigt to be the same as the
-// FWHM of the individual Lorentzian and Gaussian.
-double pseudo_Voigt( const double x, const double FWHM )
+double pseudo_Voigt( const double x, const double FWHM, const double eta )
 {
-    double eta( 0.9 );
-// For a *full* Voigt, when the FWHM is set to the same value for the Gaussian and the Lorentzian part, the FWHM of the
-// resulting full Voigt is also that same FWHM. This is no longer true for our pseudo-Voigt, so we
-// must calculate the correct FWHM.
     return eta * Lorentzian( x, FWHM ) + (1.0-eta) * Gaussian( x, FWHM );
 }
 

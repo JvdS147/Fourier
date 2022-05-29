@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FileName.h"
 #include "ReadCell.h"
 #include "ReadCif.h"
-#include "Utilities.h"
+#include "StringFunctions.h"
 
 #include <stdexcept>
 #include <iostream>

@@ -1,3 +1,6 @@
+#ifndef FINGERCOXJEPHCOAT_H
+#define FINGERCOXJEPHCOAT_H
+
 /* *********************************************
 Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -25,34 +28,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "Utilities.h"
-#include "TestSuite.h"
+class Angle;
 
-#include <iostream>
-#include <string>
+#include <vector>
 
-void test_utilities( TestSuite & test_suite )
-{
-    std::cout << "Now running tests for Utilities." << std::endl;
+// An asymmetric peak. This needs to store a lot of state, so this must probably be a class, at the moment just some experiments.
 
-    {
-        std::vector< size_t > result = initialise_with_sequential_values( static_cast< size_t >( 5 ) );
-        test_suite.test_equality( result.size(), static_cast< size_t >( 5 ), "initialise_with_sequential_values() 01" );
-        test_suite.test_equality( result[0], static_cast< size_t >( 0 ), "initialise_with_sequential_values() 02" );
-        test_suite.test_equality( result[4], static_cast< size_t >( 4 ), "initialise_with_sequential_values() 03" );
-    }
+std::vector< double > asymmetric_peak( const Angle peak_position, const double FWHM, const double H, const double S, const double L );
 
-// Recognises scientific notation with "E" or "e" such as -.234e-45
-// double string2double( std::string input );
-
-// int string2integer( const std::string & input );
-
-// std::string double2string( const double input );
-
-// Pads the string to e.g. "0001"
-// If the length of the input value is longer than the padded length, a string with
-// the length of the input value is returned (so the value is never corrupted).
-// std::string size_t2string( const size_t input, const size_t padded_length = 0, const char padding_character = '0' );
-
-}
+#endif // FINGERCOXJEPHCOAT_H
 

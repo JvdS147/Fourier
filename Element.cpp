@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Element.h"
 #include "BasicMathsFunctions.h"
-#include "Utilities.h"
+#include "StringFunctions.h"
 
 #include <cmath>
 #include <stdexcept>
@@ -264,7 +264,7 @@ static const char* element_symbols_1[113] =
 static std::vector< std::string > element_symbols( element_symbols_1, element_symbols_1+113 );
 
 static const double atomic_weights[113] =
-                   {
+                    {
                          2.0,    1.008,   4.003,   6.941,   9.012,  10.811,  12.011,  14.007,  15.999,  18.998,  20.180,
                         22.990, 24.305,  26.982,  28.086,  30.974,  32.064,  35.453,  39.948,  39.098,  40.08,
                         44.956, 47.88,   50.942,  51.996,  54.938,  55.847,  58.933,  58.69,   63.546,  65.38,
@@ -301,8 +301,8 @@ static const double solid_state_volumes[113] =
 
 Element::Element( const size_t atomic_number ) : id_(atomic_number)
 {
-    if ( atomic_number > 94 )
-        throw std::runtime_error( "Element::Element( const size_t ): atomic number > 94." );
+    if ( atomic_number > 112 )
+        throw std::runtime_error( "Element::Element( const size_t ): atomic number > 112." );
 }
 
 // ********************************************************************************

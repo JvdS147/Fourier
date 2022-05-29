@@ -25,34 +25,30 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "Utilities.h"
-#include "TestSuite.h"
+#include "FingerCoxJephcoat.h"
 
-#include <iostream>
-#include <string>
+#include "Angle.h"
+#include "MathsFunctions.h"
 
-void test_utilities( TestSuite & test_suite )
+//#include <stdexcept>
+//#include <iostream> // For debugging
+
+// ********************************************************************************
+
+std::vector< double > asymmetric_peak( const Angle peak_position, const double FWHM, const double H, const double S, const double L )
 {
-    std::cout << "Now running tests for Utilities." << std::endl;
+    size_t N( 30 ); // Number of points for the Gauss-Legendre quadrature.
 
-    {
-        std::vector< size_t > result = initialise_with_sequential_values( static_cast< size_t >( 5 ) );
-        test_suite.test_equality( result.size(), static_cast< size_t >( 5 ), "initialise_with_sequential_values() 01" );
-        test_suite.test_equality( result[0], static_cast< size_t >( 0 ), "initialise_with_sequential_values() 02" );
-        test_suite.test_equality( result[4], static_cast< size_t >( 4 ), "initialise_with_sequential_values() 03" );
-    }
-
-// Recognises scientific notation with "E" or "e" such as -.234e-45
-// double string2double( std::string input );
-
-// int string2integer( const std::string & input );
-
-// std::string double2string( const double input );
-
-// Pads the string to e.g. "0001"
-// If the length of the input value is longer than the padded length, a string with
-// the length of the input value is returned (so the value is never corrupted).
-// std::string size_t2string( const size_t input, const size_t padded_length = 0, const char padding_character = '0' );
-
+    std::vector< double > result;
+    
+    std::vector< double > x_i;
+    std::vector< double > w_i;
+//    Gauss_Legendre_quadrature( const double x1, const double x2, N, x_i, w_i );
+    
+    
+    
+    return result;
 }
+
+// ********************************************************************************
 

@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Histogram.h"
 #include "MathsFunctions.h"
-#include "Utilities.h"
+#include "StringFunctions.h"
 
 #include <stdexcept>
 

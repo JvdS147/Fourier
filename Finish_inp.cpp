@@ -29,10 +29,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CopyTextFile.h"
 #include "Element.h"
 #include "FileName.h"
+#include "StringFunctions.h"
 #include "TextFileReader.h"
 #include "TextFileWriter.h"
 #include "TOPAS.h"
-#include "Utilities.h"
 
 #include <iostream> // For debugging
 #include <stdexcept>

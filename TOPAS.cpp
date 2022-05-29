@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Angle.h"
 #include "CrystalLattice.h"
 #include "TextFileReader_2.h"
+#include "StringFunctions.h"
 #include "Utilities.h"
 
 #include <iostream> // For debugging

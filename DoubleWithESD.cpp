@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "DoubleWithESD.h"
+#include "StringFunctions.h"
 #include "Utilities.h"
 
 #include <cmath>

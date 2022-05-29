@@ -94,9 +94,7 @@ double Gaussian( const double x, const double FWHM );
 
 // Centered around 0.0, area normalised to 1.0.
 // Needs: FWHM (in degrees 2theta), eta, 2theta w.r.t. 0.0
-// eta should probably be 0.68 for the FWHM of the pseudo-Voigt to be the same as the
-// FWHM of the individual Lorentzian and Gaussian.
-double pseudo_Voigt( const double x, const double FWHM );
+double pseudo_Voigt( const double x, const double FWHM, const double eta = 0.9 );
 
 // Returns a random number between 0.0 and 1.0, inclusive.
 double uniform_distribution_1();

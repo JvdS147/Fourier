@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CheckFoundItem.h"
 #include "CrystalStructure.h"
 #include "FileName.h"
+#include "StringFunctions.h"
 #include "TextFileReader.h"
 #include "TextFileWriter.h"
 #include "Utilities.h"

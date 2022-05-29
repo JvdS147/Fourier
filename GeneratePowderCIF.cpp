@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PhysicalConstants.h"
 #include "PowderPatternCalculator.h"
 #include "String2Fraction.h"
+#include "StringFunctions.h"
 #include "SymmetryOperator.h"
 #include "Utilities.h"
 
@@ -104,7 +105,7 @@ void GeneratePowderCIF::generate()
         if ( words[0].length() > longest_label_size_ )
             longest_label_size_ = words[0].length();
     }
-    // Bit of a fudge in case the longest does NOT have a minus sign (which then gets padded as well)
+    // Bit of a fudge in case the longest does NOT have a minus sign (which then gets padded as well).
     ++longest_x_;
     ++longest_y_;
     ++longest_z_;
@@ -267,7 +268,7 @@ void GeneratePowderCIF::generate()
     crystal_structure_.set_crystal_lattice( crystal_lattice_ );
     crystal_structure_.set_space_group( space_group_ );
     PowderPatternCalculator powder_pattern_calculator( crystal_structure_ );
-    powder_pattern_calculator.set_wavelength( wavelength_.wavelength_1() );
+    powder_pattern_calculator.set_wavelength( wavelength_ );
     iLine = file_cif_.find( "_cell_length_a" );
     words = split( file_cif_.line( iLine ) );
     insert_keyword_and_value( "_cell_length_a", words[1] );

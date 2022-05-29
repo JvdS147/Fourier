@@ -55,7 +55,7 @@ class FileList
 public:
 
     FileList();
-    
+
     // The directory of the file_name will also be applied to the file names in the file.
     explicit FileList( const FileName & file_name );
 

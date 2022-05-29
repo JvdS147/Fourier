@@ -28,6 +28,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Wavelength.h"
 #include "BasicMathsFunctions.h"
 
+#include <stdexcept>
+
 namespace
 {
 
@@ -106,8 +108,14 @@ std::string Wavelength::cif_style() const
             return result;
         }
     }
-    return "Nonsense";
-    // @@ When we are here, we are in trouble.
+    throw std::runtime_error( "Wavelength::cif_style(): error: unknown lab wavelength." );
+}
+
+// ********************************************************************************
+
+bool nearly_equal( const Wavelength & lhs, const Wavelength & rhs )
+{
+    return nearly_equal( lhs.wavelength_1(), rhs.wavelength_1() );
 }
 
 // ********************************************************************************
