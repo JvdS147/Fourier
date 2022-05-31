@@ -1,5 +1,5 @@
-#ifndef FINGERCOXJEPHCOAT_H
-#define FINGERCOXJEPHCOAT_H
+#ifndef FINGERCOXJEPHCOAT_FUNCTIONS_H
+#define FINGERCOXJEPHCOAT_FUNCTIONS_H
 
 /* *********************************************
 Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
@@ -29,50 +29,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 //class Angle;
-#include "Angle.h"
 
 #include <vector>
 
-// An asymmetric peak.
+// An asymmetric peak. This needs to store a lot of state, so this must probably be a class, at the moment just some experiments.
 // Currently only correctly implemented for two_theta and two_phi_values lower than 90 degrees.
 // Generally speaking peak asymmetry is only visible up to about 30 degrees 2theta and beyond 150 degrees 2theta.
 // we assume that we have not measured beyond 90 degrees 2theta.
-//std::vector< double > asymmetric_peak( const double two_theta, const std::vector< double > & two_phi_values, const double FWHM );
+std::vector< double > asymmetric_peak( const double two_theta, const std::vector< double > & two_phi_values, const double FWHM, const double H, const double S, const double L );
 
-// We do things properly here: express everything in terms of A = H/L and B = S/L and phi and theta are Angle objects.
-// The peak shape is fixed to be pseudo-Voigt, but this is the case everywhere and it is always mentioned how good the results are.
-class FingerCoxJephcoat
-{
-public:
-
-    // Note that internally, this class only works with H/L and S/L.
-    FingerCoxJephcoat( const double H, const double S, const double L );
-
-    FingerCoxJephcoat( const double A, const double B );
-
-    void set_HSL( const double H, const double S, const double L );
-
-    // A = H/L
-    double A() const { return A_; }
-    void set_A( const double A );
-
-    // B = S/L
-    double B() const { return B_; }
-    void set_B( const double B );
-
-    // Returns the peak shape, @@ I do not know if it is still normalised to an area of 1.0?
-    // two_theta is the peak position.
-    std::vector< double > asymmetric_peak( const Angle two_theta, const std::vector< Angle > & two_phi_values, const double FWHM ) const;
-
-private:
-    double A_;
-    double B_;
-    double eta_;
-    size_t N_;
-    std::vector< double > x_i_;
-    std::vector< double > w_i_;
-    
-};
-
-#endif // FINGERCOXJEPHCOAT_H
+#endif // FINGERCOXJEPHCOAT_FUNCTIONS_H
 
