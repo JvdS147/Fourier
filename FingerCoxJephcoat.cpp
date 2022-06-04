@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MathsFunctions.h"
 
 #include <stdexcept>
-#include <iostream> // For debugging
 
 // ********************************************************************************
 
@@ -55,13 +54,12 @@ FingerCoxJephcoat::FingerCoxJephcoat( const double A, const double B ):eta_(0.9)
 
 void FingerCoxJephcoat::set_HSL( const double H, const double S, const double L )
 {
-    if ( H < TOLERANCE )
-        throw std::runtime_error( "FingerCoxJephcoat::set_HSL(): H < 0.0." );
-    if ( S < TOLERANCE )
-        throw std::runtime_error( "FingerCoxJephcoat::set_HSL(): S < 0.0." );
-    if ( L < TOLERANCE )
-        throw std::runtime_error( "FingerCoxJephcoat::set_HSL(): L < 0.0." );
-    // @@ Could / should check for very small L value.
+    if ( H < 0.01 )
+        throw std::runtime_error( "FingerCoxJephcoat::set_HSL(): H < 0.01." );
+    if ( S < 0.01 )
+        throw std::runtime_error( "FingerCoxJephcoat::set_HSL(): S < 0.01." );
+    if ( L < 0.01 )
+        throw std::runtime_error( "FingerCoxJephcoat::set_HSL(): L < 0.01." );
     A_ = H/L;
     B_ = S/L;
 }
@@ -94,36 +92,20 @@ std::vector< double > FingerCoxJephcoat::asymmetric_peak( const Angle two_theta,
     Angle two_phi_min;
     Angle two_phi_infl;
     double cosine_argument = two_theta.cosine() * sqrt( square( A_ + B_ ) + 1.0 );
-//std::cout << "cosine_argument = " << cosine_argument << std::endl;
-    if ( cosine_argument < 0.999 )
+    if ( cosine_argument < 1.0 )
         two_phi_min = arccosine( cosine_argument );
     cosine_argument = two_theta.cosine() * sqrt( square( A_ - B_ ) + 1.0 );
-//std::cout << "cosine_argument = " << cosine_argument << std::endl;
-    if ( cosine_argument < 0.999 )
+    if ( cosine_argument < 1.0 )
         two_phi_infl = arccosine( cosine_argument );
-//std::cout << "two_phi_min = " << two_phi_min << std::endl;
-//std::cout << "two_phi_infl = " << two_phi_infl << std::endl;
     for ( size_t i( 0 ); i != two_phi_values.size(); ++i )
     {
         if ( two_phi_values[i] > Angle::angle_90_degrees() )
-            throw std::runtime_error( "FingerCoxJephcoat::asymmetric_peak(): two_phi_values[i] > 90.0." );
-        if ( two_phi_values[i] < two_phi_min )
-            continue;
-        // h( 2phi ) goes to 0.0 as 2phi goes to 2theta.
-        if ( ( two_phi_values[i] + Angle::from_degrees( 0.001 ) ) > two_theta )
-        {
-            result[i] = pseudo_Voigt( ( two_phi_values[i] - two_theta ).value_in_degrees(), FWHM, eta_ );
-            continue;
-        }
+            throw std::runtime_error( "FingerCoxJephcoat::asymmetric_peak_H_is_S(): two_phi_values[i] > 90.0." );
         double numerator = 0.0;
         double denominator = 0.0;
         for ( size_t j( 0 ); j != N_; ++j )
         {
             Angle delta_n = ( two_theta + two_phi_min ) / 2.0 + ( two_theta - two_phi_min ) * x_i_[j] / 2.0;
-            if ( delta_n < two_phi_min )
-                continue;
-            if ( ( delta_n + Angle::from_degrees( 0.001 ) ) > two_theta )
-                continue;
             double C = sqrt( ( square( delta_n.cosine() ) / square( two_theta.cosine() ) ) - 1.0 );
             double term;
             if ( delta_n < two_phi_infl )
@@ -137,7 +119,42 @@ std::vector< double > FingerCoxJephcoat::asymmetric_peak( const Angle two_theta,
             }
             term *= w_i_[j];
             term /= delta_n.cosine();
-            numerator   += term * pseudo_Voigt( ( two_phi_values[i] - delta_n - two_theta ).value_in_degrees(), FWHM, eta_ );
+            numerator   += term * pseudo_Voigt( ( two_phi_values[i] - delta_n ).value_in_degrees(), FWHM, eta_ );
+            denominator += term;
+        }
+        result[i] = numerator / denominator;
+    }
+    return result;
+}
+
+// ********************************************************************************
+
+std::vector< double > FingerCoxJephcoat::asymmetric_peak_H_is_S( const Angle two_theta, const std::vector< Angle > & two_phi_values, const double FWHM ) const
+{
+    if ( two_theta > Angle::angle_90_degrees() )
+        throw std::runtime_error( "FingerCoxJephcoat::asymmetric_peak(): two_theta > 90.0." );
+    std::vector< double > result( two_phi_values.size(), 0.0 );
+    Angle two_phi_min;
+    double cosine_argument = two_theta.cosine() * sqrt( 4.0*square( A_ ) + 1.0 );
+    if ( cosine_argument < 1.0 )
+        two_phi_min = arccosine( cosine_argument );
+    for ( size_t i( 0 ); i != two_phi_values.size(); ++i )
+    {
+        if ( two_phi_values[i] > Angle::angle_90_degrees() )
+            throw std::runtime_error( "FingerCoxJephcoat::asymmetric_peak_H_is_S(): two_phi_values[i] > 90.0." );
+        double numerator = 0.0;
+        double denominator = 0.0;
+        for ( size_t j( 0 ); j != N_; ++j )
+        {
+            Angle delta_n = ( two_theta + two_phi_min ) / 2.0 + ( two_theta - two_phi_min ) * x_i_[j] / 2.0;
+            double C = sqrt( ( square( delta_n.cosine() ) / square( two_theta.cosine() ) ) - 1.0 );
+            double term;
+            if ( delta_n < two_theta )
+                term = ( 2.0 * A_ / C ) - 1.0;
+            else
+                term = 2.0 * A_ / C;
+            term *= w_i_[j] / delta_n.cosine();
+            numerator   += term * pseudo_Voigt( ( two_phi_values[i] - delta_n ).value_in_degrees(), FWHM, eta_ );
             denominator += term;
         }
         result[i] = numerator / denominator;

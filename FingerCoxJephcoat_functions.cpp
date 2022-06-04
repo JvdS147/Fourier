@@ -47,18 +47,11 @@ double W( const double two_phi, const double two_theta, const double two_phi_min
     if ( two_phi < two_phi_min )
         return 0.0;
     // h( 2phi ) goes to 0.0 as 2phi goes to 2theta.
-    if ( ( two_phi + 0.001 ) > two_theta )
+    if ( two_phi > two_theta )
         return 0.0;
     if ( two_phi < two_phi_inflection )
         return H + S - h( two_phi, two_theta, L );
     return 2.0 * std::min( H, S );
-}
-
-// ********************************************************************************
-
-double R( const double x, const double two_theta, const double FWHM, const double eta )
-{
-    return pseudo_Voigt( x - two_theta, FWHM, eta );
 }
 
 // ********************************************************************************
@@ -75,56 +68,47 @@ std::vector< double > asymmetric_peak( const double two_theta, const std::vector
     if ( two_theta > 90.0 )
         throw std::runtime_error( "asymmetric_peak(): two_theta > 90.0." );
     size_t N( 30 ); // Number of points for the Gauss-Legendre quadrature.
+    // N can be made to depend on the distance from two_theta. In the Finger-Cox-Jephcoat paper they
+    // recommend N = 30 for the region within six FWHMs from two_theta, N = 10 for everywhere else.
     double two_phi_min = 0.0;
     double cosine_argument = cos( two_theta * degrees2radians ) * sqrt( square( ( H + S ) / L ) + 1.0 );
-//std::cout << "cosine_argument = " << cosine_argument << std::endl;
-    if ( cosine_argument < -0.999 )
-        two_phi_min = 180.0;
-    else if ( cosine_argument > 0.999 )
-        two_phi_min = 0.0;
-    else
+    if ( cosine_argument < 1.0 )
         two_phi_min = radians2degrees * acos( cosine_argument );
     double two_phi_inflection = 0.0;
     cosine_argument = cos( two_theta * degrees2radians ) * sqrt( square( ( H - S ) / L ) + 1.0 );
-//std::cout << "cosine_argument = " << cosine_argument << std::endl;
-    if ( cosine_argument < -0.999 )
-        two_phi_inflection = 180.0;
-    else if ( cosine_argument > 0.999 )
-        two_phi_inflection = 0.0;
-    else
+    if ( cosine_argument < 1.0 )
         two_phi_inflection = radians2degrees * acos( cosine_argument );
-//std::cout << "two_phi_min = " << two_phi_min << std::endl;
-//std::cout << "two_phi_inflection = " << two_phi_inflection << std::endl;
     std::vector< double > result( two_phi_values.size(), 0.0 );
     std::vector< double > x_i;
     std::vector< double > w_i;
     Gauss_Legendre_quadrature( -1.0, 1.0, N, x_i, w_i );
-      //  std::cout << "####################    DDDDD    ######################" << std::endl;
-    
     for ( size_t i( 0 ); i != two_phi_values.size(); ++i )
     {
         if ( two_phi_values[i] > 90.0 )
             throw std::runtime_error( "asymmetric_peak(): two_phi_values[i] > 90.0." );
     //    std::cout << D( two_phi_values[i], two_theta, two_phi_min, two_phi_inflection, H, S, L ) << std::endl;
-        if ( two_phi_values[i] < two_phi_min )
-            continue;
-        // h( 2phi ) goes to 0.0 as 2phi goes to 2theta.
-        if ( ( two_phi_values[i] + 0.001 ) > two_theta )
-            continue;
         double numerator = 0.0;
         double denominator = 0.0;
         for ( size_t j( 0 ); j != N; ++j )
         {
             double delta_n = ( two_theta + two_phi_min ) / 2.0 + ( two_theta - two_phi_min ) * x_i[j] / 2.0;
-//            numerator   += ( w_i[j] * W( delta_n, two_theta, two_phi_min, two_phi_inflection, H, S, L ) * R( two_phi_values[i] - delta_n, two_theta, FWHM, 0.9 ) ) / ( h( delta_n, two_theta, L ) * cos( delta_n * degrees2radians ) );
-//            denominator += ( w_i[j] * W( delta_n, two_theta, two_phi_min, two_phi_inflection, H, S, L )                                                          ) / ( h( delta_n, two_theta, L ) * cos( delta_n * degrees2radians ) );
-            double term = ( w_i[j] * W( delta_n, two_theta, two_phi_min, two_phi_inflection, H, S, L ) ) / ( h( delta_n, two_theta, L ) * cos( delta_n * degrees2radians ) );
-            numerator   += term * R( two_phi_values[i] - delta_n, two_theta, FWHM, 0.9 );
+//std::cout << "delta_n " << delta_n << std::endl;
+
+//std::cout << "w " << w_i[j] << std::endl;
+//std::cout << "W " << W( delta_n, two_theta, two_phi_min, two_phi_inflection, H, S, L ) << std::endl;
+//std::cout << "h " << h( delta_n, two_theta, L ) << std::endl;
+//std::cout << "cos " << cos( delta_n * degrees2radians ) << std::endl;
+//std::cout << " D " << D( delta_n, two_theta, two_phi_min, two_phi_inflection, H, S, L ) << std::endl;
+
+            double term = ( W( delta_n, two_theta, two_phi_min, two_phi_inflection, H, S, L ) ) / h( delta_n, two_theta, L );
+            term *= w_i[j] / cos( delta_n * degrees2radians );
+            numerator   += term * pseudo_Voigt( two_phi_values[i] - delta_n, FWHM, 0.9 );
             denominator += term;
         }
         result[i] = numerator / denominator;
     }
-  //      std::cout << "####################    DDDDD    ######################" << std::endl;
+//std::cout << "two_phi_min = " << two_phi_min << std::endl;
+//std::cout << "two_phi_inflection = " << two_phi_inflection << std::endl;
     return result;
 }
 

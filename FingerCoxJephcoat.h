@@ -28,19 +28,19 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-//class Angle;
-#include "Angle.h"
+class Angle;
 
+#include <cstddef> // For definition of size_t
 #include <vector>
 
-// An asymmetric peak.
-// Currently only correctly implemented for two_theta and two_phi_values lower than 90 degrees.
-// Generally speaking peak asymmetry is only visible up to about 30 degrees 2theta and beyond 150 degrees 2theta.
-// we assume that we have not measured beyond 90 degrees 2theta.
-//std::vector< double > asymmetric_peak( const double two_theta, const std::vector< double > & two_phi_values, const double FWHM );
-
-// We do things properly here: express everything in terms of A = H/L and B = S/L and phi and theta are Angle objects.
-// The peak shape is fixed to be pseudo-Voigt, but this is the case everywhere and it is always mentioned how good the results are.
+/*
+  An asymmetric peak.
+  Currently only correctly implemented for two_theta and two_phi_values lower than 45 degrees.
+  Generally speaking peak asymmetry is only visible up to about 30 degrees 2theta and beyond 150 degrees 2theta.
+  we assume that we have not measured beyond 90 degrees 2theta.
+  We do things properly here: express everything in terms of A = H/L and B = S/L and phi and theta are Angle objects.
+  The peak shape is fixed to be pseudo-Voigt, but this is the case in all implemenetations I have seen and it is always mentioned how good the results are.
+*/
 class FingerCoxJephcoat
 {
 public:
@@ -60,9 +60,12 @@ public:
     double B() const { return B_; }
     void set_B( const double B );
 
-    // Returns the peak shape, @@ I do not know if it is still normalised to an area of 1.0?
+    // Returns the peak shape, normalised to an area of 1.0.
     // two_theta is the peak position.
     std::vector< double > asymmetric_peak( const Angle two_theta, const std::vector< Angle > & two_phi_values, const double FWHM ) const;
+
+    // Sets B = A.
+    std::vector< double > asymmetric_peak_H_is_S( const Angle two_theta, const std::vector< Angle > & two_phi_values, const double FWHM ) const;
 
 private:
     double A_;
@@ -71,7 +74,7 @@ private:
     size_t N_;
     std::vector< double > x_i_;
     std::vector< double > w_i_;
-    
+
 };
 
 #endif // FINGERCOXJEPHCOAT_H

@@ -116,6 +116,26 @@ double integral( const Function f, const double start, const double end, const s
 
 // ********************************************************************************
 
+double integral( const std::vector< double > & y_i, const double interval )
+{
+    if ( y_i.empty() )
+        throw std::runtime_error( "integral(): y_i.empty()." );
+    // The algorithm inherently requires at the very least the two end points,
+    // so f(x) needs to be evaluated at least for x = start and x = end.
+    // So for npoints == 1 we must either throw or provide a specialised implementation.
+    // We only want to evaluate f( x ) at one point, this must be the midpoint of the interval.
+    if ( y_i.size() == 1 )
+        return y_i[0] * interval;
+    double result = y_i[0] / 2.0;
+    for ( size_t i( 1 ); i != y_i.size()-1; ++i )
+        result += y_i[i];
+    result += y_i[ y_i.size() - 1 ] / 2.0;
+    result *= interval;
+    return result;
+}
+
+// ********************************************************************************
+
 double integral_Monte_Carlo( const Function f, const double start, const double end, const size_t npoints )
 {
     double result( 0.0 );

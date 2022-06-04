@@ -46,6 +46,10 @@ double bisection( const Function f, const double target_y_value, const double in
 // Simple linear interpolation between sampling points.
 double integral( const Function f, const double start, const double end, const size_t npoints );
 
+// Assumes that the std::vector< double > represents f(x) values at a regular interval.
+// Simple linear interpolation between sampling points.
+double integral( const std::vector< double > & y_i, const double interval );
+
 // Evaluates the integral by drawing random values for x
 // This has a minor advantage that you if you want to double the number of sampling points
 // to improve the accuracy, you can simply call the function twice with the same number

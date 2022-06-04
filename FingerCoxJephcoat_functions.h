@@ -28,11 +28,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-//class Angle;
-
 #include <vector>
 
-// An asymmetric peak. This needs to store a lot of state, so this must probably be a class, at the moment just some experiments.
+// This was a first implementation to experiment, please use the FingerCoxJephcoat class.
 // Currently only correctly implemented for two_theta and two_phi_values lower than 90 degrees.
 // Generally speaking peak asymmetry is only visible up to about 30 degrees 2theta and beyond 150 degrees 2theta.
 // we assume that we have not measured beyond 90 degrees 2theta.
