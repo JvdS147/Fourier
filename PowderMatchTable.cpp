@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "PowderMatchTable.h"
 #include "MillerIndices.h"
+#include "StringFunctions.h"
 #include "TextFileReader.h"
 #include "Utilities.h"
 

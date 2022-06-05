@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ReadXSD.h"
 #include "3DCalculations.h"
 #include "CrystalStructure.h"
+#include "StringFunctions.h"
 #include "TextFileReader.h"
 #include "Utilities.h"
 

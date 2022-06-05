@@ -26,7 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Refcode.h"
-#include "Utilities.h"
+#include "StringFunctions.h"
 
 #include <stdexcept>
 

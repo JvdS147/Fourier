@@ -52,6 +52,7 @@ void Gauss_Legendre_quadrature( const double x1, const double x2, const size_t n
         double z1;
         // The following estimates the root. The estimate is pretty accuracte.
         // Note that I have also seen cos( CONSTANT_PI * ( i - 0.25 ) / ( npoints + 0.5 ) ) on the internet, but that is not a good approximation at all.
+        // In fact, that approximation is poor enough that it may converge to the wrong root.
         double z = cos( CONSTANT_PI * ( i + 0.75 ) / ( npoints + 0.5 ) );
         do
         {
@@ -81,7 +82,7 @@ double bisection( const Function f, const double target_y_value, const double in
         //increment *= 2.0;
     }
     double result = initial_x_value;
-    while ( std::abs( f( result ) - target_y_value ) > tolerance )
+    while ( absolute( f( result ) - target_y_value ) > tolerance )
     {
         if ( sign( f( result ) - target_y_value ) * sign( f( right_bracket ) - target_y_value ) < 0 )
             left_bracket = result;
@@ -109,6 +110,26 @@ double integral( const Function f, const double start, const double end, const s
     for ( size_t i( 1 ); i != npoints-1; ++i )
         result += f( start + i * interval );
     result += f( end ) / 2.0;
+    result *= interval;
+    return result;
+}
+
+// ********************************************************************************
+
+double integral( const std::vector< double > & y_i, const double interval )
+{
+    if ( y_i.empty() )
+        throw std::runtime_error( "integral(): y_i.empty()." );
+    // The algorithm inherently requires at the very least the two end points,
+    // so f(x) needs to be evaluated at least for x = start and x = end.
+    // So for npoints == 1 we must either throw or provide a specialised implementation.
+    // We only want to evaluate f( x ) at one point, this must be the midpoint of the interval.
+    if ( y_i.size() == 1 )
+        return y_i[0] * interval;
+    double result = y_i[0] / 2.0;
+    for ( size_t i( 1 ); i != y_i.size()-1; ++i )
+        result += y_i[i];
+    result += y_i[ y_i.size() - 1 ] / 2.0;
     result *= interval;
     return result;
 }
@@ -310,21 +331,15 @@ double Lorentzian( const double x, const double FWHM )
 double Gaussian( const double x, const double FWHM )
 {
     double sigma = FWHM / 2.35482; // 2.35482 = 2*sqrt(2*ln(2))
-    return exp( -square(x) / (2.0*square( sigma )) ) / ( sigma*sqrt(2.0*CONSTANT_PI) );
+    return exp( -square(x) / ( 2.0*square( sigma ) ) ) / ( sigma*sqrt( 2.0 * CONSTANT_PI ) );
 }
 
 // ********************************************************************************
 
 // Centered around 0.0, area normalised to 1.0.
 // Needs: FWHM (in degrees 2theta), eta, 2theta w.r.t. 0.0
-// eta should probably be 0.68 for the FWHM of the pseudo-Voigt to be the same as the
-// FWHM of the individual Lorentzian and Gaussian.
-double pseudo_Voigt( const double x, const double FWHM )
+double pseudo_Voigt( const double x, const double FWHM, const double eta )
 {
-    double eta( 0.9 );
-// For a *full* Voigt, when the FWHM is set to the same value for the Gaussian and the Lorentzian part, the FWHM of the
-// resulting full Voigt is also that same FWHM. This is no longer true for our pseudo-Voigt, so we
-// must calculate the correct FWHM.
     return eta * Lorentzian( x, FWHM ) + (1.0-eta) * Gaussian( x, FWHM );
 }
 

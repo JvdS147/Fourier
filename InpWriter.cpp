@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "FileName.h"
 #include "PowderPattern.h"
 #include "ReadCif.h"
+#include "StringFunctions.h"
 #include "TextFileReader_2.h"
 #include "TextFileWriter.h"
 //#include "TOPAS.h"

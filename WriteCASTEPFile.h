@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "CrystalStructure.h"
-#include "Utilities.h"
 
 #include <string>
 
@@ -42,7 +41,7 @@ public:
     enum JobType { UNIT_CELL_FIXED, UNIT_CELL_FREE, H_ATOMS_ONLY, SS_NMR };
 
     WriteCASTEPFile();
-    
+
     explicit WriteCASTEPFile( const CrystalStructure & crystal_structure,
                               const std::string & directory = "",
                               const std::string & base_name = "" );
@@ -50,8 +49,9 @@ public:
     JobType job_type() const { return job_type_; }
     void set_job_type( const JobType job_type ) { job_type_ = job_type; }
 
+    // Guaranteed to end in a backslash
     std::string directory() const { return directory_; }
-    void set_directory( const std::string & directory ) { directory_ = append_backslash( directory ); }
+    void set_directory( const std::string & directory );
 
     std::string base_name() const { return base_name_; }
     void set_base_name( const std::string & base_name ) { base_name_ = base_name; }

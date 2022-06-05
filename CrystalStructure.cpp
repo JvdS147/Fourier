@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PhysicalConstants.h"
 #include "PointGroup.h"
 #include "RunningAverageAndESD.h"
+#include "StringFunctions.h"
 #include "TextFileWriter.h"
 #include "Utilities.h"
 

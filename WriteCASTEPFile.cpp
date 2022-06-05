@@ -27,7 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "WriteCASTEPFile.h"
 #include "FileName.h"
+#include "StringFunctions.h"
 #include "TextFileWriter.h"
+#include "Utilities.h"
 
 #include <stdexcept>
 
@@ -51,6 +53,13 @@ cut_off_energy_(520.0)
 {
     directory_ = append_backslash( directory );
     crystal_structure_.apply_space_group_symmetry();
+}
+
+// ********************************************************************************
+
+void WriteCASTEPFile::set_directory( const std::string & directory )
+{
+    directory_ = append_backslash( directory );
 }
 
 // ********************************************************************************

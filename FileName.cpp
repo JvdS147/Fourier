@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "FileName.h"
+#include "StringFunctions.h"
 #include "Utilities.h"
 
 #include <fstream>
@@ -268,6 +269,15 @@ FileName replace_extension( const FileName & file_name, const std::string & new_
 FileName append_to_file_name( const FileName & file_name, const std::string & addition )
 {
     return FileName( file_name.directory(), file_name.file_name() + addition, file_name.extension() );
+}
+
+// ********************************************************************************
+
+std::string append_backslash( const std::string & input )
+{
+    if ( input.empty() || ( input.substr( input.length() - 1 ) == "\\" ) )
+        return input;
+    return input + "\\";
 }
 
 // ********************************************************************************

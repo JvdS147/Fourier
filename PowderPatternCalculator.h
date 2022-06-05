@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Angle.h"
 #include "PointGroup.h"
 #include "ReflectionList.h"
+#include "Wavelength.h"
 
 class PowderPattern;
 class CrystalStructure;
@@ -43,9 +44,8 @@ public:
 
     explicit PowderPatternCalculator( const CrystalStructure & crystal_structure );
 
-    // @@ We now have a Wavelength class
-    double wavelength() const { return wavelength_; }
-    void set_wavelength( const double wavelength ) { wavelength_ = wavelength; }
+    Wavelength wavelength() const { return wavelength_; }
+    void set_wavelength( const Wavelength & wavelength ) { wavelength_ = wavelength; }
     Angle two_theta_start() const { return two_theta_start_; }
     void set_two_theta_start( const Angle two_theta_start ) { two_theta_start_ = two_theta_start; }
     Angle two_theta_end() const { return two_theta_end_; }
@@ -54,13 +54,17 @@ public:
     void set_two_theta_step( const Angle two_theta_step );
     double FWHM() const { return FWHM_; }
     void set_FWHM( const double FWHM ) { FWHM_ = FWHM; }
-    
+
     ReflectionList reflection_list() const { return reflection_list_; }
-    
+
     // A March-Dollase model is used
     void set_preferred_orientation( const MillerIndices & miller_indices, const double r );
 
-// @@ We need getters for the PO
+    void unset_preferred_orientation() { include_preferred_orientation_ = false; }
+
+    bool include_preferred_orientation() const { return include_preferred_orientation_; }
+    MillerIndices preferred_orientation_direction() const { return preferred_orientation_direction_; }
+    double r() const { return r_; }
 
 // Same for eta and/or peak shape
 
@@ -72,7 +76,7 @@ public:
     // Usually some reflections before and after the exact 2theta limits are included to avoid strange cut-off effects.
     // This can be switched off by setting exact to true.
     void calculate_reflection_list( const bool exact = false );
-    
+
     void calculate_structure_factors();
 
     // Sets all structure factors to 1, to get an artificial powder pattern to compare lattices.
@@ -82,10 +86,9 @@ public:
 
     void calculate_powder_pattern( PowderPattern & powder_pattern );
     void calculate( const ReflectionList & reflection_list, PowderPattern & powder_pattern );
-    void calculate_for_testing( PowderPattern & powder_pattern );
 
 private:
-    double wavelength_;
+    Wavelength wavelength_;
     Angle two_theta_start_;
     Angle two_theta_end_;
     Angle two_theta_step_;
@@ -101,7 +104,5 @@ private:
     bool is_systematic_absence( const MillerIndices miller_indices ) const;
     std::set< MillerIndices > calculate_equivalent_reflections( const MillerIndices miller_indices ) const;
 };
-
-void test_FWHM();
 
 #endif // POWDERPATTERNCALCULATOR_H

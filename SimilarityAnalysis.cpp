@@ -56,7 +56,6 @@ CorrelationMatrix calculate_correlation_matrix( const FileList & file_list )
         crystal_structure.apply_space_group_symmetry();
         std::cout << "Now calculating powder pattern... " + size_t2string( i, 4, '0' ) << std::endl;
         PowderPatternCalculator powder_pattern_calculator( crystal_structure );
-        powder_pattern_calculator.set_wavelength( 1.54056 );
         powder_pattern_calculator.set_two_theta_start( two_theta_start );
         powder_pattern_calculator.set_two_theta_end( two_theta_end );
         powder_pattern_calculator.set_two_theta_step( two_theta_step );

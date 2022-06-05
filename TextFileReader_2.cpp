@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "TextFileReader_2.h"
 #include "FileName.h"
-#include "Utilities.h"
+#include "StringFunctions.h"
 
 #include <stdexcept>
 #include <iostream>

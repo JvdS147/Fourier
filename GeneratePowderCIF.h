@@ -32,7 +32,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "CrystalLattice.h"
 #include "CrystalStructure.h"
 #include "PowderPattern.h"
-#include "PowderPatternCalculator.h"
 #include "SpaceGroup.h"
 #include "TextFileReader_2.h"
 #include "TextFileWriter.h"

@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "ChemicalFormula.h"
 #include "Fraction.h"
+#include "StringFunctions.h"
 #include "Utilities.h"
 
 #include <stdexcept>

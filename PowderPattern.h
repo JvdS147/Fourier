@@ -29,7 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 class FileName;
+
 #include "Angle.h"
+#include "Wavelength.h"
 
 #include <vector>
 
@@ -68,8 +70,8 @@ public:
     double intensity( const size_t i ) const { return intensities_[i]; }
     double estimated_standard_deviation( const size_t i ) const { return estimated_standard_deviations_[i]; }
     void set_two_theta( const size_t i, const Angle value ) { two_theta_values_[i] = value; }
-    double wavelength() const { return wavelength_; }
-    void set_wavelength( const double wavelength ) { wavelength_ = wavelength; }
+    Wavelength wavelength() const { return wavelength_; }
+    void set_wavelength( const Wavelength & wavelength ) { wavelength_ = wavelength; }
 
     // ESD is NOT updated.
     void set_intensity( const size_t i, const double value ) { intensities_[i] = value; }
@@ -143,7 +145,7 @@ public:
     void average_if_two_theta_equal();
 
 private:
-    double wavelength_;
+    Wavelength wavelength_;
     std::vector< Angle > two_theta_values_;
     std::vector< double > intensities_;
     std::vector< double > estimated_standard_deviations_;

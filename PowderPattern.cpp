@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "MathsFunctions.h"
 #include "RandomNumberGenerator.h"
 #include "RunningAverageAndESD.h"
+#include "StringFunctions.h"
 #include "TextFileReader.h"
 #include "TextFileReader_2.h"
 #include "TextFileWriter.h"
@@ -43,14 +44,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ********************************************************************************
 
-PowderPattern::PowderPattern() : wavelength_(1.54056)
+PowderPattern::PowderPattern()
 {
 }
 
 // ********************************************************************************
 
-PowderPattern::PowderPattern( const Angle two_theta_start, const Angle two_theta_end, const Angle two_theta_step ):
-wavelength_(1.54056)
+PowderPattern::PowderPattern( const Angle two_theta_start, const Angle two_theta_end, const Angle two_theta_step )
 {
     size_t npoints = round_to_int( ( (two_theta_end-two_theta_start) / two_theta_step ) ) + 1;
     two_theta_values_.reserve( npoints );
@@ -62,8 +62,7 @@ wavelength_(1.54056)
 
 // ********************************************************************************
 
-PowderPattern::PowderPattern( const FileName & file_name ):
-wavelength_(1.54056)
+PowderPattern::PowderPattern( const FileName & file_name )
 {
     read_xye( file_name );
 }
@@ -237,7 +236,7 @@ void PowderPattern::read_xye( const FileName & file_name )
     if ( text_file_reader.get_next_line( words ) )
     {
         if ( words.size() == 1 )
-            wavelength_ = string2double( words[0] );
+            wavelength_ = Wavelength( string2double( words[0] ) );
         else
             text_file_reader.push_back_last_line();
     }
@@ -272,11 +271,11 @@ void PowderPattern::read_xrdml( const FileName & file_name )
     std::vector< std::string > divergence_corrections;
     iPos = text_file_reader.find( "<divergenceCorrections>" );
     if ( iPos != std::string::npos )
-         divergence_corrections = split( extract_delimited_text( text_file_reader.line( iPos ), "<divergenceCorrections>", "</divergenceCorrections>" ) );
+        divergence_corrections = split( extract_delimited_text( text_file_reader.line( iPos ), "<divergenceCorrections>", "</divergenceCorrections>" ) );
     std::vector< std::string > counts;
     iPos = text_file_reader.find( "<intensities unit=\"counts\">" );
     if ( iPos != std::string::npos )
-         counts = split( extract_delimited_text( text_file_reader.line( iPos ), "<intensities unit=\"counts\">", "</intensities>" ) );
+        counts = split( extract_delimited_text( text_file_reader.line( iPos ), "<intensities unit=\"counts\">", "</intensities>" ) );
     else
     {
         iPos = text_file_reader.find( "<counts unit=\"counts\">" );
@@ -525,7 +524,7 @@ void PowderPattern::save_xye( const FileName & file_name, const bool include_wav
 {
     TextFileWriter text_file_writer( file_name );
     if ( include_wave_length )
-        text_file_writer.write_line( double2string( wavelength_ ) );
+        text_file_writer.write_line( double2string( wavelength_.wavelength_1() ) );
     for ( size_t i( 0 ); i != size(); ++i )
         text_file_writer.write_line( double2string( two_theta_values_[i].value_in_degrees(), 5 ) + "  " + double2string( intensities_[i] ) + "  " + double2string( estimated_standard_deviations_[i] ) );
 }
