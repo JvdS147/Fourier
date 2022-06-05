@@ -455,7 +455,7 @@ Element element_from_atom_label( std::string label )
     if ( label.empty() )
         throw std::runtime_error( "element_from_atom_label(): string is empty." );
     if ( ! std::isalpha( label[0] ) )
-        throw std::runtime_error( "element_from_atom_label(): string must start with alphabetic character." );
+        throw std::runtime_error( "element_from_atom_label(): string >" + label + "< must start with alphabetic character." );
     if ( ( label.length() == 1 ) || ( ! std::isalpha( label[1] ) ) )
         return Element( label.substr( 0, 1 ) );
     if ( ( to_upper( label[0] ) == 'O' ) && ( to_lower( label[1] ) == 'w' ) )

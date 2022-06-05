@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void inp_writer( const FileName & input_cif_file_name, const FileName & input_xye_file_name, const std::string & aal  )
 {
-    bool generate_restraints( true );
+    bool generate_restraints( false );
     CrystalStructure crystal_structure;
     std::cout << "Now reading cif... " + input_cif_file_name.full_name() << std::endl;
     read_cif( input_cif_file_name, crystal_structure );
@@ -206,7 +206,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    CS_G(@ , 107.03272`)" );
     text_file_writer.write_line( "    Strain_G(@ , 0.49554`)" );
     text_file_writer.write_line( "    Strain_L(@ , 0.03347`)" );
-    text_file_writer.write_line( "    prm  sh_scale_l" + aal + "  0.01948" );
+    text_file_writer.write_line( "    prm  sh_scale_l" + aal + " " + double2string( powder_pattern.cumulative_intensity() * 4.2E-10 ) );
     text_file_writer.write_line( "    spherical_harmonics_hkl sh_l" + aal );
     text_file_writer.write_line( "      sh_order 6" );
     text_file_writer.write_line( "    lor_fwhm = Abs( sh_scale_l" + aal + " * sh_l" + aal + " );" );
