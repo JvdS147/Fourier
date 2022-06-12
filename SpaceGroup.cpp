@@ -155,10 +155,26 @@ SymmetryOperator SpaceGroup::symmetry_operator( const size_t i ) const
 
 // ********************************************************************************
 
+// i = 0, 1, 2 for x, y, z.
+// I think that the diagonal in some cubic space groups can be a floating axis, so this
+// will not always work.
+bool SpaceGroup::is_floating_axis( const size_t i ) const
+{
+    if ( has_inversion_ )
+        return false;
+    Matrix3D sum;
+    for ( size_t k( 1 ); k != representative_symmetry_operators_.size(); ++k )
+        sum += representative_symmetry_operators_[ k ].rotation();
+    return ( ! nearly_zero( sum.value( i, i ) ) );
+}
+
+// ********************************************************************************
+
 // All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
 // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
 bool SpaceGroup::contains_non_standard_symmetry_operator() const
 {
+    // @@ Could / should do this via representative_symmetry_operators_
     for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
     {
         if ( symmetry_operators_[i].is_non_standard_symmetry_operator() )
@@ -366,9 +382,10 @@ void SpaceGroup::decompose()
     has_inversion_ = false;
     has_inversion_at_origin_ = false;
     std::vector< Vector3D > centring_vectors;
+    centring_vectors.push_back( Vector3D() );
     std::vector< Vector3D > inversion_translation_vectors;
     Matrix3D inversion( -1.0 );
-    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+    for ( size_t i( 1 ); i != symmetry_operators_.size(); ++i )
     {
         double determinant = symmetry_operators_[i].rotation().determinant();
         if ( nearly_equal( determinant, 1.0 ) )
