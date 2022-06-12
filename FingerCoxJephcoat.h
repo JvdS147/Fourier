@@ -50,6 +50,9 @@ public:
 
     FingerCoxJephcoat( const double A, const double B );
 
+    // DASH reports "H plus S over L" (HPSL) and "H minus S over L" (HMSL).
+    static FingerCoxJephcoat from_DASH( const double HPSL, const double HMSL );
+
     void set_HSL( const double H, const double S, const double L );
 
     // A = H/L

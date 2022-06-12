@@ -52,6 +52,13 @@ FingerCoxJephcoat::FingerCoxJephcoat( const double A, const double B ):eta_(0.9)
 
 // ********************************************************************************
 
+FingerCoxJephcoat FingerCoxJephcoat::from_DASH( const double HPSL, const double HMSL )
+{
+    return FingerCoxJephcoat( 0.5 * ( HPSL + HMSL ), 0.5 * ( HPSL - HMSL ) );
+}
+
+// ********************************************************************************
+
 void FingerCoxJephcoat::set_HSL( const double H, const double S, const double L )
 {
     if ( H < 0.01 )

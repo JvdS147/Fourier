@@ -608,18 +608,9 @@ void CrystalStructure::position_all_atoms_within_unit_cell()
 
 void CrystalStructure::move_com_close_to_origin( const bool allow_inversion )
 {
-    Matrix3D sum( 0.0 );
-    for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
-        sum += space_group_.symmetry_operator( i ).rotation();
     std::vector< bool > is_floating_axis( 3, false );
     for ( size_t i( 0 ); i != 3; ++i )
-    {
-        if ( ! nearly_zero( sum.value( i, i ) ) )
-        {
-            std::cout << "Floating axis found " << Vector3D::index2string( i ) << std::endl;
-            is_floating_axis[i] = true;
-        }
-    }
+        is_floating_axis[i] = space_group_.is_floating_axis( i );
     Vector3D com = centre_of_mass();
     std::cout << "Centre of mass = " << std::endl;
     com.show();
@@ -1891,7 +1882,6 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
     if ( natoms == 0 )
         return;
     std::vector< size_t > mapping_temp;
- //   mapping.clear();
     translations.clear();
     // Find closest match
     std::vector< bool > done( natoms, false );
@@ -1901,14 +1891,11 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
     Vector3D floating_axes_correction;
     if ( correct_floating_axes )
     {
-        Matrix3D sum( 0.0 );
-        for ( size_t k( 0 ); k != space_group.nsymmetry_operators(); ++k )
-            sum += space_group.symmetry_operator( k ).rotation();
         Vector3D com_lhs = to_be_changed.centre_of_mass(); // Fractional coordinates
         Vector3D com_rhs = target.centre_of_mass();
         for ( size_t i( 0 ); i != 3; ++i )
         {
-            if ( ! nearly_zero( sum.value( i, i ) ) )
+            if ( space_group.is_floating_axis( i ) )
             {
                 if ( debug_output )
                 {

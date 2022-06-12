@@ -60,7 +60,7 @@ public:
 
     enum AngleType { RADIANS, DEGREES };
 
-    // Default constructor: 0.0 radians
+    // Default constructor: 0.0 radians.
     Angle(): angle_(0.0) {}
 
     // 
@@ -69,7 +69,7 @@ public:
         angle_ = (radians_or_degrees == RADIANS) ? value : value * degrees2radians;
     }
 
-    // Named constructors, the names can be improved
+    // Named constructors, the names can be improved.
     static Angle from_radians( const double value ) { return Angle( value ); }
     static Angle from_degrees( const double value ) { return Angle( value * degrees2radians ); }
 
@@ -118,7 +118,7 @@ public:
         return *this;
     }
 
-    // Of course, operator== for floating point values is nonsense
+    // Of course, operator== for floating point values is nonsense.
     bool operator==( const Angle rhs ) const { return ( this->angle_ == rhs.angle_ ); }
     bool operator!=( const Angle rhs ) const { return ! ( *this == rhs ); }
     bool operator< ( const Angle rhs ) const { return ( this->angle_ < rhs.angle_ ); }
@@ -137,13 +137,13 @@ public:
     friend Angle absolute( const Angle angle );
 
 private:
-    double angle_; // The angle, stored in radians
+    double angle_; // The angle, stored in radians.
     // The angle is stored in radians because radians are used for calculations,
     // i.e. where speed is important, and degrees are only necessary when user output
     // is required, which takes a lot of time anyway, so the time for the conversion
-    // is negligible
+    // is negligible.
     
-    // Private constructor for named constructors
+    // Private constructor for named constructors.
     explicit Angle( const double value ) : angle_(value) {}
 };
 
@@ -154,13 +154,13 @@ std::ostream & operator<<( std::ostream & os, const Angle angle );
 inline Angle arcsine( const double value ) { return Angle::from_radians( asin( value ) ); }
 inline Angle arccosine( const double value ) { return Angle::from_radians( acos( value ) ); }
 
-// It is more efficient to calculate sine and cosine of the same angle simultaneously
-// The algorithm that is used is an APPROXIMATION
+// It is more efficient to calculate sine and cosine of the same angle simultaneously.
+// The algorithm that is used is an APPROXIMATION.
 void sincos( Angle angle, double & sine, double & cosine );
 
 inline Angle arctangent( const double x ) { return Angle::from_radians( atan( x ) ); }
 
-// cot-1(x) = pi/2 - tan-1(x) for any x
+// cot-1(x) = pi/2 - tan-1(x) for any x.
 inline Angle arccotangent( const double x ) { return Angle::angle_90_degrees() - arctangent( x ); }
 
 inline Angle operator*( const double lhs, const Angle rhs ) { return Angle::from_radians( rhs.value_in_radians() * lhs ); }
