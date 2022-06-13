@@ -174,10 +174,17 @@ bool SpaceGroup::is_floating_axis( const size_t i ) const
 // All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
 bool SpaceGroup::contains_non_standard_symmetry_operator() const
 {
-    // @@ Could / should do this via representative_symmetry_operators_
-    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+    if ( has_inversion_ )
     {
-        if ( symmetry_operators_[i].is_non_standard_symmetry_operator() )
+        if ( ! has_inversion_at_origin_ )
+        {
+            if ( is_non_standard_translation( position_of_inversion_ ) )
+                return true;
+        }
+    }
+    for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
+    {
+        if ( representative_symmetry_operators_[i].is_non_standard_symmetry_operator() )
             return true;
     }
     if ( centring_.centring_type() == Centring::U )

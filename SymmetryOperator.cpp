@@ -53,9 +53,7 @@ translation_vector_( translation_vector )
 // ********************************************************************************
 
 SymmetryOperator::SymmetryOperator( std::string input ) :
-rotation_matrix_( 0.0, 0.0, 0.0,
-                  0.0, 0.0, 0.0,
-                  0.0, 0.0, 0.0 )
+rotation_matrix_( 0.0 )
 {
     std::string original_input( input );
     // Remove all spaces
@@ -76,12 +74,12 @@ rotation_matrix_( 0.0, 0.0, 0.0,
         throw std::runtime_error( "SymmetryOperator::SymmetryOperator( std::string ): symmetry line cannot contain empty field: " + original_input );
     parts.push_back( input.substr( iPos1+1, iPos2 - (iPos1+1) ) );
     parts.push_back( input.substr( iPos2+1 ) );
-    // For each part, separate into parts separated by "+" or "-"
-    // This can be made easier by replacing each "-" except the first by "+-" (this turns a binary minus into a unary minus)
+    // For each part, separate into parts separated by "+" or "-".
+    // This can be made easier by replacing each "-" except the first by "+-" (this turns a binary minus into a unary minus).
     size_t iPos;
     for ( size_t i( 0 ); i != 3; ++i )
     {
-        // Find reference to x
+        // Find reference to x.
         iPos = parts[i].find_first_of( "xX" );
         if ( iPos != std::string::npos )
         {
@@ -89,9 +87,9 @@ rotation_matrix_( 0.0, 0.0, 0.0,
             double value = 1.0;
             if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
             {
-                // We now have something like 2x,y,z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                // We now have something like 2x,y,z , which can happen if we make angles close to 90 degrees after going from centred to primitive.
                 value = string2double( parts[i].substr( iPos-1, 1 ) );
-                // We only allow for a single digit, so 10x,y,z is still considered an error
+                // We only allow for a single digit, so 10x,y,z is still considered an error.
                 --iPos;
                 parts[i].erase( iPos, 1 );
             }
@@ -104,7 +102,7 @@ rotation_matrix_( 0.0, 0.0, 0.0,
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }
-        // Find reference to y
+        // Find reference to y.
         iPos = parts[i].find_first_of( "yY" );
         if ( iPos != std::string::npos )
         {
@@ -112,9 +110,9 @@ rotation_matrix_( 0.0, 0.0, 0.0,
             double value = 1.0;
             if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
             {
-                // We now have something like x,2y,z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                // We now have something like x,2y,z , which can happen if we make angles close to 90 degrees after going from centred to primitive.
                 value = string2double( parts[i].substr( iPos-1, 1 ) );
-                // We only allow for a single digit, so x,10y,z is still considered an error
+                // We only allow for a single digit, so x,10y,z is still considered an error.
                 --iPos;
                 parts[i].erase( iPos, 1 );
             }
@@ -127,7 +125,7 @@ rotation_matrix_( 0.0, 0.0, 0.0,
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }
-        // Find reference to z
+        // Find reference to z.
         iPos = parts[i].find_first_of( "zZ" );
         if ( iPos != std::string::npos )
         {
@@ -135,9 +133,9 @@ rotation_matrix_( 0.0, 0.0, 0.0,
             double value = 1.0;
             if ( ( iPos != 0 ) && is_digit( parts[i][iPos-1] ) )
             {
-                // We now have something like x,y,2z , which can happen if we make angles close to 90 degrees after going from centred to primitive
+                // We now have something like x,y,2z , which can happen if we make angles close to 90 degrees after going from centred to primitive.
                 value = string2double( parts[i].substr( iPos-1, 1 ) );
-                // We only allow for a single digit, so x,y,10z is still considered an error
+                // We only allow for a single digit, so x,y,10z is still considered an error.
                 --iPos;
                 parts[i].erase( iPos, 1 );
             }
@@ -150,7 +148,7 @@ rotation_matrix_( 0.0, 0.0, 0.0,
             if ( iPos != 0 )
                 parts[i].erase( iPos-1, 1 );
         }
-        // Whatever is left must be the translational part
+        // Whatever is left must be the translational part.
         double translational_part( 0.0 );
         if ( parts[i].length() != 0 )
         {
@@ -178,7 +176,7 @@ rotation_matrix_( 0.0, 0.0, 0.0,
 
 // ********************************************************************************
 
-// This is the "N" in Grosse-Kunstleve
+// This is the "N" in Grosse-Kunstleve.
 int SymmetryOperator::rotation_part_type() const
 {
     switch( round_to_int( rotation_matrix_.trace() ) )
@@ -196,7 +194,7 @@ int SymmetryOperator::rotation_part_type() const
 
 // ********************************************************************************
 
-// This is wi in Grosse-Kunstleve
+// This is wi in Grosse-Kunstleve.
 Vector3D SymmetryOperator::intrinsic_translation_part() const
 {
     int N = rotation_part_type();
@@ -231,43 +229,13 @@ Vector3D SymmetryOperator::location_translation_part() const
 // ********************************************************************************
 
 // All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
-// All elements of the translation vector are multiples of 1/12
+// All elements of the translation vector are multiples of 1/12.
 bool SymmetryOperator::is_non_standard_symmetry_operator() const
 {
-    for ( size_t i( 0 ); i != 3; ++i )
-    {
-        for ( size_t j( 0 ); j != 3; ++j )
-        {
-            if ( ! ( nearly_zero( rotation_matrix_.value( i, j ) ) || nearly_equal( rotation_matrix_.value( i, j ), 1.0 ) || nearly_equal( rotation_matrix_.value( i, j ), -1.0 ) ) )
-                return true;
-        }
-    }
-    for ( size_t i( 0 ); i != 3; ++i )
-    {
-        Fraction fraction = double2fraction( translation_vector_.value( i ), Fraction( 1, 12 ) );
-        if ( ! nearly_equal( fraction.to_double(), translation_vector_.value( i ), 0.01 ) )
-            return true;
-//        if ( fraction.integer_part() != 0 )
-//            return true;
-//        if ( fraction.numerator() < 0 )
-//            return true;
-        if ( fraction == Fraction( 0 ) )
-            continue;
-        if ( fraction == Fraction( 1, 6 ) )
-            continue;
-        if ( fraction == Fraction( 1, 4 ) )
-            continue;
-        if ( fraction == Fraction( 1, 3 ) )
-            continue;
-        if ( fraction == Fraction( 1, 2 ) )
-            continue;
-        if ( fraction == Fraction( 2, 3 ) )
-            continue;
-        if ( fraction == Fraction( 3, 4 ) )
-            continue;
-        if ( fraction == Fraction( 5, 6 ) )
-            continue;
-    }
+    if ( is_non_standard_rotation( rotation_matrix_ ) )
+        return true;
+    if ( is_non_standard_translation( translation_vector_ ) )
+        return true;
     return false;
 }
 
@@ -360,6 +328,57 @@ std::ostream & operator<<( std::ostream & os, const SymmetryOperator & symmetry_
 bool nearly_equal( const SymmetryOperator & lhs, const SymmetryOperator & rhs, const double tolerance )
 {
     return ( nearly_equal( lhs.rotation(), rhs.rotation(), tolerance ) && nearly_equal( lhs.translation(), rhs.translation(), tolerance ) );
+}
+
+// ********************************************************************************
+
+// All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
+bool is_non_standard_rotation( const Matrix3D & rotation )
+{
+    for ( size_t i( 0 ); i != 3; ++i )
+    {
+        for ( size_t j( 0 ); j != 3; ++j )
+        {
+            if ( ! ( nearly_zero( rotation.value( i, j ) ) || nearly_equal( absolute ( rotation.value( i, j ) ), 1.0 ) ) )
+                return true;
+        }
+    }
+    return false;
+}
+
+// ********************************************************************************
+
+// All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
+bool is_non_standard_translation( const Vector3D & translation )
+{
+    for ( size_t i( 0 ); i != 3; ++i )
+    {
+        Fraction fraction = double2fraction( translation.value( i ), Fraction( 1, 12 ) );
+        if ( ! nearly_equal( fraction.to_double(), translation.value( i ), 0.01 ) )
+            return true;
+//        if ( fraction.integer_part() != 0 )
+//            return true;
+//        if ( fraction.numerator() < 0 )
+//            return true;
+        if ( fraction == Fraction( 0 ) )
+            continue;
+        if ( fraction == Fraction( 1, 6 ) )
+            continue;
+        if ( fraction == Fraction( 1, 4 ) )
+            continue;
+        if ( fraction == Fraction( 1, 3 ) )
+            continue;
+        if ( fraction == Fraction( 1, 2 ) )
+            continue;
+        if ( fraction == Fraction( 2, 3 ) )
+            continue;
+        if ( fraction == Fraction( 3, 4 ) )
+            continue;
+        if ( fraction == Fraction( 5, 6 ) )
+            continue;
+        return true;
+    }
+    return false;
 }
 
 // ********************************************************************************

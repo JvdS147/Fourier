@@ -69,12 +69,12 @@ public:
 
     // This is the "N" in Grosse-Kunstleve.
     int rotation_part_type() const;
-    
+
     // This is wi in Grosse-Kunstleve.
     Vector3D intrinsic_translation_part() const;
-    
+
     bool has_intrinsic_translation() const;
-    
+
     // This is wl in Grosse-Kunstleve.
     Vector3D location_translation_part() const;
 
@@ -99,6 +99,12 @@ private:
 std::ostream & operator<<( std::ostream & os, const SymmetryOperator & symmetry_operator );
 
 bool nearly_equal( const SymmetryOperator & lhs, const SymmetryOperator & rhs, const double tolerance = TOLERANCE );
+
+// All elements of the rotation matrix of a standard symmetry operator are -1, 0 or 1.
+bool is_non_standard_rotation( const Matrix3D & rotation );
+
+// All elements of the translation vector are 0, 1/6, 1/4, 1/3, 1/2, 2/3, 3/4 or 5/6.
+bool is_non_standard_translation( const Vector3D & translation );
 
 SymmetryOperator operator*( const Matrix3D & matrix, const SymmetryOperator & symmetry_operator );
 
