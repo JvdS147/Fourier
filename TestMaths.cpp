@@ -83,5 +83,24 @@ void test_maths( TestSuite & test_suite )
         Legendre_polynomial_and_derivative( 6, x, y2, dydx );
         test_suite.test_equality_double( y1, y2, "Legendre_polynomial_and_derivative 01" );
     }
+    {
+        test_suite.test_equality( factorial( 0 ), 1, "factorial() 01" );
+        test_suite.test_equality( factorial( 5 ), 120, "factorial() 02" );
+        test_suite.test_equality( double_factorial( 0 ), 1, "double_factorial() 01" );
+        test_suite.test_equality( double_factorial( 1 ), 1, "double_factorial() 02" );
+        test_suite.test_equality( double_factorial( 7 ), 105, "double_factorial() 03" );
+        test_suite.test_equality( double_factorial( 8 ), 384, "double_factorial() 04" );
+    }
+    {
+        Angle theta( 50.0, Angle::DEGREES );
+        double result;
+        result = associated_Legendre_polynomial( 2, 0, theta.cosine() );
+        test_suite.test_equality_double( result, 0.5 * ( 3.0 * square( theta.cosine() ) - 1.0 ), "associated_Legendre_polynomial 01" );
+        result = associated_Legendre_polynomial( 2, 1, theta.cosine() );
+        test_suite.test_equality_double( result, -3.0 * theta.cosine() * theta.sine(), "associated_Legendre_polynomial 02" );
+        result = associated_Legendre_polynomial( 2, 2, theta.cosine() );
+        test_suite.test_equality_double( result, 3.0 * square( theta.sine() ), "associated_Legendre_polynomial 03" );
+    }
+
 }
 

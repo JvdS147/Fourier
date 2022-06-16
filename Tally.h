@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 
 /*
- * Counts number of items
+ * Counts number of items.
  * 
  * Basically gives a C++ container an old-fashioned index-based interface, probably not good.
  */

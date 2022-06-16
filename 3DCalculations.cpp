@@ -486,6 +486,50 @@ Vector3D rotate_point_about_axis( Vector3D point, const Vector3D & origin, const
 
 // ********************************************************************************
 
+// Converts the orientation of a vector to Eulerian angles alpha and beta.
+// Eulerian angles have many problems with definitions of origin and domain and ambiguous values.
+void Eulerian_angles( const Vector3D & rhs, Angle & alpha, Angle & beta )
+{
+    // beta is the angle between the vector and the z-axis, domain 0.0 <= beta <= 180.0.
+    if ( nearly_zero( rhs.x() ) && nearly_zero( rhs.y() ) )
+    {
+        if ( nearly_zero( rhs.z() ) )
+            throw std::runtime_error( "Eulerian_angles( Vector3D, Angle, Angle ): error: the zero vector does not have an orientation." );
+        alpha = Angle();
+        if ( rhs.z() > 0.0 )
+            beta = Angle();
+        else
+            beta = Angle::angle_180_degrees();
+        return;
+    }
+    beta = arccosine( rhs.z() / rhs.length() );
+    // alpha is the orientation in the xy-plane, the phase is measured w.r.t. the x-axis, i.e. the x-axis is the origin.
+    alpha = ATAN2( rhs.y(), rhs.x() );
+}
+
+// ********************************************************************************
+
+// Converts the orientation of a vector to Eulerian angles alpha and beta.
+// Eulerian angles have many problems with definitions of origin and domain and ambiguous values.
+void Eulerian_angles( const NormalisedVector3D & rhs, Angle & alpha, Angle & beta )
+{
+    // beta is the angle between the vector and the z-axis, domain 0.0 <= beta <= 180.0.
+    if ( nearly_zero( rhs.x() ) && nearly_zero( rhs.y() ) )
+    {
+        alpha = Angle();
+        if ( rhs.z() > 0.0 )
+            beta = Angle();
+        else
+            beta = Angle::angle_180_degrees();
+        return;
+    }
+    beta = arccosine( rhs.z() );
+    // alpha is the orientation in the xy-plane, the phase is measured w.r.t. the x-axis, i.e. the x-axis is the origin.
+    alpha = ATAN2( rhs.y(), rhs.x() );
+}
+
+// ********************************************************************************
+
 Vector3D cylindrical2Cartesian( const double r, Angle phi, const double z )
 {
     return Vector3D( r * phi.cosine(), r * phi.sine(), z );

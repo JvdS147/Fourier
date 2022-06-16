@@ -29,9 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Angle.h"
 #include "Sort.h"
 
-#include <stdexcept>
 #include <cstdlib>
-#include <iostream> // For debugging
+#include <iostream> // For debugging.
+#include <stdexcept>
 
 // ********************************************************************************
 
@@ -189,13 +189,56 @@ void Legendre_polynomial_and_derivative( const size_t order, const double x, dou
 
 // ********************************************************************************
 
-// Must return size_t, because we use recursion
+double associated_Legendre_polynomial( const size_t l, const size_t m, const double x )
+{
+    if ( absolute( x ) > 1.0 )
+        throw std::runtime_error( "associated_Legendre_polynomial(): |x| > 1.0." );
+    if ( m > l )
+        throw std::runtime_error( "associated_Legendre_polynomial(): m > l." );
+    double Pmm = 1.0;
+    if ( m > 0 )
+    {
+        double somx2 = -sqrt( ( 1.0 - x ) * ( 1.0 + x ) );
+        Pmm = somx2;
+        double fact = 3.0;
+        for ( size_t i( 2 ); i <= m; ++i )
+        {
+            Pmm *= fact*somx2;
+            fact += 2.0;
+        }
+    }
+    if ( l == m )
+        return Pmm;
+    double Pmmp1 = x * ( 2.0 * m + 1.0 ) * Pmm;
+    for ( size_t ll( m+2 ); ll <= l; ++ll )
+    {
+        double Pll = ( x * ( 2.0 * ll - 1.0 ) * Pmmp1 - ( ll + m - 1.0 ) * Pmm ) / ( ll - m );
+        Pmm = Pmmp1;
+        Pmmp1 = Pll;
+    }
+    return Pmmp1;
+}
+
+// ********************************************************************************
+
+// Must return size_t, because we use recursion.
 // Simplistic algorithm, will overflow very quickly.
 size_t factorial( const size_t n )
 {
-    if ( n == 0 )
+    if ( n < 2 )
         return 1;
     return n * factorial( n-1 );
+}
+
+// ********************************************************************************
+
+// Must return size_t, because we use recursion.
+// Simplistic algorithm, will overflow very quickly.
+size_t double_factorial( const size_t n )
+{
+    if ( n < 2 )
+        return 1;
+    return n * double_factorial( n-2 );
 }
 
 // ********************************************************************************
@@ -304,7 +347,6 @@ size_t calculate_maximum( const std::vector< size_t > & values )
 
 // ********************************************************************************
 
-// hypothenuse
 double hypothenuse( const double x, const double y )
 {
     double ax = fabs( x );
@@ -465,6 +507,8 @@ double ln( const double x )
 {
     if ( nearly_zero( x ) )
         return 1.0;
+    if ( x < 0.0 )
+        throw std::runtime_error( "ln(): x < 0.0." );
     return log( x );
 }
 

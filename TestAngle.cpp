@@ -29,22 +29,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "TestSuite.h"
 
-#include <string>
 #include <iostream>
-
-void test_one_angle( TestSuite & test_suite, const double actual_value, const double target_value, const std::string & error_message )
-{
-    test_suite.test_equality( actual_value, target_value, error_message );
-}
 
 void test_angle( TestSuite & test_suite )
 {
     std::cout << "Now running tests for Angle." << std::endl;
     {
     Angle angle;
-    test_one_angle( test_suite, angle.value_in_radians(), 0.0, "Angle 1" );
+    test_suite.test_equality_double( angle.value_in_radians(), 0.0, "Angle 1" );
     }
-    
+    {
+        double x;
+        double y;
+        Angle angle;
+        x = 1.0;
+        y = 1.0;
+        angle = ATAN2( y, x );
+        test_suite.test_equality_double( angle.value_in_degrees(), 45.0, "Angle ATAN2() 1" );
+        x = -1.0;
+        y = 1.0;
+        angle = ATAN2( y, x );
+        test_suite.test_equality_double( angle.value_in_degrees(), 135.0, "Angle ATAN2() 2" );
+        x = -1.0;
+        y = -1.0;
+        angle = ATAN2( y, x );
+        test_suite.test_equality_double( angle.value_in_degrees(), 225.0, "Angle ATAN2() 3" );
+        x = 1.0;
+        y = -1.0;
+        angle = ATAN2( y, x );
+        test_suite.test_equality_double( angle.value_in_degrees(), 315.0, "Angle ATAN2() 4" );
+    }
     
 }
 

@@ -30,6 +30,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "BasicMathsFunctions.h"
 
+#include <iosfwd>
+#include <string>
+
 /*
     Mainly a wrapper for std::complex< double > .
     
@@ -91,6 +94,8 @@ public:
     Complex & operator--();    // Prefix
     Complex   operator--(int); // Postfix
 
+    std::string to_string() const;
+
 private:
 
     double real_;
@@ -99,6 +104,8 @@ private:
     inline void negate() { real_ = -real_; imaginary_ = -imaginary_; }
 
 };
+
+std::ostream & operator<<( std::ostream & os, const Complex value );
 
 bool nearly_equal( const Complex & lhs, const Complex & rhs, const double tolerance = TOLERANCE );
 

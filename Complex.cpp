@@ -29,8 +29,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasicMathsFunctions.h"
 
 #include <cmath>
-#include <stdexcept>
 #include <iostream>
+#include <sstream>
+#include <stdexcept>
 
 // ********************************************************************************
 
@@ -90,7 +91,7 @@ void Complex::power( const int n )
     // The current implementation is extremely simple.
     Complex z( *this );
     for ( size_t i(1); i != abs_n; ++i )
-        *this = *this * z;
+        *this *= z;
 }
 
 // ********************************************************************************
@@ -136,19 +137,51 @@ Complex & Complex::operator-=( const Complex & rhs )
 
 Complex & Complex::operator*=( const Complex & rhs )
 {
-  //  numerator_    = integer_part_*rhs.numerator_*denominator_ + rhs.integer_part_*numerator_*rhs.denominator_ + numerator_*rhs.numerator_;
-  //  denominator_ *= rhs.denominator_;
-  //  integer_part_ *= rhs.integer_part_;
+    double real_temp = real_ * rhs.real_ - imaginary_ * rhs.imaginary_;
+    imaginary_ = real_ * rhs.imaginary_ + rhs.real_ * imaginary_;
+    real_ = real_temp;
     return *this;
 }
 
-// *************************Complex*******************************************************
+// ********************************************************************************
 
 Complex & Complex::operator/=( const Complex & rhs )
 {
- //   numerator_   = integer_part_*denominator_*rhs.denominator_     + numerator_*rhs.denominator_;
- //   denominator_ = rhs.integer_part_*denominator_*rhs.denominator_ + rhs.numerator_*denominator_;
- //   integer_part_ = 0;
+    *this = *this / rhs;
+    return *this;
+}
+
+// ********************************************************************************
+
+Complex & Complex::operator+=( const double & rhs )
+{
+    real_ += rhs;
+    return *this;
+}
+
+// ********************************************************************************
+
+Complex & Complex::operator-=( const double & rhs )
+{
+    real_ -= rhs;
+    return *this;
+}
+
+// ********************************************************************************
+
+Complex & Complex::operator*=( const double & rhs )
+{
+    real_ *= rhs;
+    imaginary_ *= rhs;
+    return *this;
+}
+
+// ********************************************************************************
+
+Complex & Complex::operator/=( const double & rhs )
+{
+    real_ /= rhs;
+    imaginary_ /= rhs;
     return *this;
 }
 
@@ -162,7 +195,7 @@ Complex & Complex::operator++()    // Prefix
 
 // ********************************************************************************
 
-Complex  Complex::operator++(int) // Postfix
+Complex   Complex::operator++(int) // Postfix
 {
     Complex old( *this );
     ++(*this);
@@ -179,11 +212,31 @@ Complex & Complex::operator--()    // Prefix
 
 // ********************************************************************************
 
-Complex  Complex::operator--(int) // Postfix
+Complex   Complex::operator--(int) // Postfix
 {
     Complex old( *this );
     --(*this);
     return old;
+}
+
+// ********************************************************************************
+
+std::string Complex::to_string() const
+{
+    std::stringstream o;
+    o << "Re = ";
+    o << real_;
+    o << ", Im = ";
+    o << imaginary_;
+    return o.str();
+}
+
+// ********************************************************************************
+
+std::ostream & operator<<( std::ostream & os, const Complex value )
+{
+    os << value.to_string();
+    return os;
 }
 
 // ********************************************************************************
@@ -200,15 +253,21 @@ Complex operator+( const Complex & lhs, const Complex & rhs )
     return Complex( lhs.real() + rhs.real(), lhs.imaginary() + rhs.imaginary() );
 }
 
+// ********************************************************************************
+
 Complex operator-( const Complex & lhs, const Complex & rhs )
 {
     return Complex( lhs.real() - rhs.real(), lhs.imaginary() - rhs.imaginary() );
 }
 
+// ********************************************************************************
+
 Complex operator*( const Complex & lhs, const Complex & rhs )
 {
     return Complex( lhs.real() * rhs.real() - lhs.imaginary() * rhs.imaginary(), lhs.real() * rhs.imaginary() + rhs.real() * lhs.imaginary() );
 }
+
+// ********************************************************************************
 
 Complex operator/( const Complex & lhs, Complex rhs )
 {
@@ -216,20 +275,28 @@ Complex operator/( const Complex & lhs, Complex rhs )
     return lhs * rhs;
 }
 
+// ********************************************************************************
+
 Complex operator+( const double lhs, const Complex & rhs )
 {
     return Complex( lhs + rhs.real(), rhs.imaginary() );
 }
+
+// ********************************************************************************
 
 Complex operator-( const double lhs, const Complex & rhs )
 {
     return Complex( lhs - rhs.real(), -rhs.imaginary() );
 }
 
+// ********************************************************************************
+
 Complex operator*( const double lhs, const Complex & rhs )
 {
     return Complex( lhs * rhs.real(), lhs * rhs.imaginary() );
 }
+
+// ********************************************************************************
 
 Complex operator/( const double lhs, Complex rhs )
 {
@@ -237,20 +304,28 @@ Complex operator/( const double lhs, Complex rhs )
     return lhs * rhs;
 }
 
+// ********************************************************************************
+
 Complex operator+( const Complex & lhs, const double rhs )
 {
     return Complex( lhs.real() + rhs, lhs.imaginary() );
 }
+
+// ********************************************************************************
 
 Complex operator-( const Complex & lhs, const double rhs )
 {
     return Complex( lhs.real() - rhs, lhs.imaginary() );
 }
 
+// ********************************************************************************
+
 Complex operator*( const Complex & lhs, const double rhs )
 {
     return Complex( rhs * lhs.real(), rhs * lhs.imaginary() );
 }
+
+// ********************************************************************************
 
 Complex operator/( const Complex & lhs, const double rhs )
 {

@@ -147,6 +147,14 @@ Matrix3D rotation_about_z( const Angle angle );
 // "origin" is a point on the axis, "n" is the direction of the axis.
 Vector3D rotate_point_about_axis( Vector3D point, const Vector3D & origin, const NormalisedVector3D & n, const Angle angle );
 
+// Converts the orientation of a vector to Eulerian angles alpha and beta.
+// Eulerian angles have many problems with definitions of origin and domain and ambiguous values.
+void Eulerian_angles( const Vector3D & vector, Angle & alpha, Angle & beta );
+
+// Converts the orientation of a vector to Eulerian angles alpha and beta.
+// Eulerian angles have many problems with definitions of origin and domain and ambiguous values.
+void Eulerian_angles( const NormalisedVector3D & vector, Angle & alpha, Angle & beta );
+
 Vector3D cylindrical2Cartesian( const double r, Angle phi, const double z );
 
 bool are_translationally_equivalent( const double x, const double y );

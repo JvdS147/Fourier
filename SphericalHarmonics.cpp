@@ -1,6 +1,3 @@
-#ifndef RUNTESTS_H
-#define RUNTESTS_H
-
 /* *********************************************
 Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -28,40 +25,31 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-class TestSuite;
+#include "SphericalHarmonics.h"
+#include "MathsFunctions.h"
 
-void test_angle( TestSuite & test_suite );
-void test_Chebyshev_background( TestSuite & test_suite );
-void test_chemical_formula( TestSuite & test_suite );
-void test_Complex( TestSuite & test_suite );
-void test_Constraints( TestSuite & test_suite );
-void test_ConvexPolygon( TestSuite & test_suite );
-void test_correlation_matrix( TestSuite & test_suite );
-void test_crystal_lattice( TestSuite & test_suite );
-void test_crystal_structure( TestSuite & test_suite );
-void test_file_name( TestSuite & test_suite );
-void test_fraction( TestSuite & test_suite );
-void test_linear_regression( TestSuite & test_suite);
-void test_mapping( TestSuite & test_suite );
-void test_matrix3D( TestSuite & test_suite );
-void test_MatrixFraction3D( TestSuite & test_suite );
-void test_maths( TestSuite & test_suite );
-void test_ModelBuilding( TestSuite & test_suite );
-void test_PowderMatchTable( TestSuite & test_suite );
-void test_PowderPattern( TestSuite & test_suite );
-void test_quaternion( TestSuite & test_suite );
-void test_ReadCell( TestSuite & test_suite );
-void test_sort( TestSuite & test_suite );
-void test_space_group( TestSuite & test_suite );
-void test_SphericalHarmonics( TestSuite & test_suite );
-void test_StringFunctions( TestSuite & test_suite );
-void test_SudokuSolver( TestSuite & test_suite );
-void test_TextFileReader_2( TestSuite & test_suite );
-void test_TLS_ADPs( TestSuite & test_suite );
-void test_utilities( TestSuite & test_suite );
-void test_3D_calculations( TestSuite & test_suite );
+#include <stdexcept>
 
-void run_tests();
+// ********************************************************************************
 
-#endif // RUNTESTS_H
+Complex spherical_harmonics( const size_t l, const int m, const Angle alpha, const Angle beta )
+{
+    if ( absolute( m ) > l )
+        throw std::runtime_error( "spherical_harmonics(): |m| > l." );
+    if ( m < 0 )
+    {
+        Complex result = spherical_harmonics( l, -m, alpha, beta );
+        result.conjugate();
+        return is_even( -m ) ? result : -result;
+    }
+    double factorial_lmm = factorial(l-m);
+    double factorial_lpm = factorial(l+m);
+    Complex result = Complex( sqrt( ( (2.0*l+1.0) / (4.0*CONSTANT_PI) ) * ( factorial_lmm / factorial_lpm ) ) );
+    result *= associated_Legendre_polynomial( l, m, beta.cosine() );
+    Complex z( 0.0, m * alpha.value_in_radians() );
+    result *= exponential( z );    
+    return result;
+}
+
+// ********************************************************************************
 
