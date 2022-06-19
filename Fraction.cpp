@@ -598,3 +598,21 @@ Fraction Farey_terminate_on_error( const double target, const double epsilon )
 
 // ********************************************************************************
 
+Fraction average( const Fraction & lhs, const Fraction & rhs, const Fraction & weight )
+{
+    return ( lhs + weight * rhs ) / ( weight + 1 );
+}
+
+// ********************************************************************************
+
+bool triquality( const Fraction & x1, const Fraction & x2, const Fraction & x3 )
+{
+    if ( x1 != x2 )
+        return false;
+    if ( x2 != x3 )
+        return false;
+    return true;
+}
+
+// ********************************************************************************
+

@@ -352,3 +352,24 @@ Complex exponential( const Complex z )
 
 // ********************************************************************************
 
+Complex average( const Complex & lhs, const Complex & rhs, const double weight )
+{
+    return ( lhs + weight * rhs ) / ( 1.0 + weight );
+}
+
+// ********************************************************************************
+
+bool triquality( const Complex & x1, const Complex & x2, const Complex & x3, const double tolerance )
+{
+    Complex average = ( x1 + x2 + x3 ) / 3.0;
+    if ( ! nearly_equal( x1, average, tolerance ) )
+        return false;
+    if ( ! nearly_equal( x2, average, tolerance ) )
+        return false;
+    if ( ! nearly_equal( x3, average, tolerance ) )
+        return false;
+    return true;
+}
+
+// ********************************************************************************
+

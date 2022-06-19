@@ -128,5 +128,24 @@ Complex square( const Complex value );
 
 Complex exponential( const Complex z );
 
+// To calculate the average of four values:
+// Complex average = average( value_1, value_2 );
+// average = average( value_3, average, 2.0 );
+// average = average( value_4, average, 3.0 );
+// Even this works:
+//    Complex prev_estimate; // No need to initialise...
+//    Complex next_estimate; // No need to initialise...
+//    size_t iStep( 0 );
+//    while ( iStep < 1000000 )
+//    {
+//        prev_estimate = next_estimate;
+//        Complex current_value = some_function();
+//        next_estimate = average( current_value, prev_estimate, iStep );
+//        ++iStep;
+//    }
+Complex average( const Complex & lhs, const Complex & rhs, const double weight = 1.0 );
+
+bool triquality( const Complex & x1, const Complex & x2, const Complex & x3, const double tolerance = TOLERANCE );
+
 #endif // COMPLEX_H
 

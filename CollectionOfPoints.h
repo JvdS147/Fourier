@@ -50,6 +50,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   @@ Maybe these should be selected to be low-level classes, so that e.g. Plane is allowed to include SetOfPoints
      (but not the opposite way round).
 
+@@ We could make this more general. The SetOfDoubles class and the SetOfPoints class could have a "reference" or "offset" defined
+which is *always* subtracted when using Vector3D point( const size_t i ) const { return points_[i]; }. I.e., we always store all
+original points and an offset, but the getters only return the original point minus the offset.
+For doubles, a natural offset is e.g. the lowest value, or the average value.
+
 */
 class CollectionOfPoints
 {

@@ -35,5 +35,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Complex spherical_harmonics( const size_t l, const int m, const Angle alpha, const Angle beta );
 
+// Spherical harmonics with a different normalisation constant. Much more efficient when calculating
+// orientational order parameters.
+Complex Racah_spherical_harmonics( const size_t l, const int m, const Angle alpha, const Angle beta );
+
 #endif // SPHERICALHARMONICS_H
 

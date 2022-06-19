@@ -1,3 +1,6 @@
+#ifndef ORIENTATIONALORDERPARAMETERS_H
+#define ORIENTATIONALORDERPARAMETERS_H
+
 /* *********************************************
 Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -25,37 +28,19 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "SphericalHarmonics.h"
-#include "MathsFunctions.h"
+class NormalisedVector3D;
+class Vector3D;
 
-#include <stdexcept>
+#include <cstddef> // For definition of size_t.
+#include <vector>
 
-// ********************************************************************************
+// < Pl( cos( theta ) ) >
+double orientational_order_parameter( const size_t l, const std::vector< NormalisedVector3D > & orientation_vectors );
 
-Complex spherical_harmonics( const size_t l, const int m, const Angle alpha, const Angle beta )
-{
-    return sqrt( ( (2.0*l+1.0) / (4.0*CONSTANT_PI) ) ) * Racah_spherical_harmonics( l, m, alpha, beta );
-}
+// S6 from the paper "Searching the Cambridge Structural Database for the ‘best’ representative of each unique polymorph",
+// Van de Streek (2006), Acta Crystallographica B. 62, 567-579.
+// points must contain exactly six coordinates, which are the positions of six carbon atoms in a phenyl ring.
+double orientational_order_parameter_S6( const std::vector< Vector3D > & points );
 
-// ********************************************************************************
-
-Complex Racah_spherical_harmonics( const size_t l, const int m, const Angle alpha, const Angle beta )
-{
-    if ( absolute( m ) > l )
-        throw std::runtime_error( "Racah_spherical_harmonics(): |m| > l." );
-    if ( m < 0 )
-    {
-        Complex result = Racah_spherical_harmonics( l, -m, alpha, beta );
-        result.conjugate();
-        return is_even( -m ) ? result : -result;
-    }
-    double factorial_lmm = factorial(l-m);
-    double factorial_lpm = factorial(l+m);
-    double result = sqrt( factorial_lmm / factorial_lpm );
-    result *= associated_Legendre_polynomial( l, m, beta.cosine() );
-    Complex z( 0.0, m * alpha.value_in_radians() );
-    return result * exponential( z );
-}
-
-// ********************************************************************************
+#endif // ORIENTATIONALORDERPARAMETERS_H
 

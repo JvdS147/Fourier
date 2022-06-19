@@ -47,6 +47,7 @@ void test_matrix3D( TestSuite & test_suite );
 void test_MatrixFraction3D( TestSuite & test_suite );
 void test_maths( TestSuite & test_suite );
 void test_ModelBuilding( TestSuite & test_suite );
+void test_OrientationalOrderParameters( TestSuite & test_suite );
 void test_PowderMatchTable( TestSuite & test_suite );
 void test_PowderPattern( TestSuite & test_suite );
 void test_quaternion( TestSuite & test_suite );

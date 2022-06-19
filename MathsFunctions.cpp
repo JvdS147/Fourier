@@ -166,9 +166,14 @@ double integral_Gauss_Legendre_quadrature( const Function f, const double start,
 
 double Legendre_polynomial( const size_t order, const double x )
 {
-    double y;
-    double dydx;
-    Legendre_polynomial_and_derivative( order, x, y, dydx );
+    double y = 1.0;
+    double p2 = 0.0;
+    for ( size_t j( 0 ); j != order; ++j )
+    {
+        double p3 = p2;
+        p2 = y;
+        y = ( ( 2.0 * j + 1.0 ) * x * p2 - j * p3 ) / ( j + 1.0 );
+    }
     return y;
 }
 

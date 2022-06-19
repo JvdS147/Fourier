@@ -144,13 +144,14 @@ public:
 
 private:
 
+    int integer_part_; // Always same sign as numerator_.
+    int numerator_;   // Always same sign as integerPart_. Always smaller than denominator_.
+    int denominator_; // Always positive. Always greater than numerator_. Always 1 when numerator_ is 0.
+
     void clean_up();
 
     inline void negate() { integer_part_ = -integer_part_; numerator_ = -numerator_; }
 
-    int integer_part_; // Always same sign as numerator_.
-    int numerator_;   // Always same sign as integerPart_. Always smaller than denominator_.
-    int denominator_; // Always positive. Always greater than numerator_. Always 1 when numerator_ is 0.
 };
 
 Fraction absolute( const Fraction & fraction );
@@ -200,6 +201,25 @@ Fraction double2fraction( const double target, const Fraction & smallest_unit );
 Fraction Farey( double target, const int maximum_denominator );
 
 Fraction Farey_terminate_on_error( const double target, const double epsilon );
+
+// To calculate the average of four values:
+// Fraction average = average( value_1, value_2 );
+// average = average( value_3, average, Fraction( 2 ) );
+// average = average( value_4, average, Fraction( 3 ) );
+// Even this works:
+//    Fraction prev_estimate; // No need to initialise...
+//    Fraction next_estimate; // No need to initialise...
+//    size_t iStep( 0 );
+//    while ( iStep < 1000000 )
+//    {
+//        prev_estimate = next_estimate;
+//        Fraction current_value = some_function();
+//        next_estimate = average( current_value, prev_estimate, Fraction( iStep ) );
+//        ++iStep;
+//    }
+Fraction average( const Fraction & lhs, const Fraction & rhs, const Fraction & weight = Fraction( 1 ) );
+
+bool triquality( const Fraction & x1, const Fraction & x2, const Fraction & x3 );
 
 #endif // FRACTION_H
 

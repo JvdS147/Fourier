@@ -1,3 +1,6 @@
+#ifndef TESTFUNCTIONS_H
+#define TESTFUNCTIONS_H
+
 /* *********************************************
 Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -25,37 +28,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "SphericalHarmonics.h"
-#include "MathsFunctions.h"
+typedef double (*Function)( const double x );
 
-#include <stdexcept>
+double test_function_01( const double x );
 
-// ********************************************************************************
+double test_function_02( const double x );
 
-Complex spherical_harmonics( const size_t l, const int m, const Angle alpha, const Angle beta )
-{
-    return sqrt( ( (2.0*l+1.0) / (4.0*CONSTANT_PI) ) ) * Racah_spherical_harmonics( l, m, alpha, beta );
-}
+double test_function_03( const double x );
 
-// ********************************************************************************
-
-Complex Racah_spherical_harmonics( const size_t l, const int m, const Angle alpha, const Angle beta )
-{
-    if ( absolute( m ) > l )
-        throw std::runtime_error( "Racah_spherical_harmonics(): |m| > l." );
-    if ( m < 0 )
-    {
-        Complex result = Racah_spherical_harmonics( l, -m, alpha, beta );
-        result.conjugate();
-        return is_even( -m ) ? result : -result;
-    }
-    double factorial_lmm = factorial(l-m);
-    double factorial_lpm = factorial(l+m);
-    double result = sqrt( factorial_lmm / factorial_lpm );
-    result *= associated_Legendre_polynomial( l, m, beta.cosine() );
-    Complex z( 0.0, m * alpha.value_in_radians() );
-    return result * exponential( z );
-}
-
-// ********************************************************************************
+#endif // TESTFUNCTIONS_H
 
