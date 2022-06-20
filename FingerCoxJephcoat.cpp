@@ -31,11 +31,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasicMathsFunctions.h"
 #include "MathsFunctions.h"
 
+#include <iostream> // for debugging
 #include <stdexcept>
 
 // ********************************************************************************
 
-FingerCoxJephcoat::FingerCoxJephcoat( const double H, const double S, const double L ):eta_(0.9),N_(30)
+FingerCoxJephcoat::FingerCoxJephcoat( const double H, const double S, const double L ):eta_(0.9),N_(250)
 {
     set_HSL( H, S, L );
     Gauss_Legendre_quadrature( -1.0, 1.0, N_, x_i_, w_i_ );
@@ -43,7 +44,7 @@ FingerCoxJephcoat::FingerCoxJephcoat( const double H, const double S, const doub
 
 // ********************************************************************************
 
-FingerCoxJephcoat::FingerCoxJephcoat( const double A, const double B ):eta_(0.9),N_(30)
+FingerCoxJephcoat::FingerCoxJephcoat( const double A, const double B ):eta_(0.9),N_(250)
 {
     set_A( A );
     set_B( B );
@@ -75,7 +76,7 @@ void FingerCoxJephcoat::set_HSL( const double H, const double S, const double L 
 
 void FingerCoxJephcoat::set_A( const double A )
 {
-    if ( A < TOLERANCE )
+    if ( A < 0.0 )
         throw std::runtime_error( "FingerCoxJephcoat::set_A(): A < 0.0." );
     A_ = A;
 }
@@ -84,7 +85,7 @@ void FingerCoxJephcoat::set_A( const double A )
 
 void FingerCoxJephcoat::set_B( const double B )
 {
-    if ( B < TOLERANCE )
+    if ( B < 0.0 )
         throw std::runtime_error( "FingerCoxJephcoat::set_B(): B < 0.0." );
     B_ = B;
 }

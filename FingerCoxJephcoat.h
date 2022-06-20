@@ -39,7 +39,7 @@ class Angle;
   Generally speaking peak asymmetry is only visible up to about 30 degrees 2theta and beyond 150 degrees 2theta.
   we assume that we have not measured beyond 90 degrees 2theta.
   We do things properly here: express everything in terms of A = H/L and B = S/L and phi and theta are Angle objects.
-  The peak shape is fixed to be pseudo-Voigt, but this is the case in all implemenetations I have seen and it is always mentioned how good the results are.
+  The peak shape is fixed to be pseudo-Voigt, but this is the case in all implementations I have seen and it is always mentioned how good the results are.
 */
 class FingerCoxJephcoat
 {
@@ -55,11 +55,11 @@ public:
 
     void set_HSL( const double H, const double S, const double L );
 
-    // A = H/L
+    // A = H/L.
     double A() const { return A_; }
     void set_A( const double A );
 
-    // B = S/L
+    // B = S/L.
     double B() const { return B_; }
     void set_B( const double B );
 

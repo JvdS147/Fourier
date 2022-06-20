@@ -40,21 +40,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream> // for debugging
 
 // This is of course not flexible enough. This should be a base class "PeakShapeFunction" with
-// instantiations like "pseudo_Voigt"
+// instantiations like "pseudo_Voigt".
 
 namespace
 
 {
 // ********************************************************************************
 
-// Precalculating the peak shape is a speed optimisation
+// Precalculating the peak shape is a speed optimisation.
 // Technically, it is an approximation, because the peak centre
 // is not exactly at one of the i*2theta_step points, so there is a slight shift of
-// on average 1/4 of a 2theta_step
+// on average 1/4 of a 2theta_step.
 // This approximation should be fine if 2theta_step is small, such as 0.01 or 0.02.
 std::vector< double > peak_shape( const Angle two_theta_step, const double FWHM )
 {
-    // Find number of points out to the right that need to be calculated to reach 0.1% of intensity at 0.0
+    // Find number of points out to the right that need to be calculated to reach 0.1% of intensity at 0.0.
     std::vector<double> values;
     values.reserve( 137 ); // 44 for 1% of intensity, but the value also depends on eta.
     double I100 = pseudo_Voigt( 0.0, FWHM );
@@ -68,7 +68,7 @@ std::vector< double > peak_shape( const Angle two_theta_step, const double FWHM 
         values.push_back( value );
     }
     while ( (I100/1000.0) < value );
-    // The number of points is now 2*i + 1 (the 1 is 0.0)
+    // The number of points is now 2*i + 1 (the 1 is 0.0).
     std::vector<double> result;
     result.reserve( 2*i+1 );
     for ( size_t j(0); j < i; ++j )
@@ -91,6 +91,9 @@ two_theta_step_(0.01,Angle::DEGREES),
 FWHM_(0.1),
 include_preferred_orientation_(false),
 preferred_orientation_direction_( 0, 0, 0 ),
+r_(1.0),
+include_finger_cox_jephcoat_(false),
+finger_cox_jephcoat_( 0.0, 0.0 ),
 crystal_structure_(crystal_structure)
 {
     if ( ! crystal_structure.space_group_symmetry_has_been_applied() )
@@ -103,9 +106,9 @@ crystal_structure_(crystal_structure)
 void PowderPatternCalculator::set_two_theta_step( const Angle two_theta_step )
 {
     two_theta_step_ = two_theta_step;
-    // There is an approximation in the calculation of the power pattern that expects the 2theta step to be small
     if ( two_theta_step_ < Angle::from_degrees( TOLERANCE ) )
          throw std::runtime_error( "PowderPatternCalculator::set_two_theta_step(): must be positive." );
+    // There is an approximation in the calculation of the powder pattern that expects the 2theta step to be small.
     if ( two_theta_step_ > Angle::from_degrees( 0.05 ) )
         std::cout << "PowderPatternCalculator::set_two_theta_step(): Warning: because of an internal approximation, 2theta step is expected to be small." << std::endl;
 }
@@ -117,7 +120,7 @@ void PowderPatternCalculator::set_preferred_orientation( const MillerIndices & m
     include_preferred_orientation_ = true;
     preferred_orientation_direction_ = miller_indices;
     r_ = r;
-    // Check that the PO direction is commensurate with the space-group symmetry
+    // Check that the PO direction is commensurate with the space-group symmetry.
     MillerIndices reflection( 37, -23, 3 );
     Vector3D PO_vector = reciprocal_lattice_point( preferred_orientation_direction_, crystal_structure_.crystal_lattice() );
     Vector3D H = reciprocal_lattice_point( reflection, crystal_structure_.crystal_lattice() );
@@ -138,6 +141,14 @@ void PowderPatternCalculator::set_preferred_orientation( const MillerIndices & m
 
 // ********************************************************************************
 
+void PowderPatternCalculator::set_finger_cox_jephcoat( const FingerCoxJephcoat & finger_cox_jephcoat )
+{
+    include_finger_cox_jephcoat_ = true;
+    finger_cox_jephcoat_ = finger_cox_jephcoat;
+}
+
+// ********************************************************************************
+
 void PowderPatternCalculator::calculate( PowderPattern & powder_pattern )
 {
     calculate_reflection_list();
@@ -149,10 +160,10 @@ void PowderPatternCalculator::calculate( PowderPattern & powder_pattern )
 
 void PowderPatternCalculator::calculate_reflection_list( const bool exact )
 {
-    // Get a list of all reflections
-    // As in Mercury, we ignore two_theta_start_ here
+    // Get a list of all reflections.
+    // As in Mercury, we ignore two_theta_start_ here.
 //    std::cout << "Now generating reflection list... " << std::endl;
-    // We add a little extra at the end to avoid cut-off effects
+    // We add a little extra at the end to avoid cut-off effects.
     Angle theta_end( ( two_theta_end_ / 2.0 ) + Angle::from_degrees( 1.0 ) );
     double one_over_d_min = ( 2.0 * theta_end.sine() ) / wavelength_.wavelength_1();
     double l_max_z = one_over_d_min / crystal_structure_.crystal_lattice().c_star_vector().z();
@@ -220,7 +231,7 @@ void PowderPatternCalculator::calculate_reflection_list( const bool exact )
 void PowderPatternCalculator::calculate_structure_factors()
 {
 //    std::cout << "Now calculating F^2 values... " << std::endl;
-    // For each reflection, calculate an intensity
+    // For each reflection, calculate an intensity.
     for ( size_t i( 0 ); i != reflection_list_.size(); ++i )
     {
         MillerIndices miller_indices( reflection_list_.miller_indices( i ) );
@@ -231,7 +242,7 @@ void PowderPatternCalculator::calculate_structure_factors()
         double sine_theta_over_lambda = 1.0 / ( 2.0 * d );
         double cosine_term( 0.0 );
         double sine_term( 0.0 );
-        // This can be sped up by sorting the list into lists of atoms of the same element
+        // This can be sped up by sorting the list into lists of atoms of the same element.
         double f0_H = Element( 1 ).scattering_factor( sine_theta_over_lambda );
         double f0_C = Element( 6 ).scattering_factor( sine_theta_over_lambda );
         double f0_N = Element( 7 ).scattering_factor( sine_theta_over_lambda );
@@ -242,7 +253,7 @@ void PowderPatternCalculator::calculate_structure_factors()
             double y = crystal_structure_.atom(j).position().y();
             double z = crystal_structure_.atom(j).position().z();
             Angle argument = Angle::from_radians( 2.0 * CONSTANT_PI * ( h*x + k*y + l*z ) );
-            // Get the scattering factor from 2theta, the wavelength and the element of the atom
+            // Get the scattering factor from 2theta, the wavelength and the element of the atom.
             double f0;
             switch ( crystal_structure_.atom(j).element().atomic_number() )
             {
@@ -268,7 +279,7 @@ void PowderPatternCalculator::calculate_structure_factors()
             }
             else
             {
-                // This is what Mercury does according to the manual
+                // This is what Mercury does according to the manual.
                 if ( crystal_structure_.atom(j).element().atomic_number() == 1 )
                     T = exp( -8.0 * square( CONSTANT_PI ) * 0.06 * square( sine_theta_over_lambda ) );
                 else
@@ -325,8 +336,7 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
         double d = reflection_list.d_spacing( i );
         Angle theta = arcsine( wavelength_.wavelength_1() / ( 2.0 * d ) );
         Angle two_theta = 2.0 * theta;
-        int peak_centre = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
-        int index_offset = peak_centre - ((static_cast<int>(peak_points.size())-1)/2);
+
         double multiplicity( 0.0 );
         if ( include_preferred_orientation_ )
         {
@@ -345,15 +355,43 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
         // Multiply by the LP factor.
         double LP_factor = ( 1.0 + square( two_theta.cosine() ) ) / ( 2.0 * two_theta.sine() * theta.sine() );
         peak_intensity *= LP_factor;
-        for ( size_t j ( 0 ); j != peak_points.size(); ++j )
+        if ( include_finger_cox_jephcoat_ && ( two_theta < Angle::angle_30_degrees() ) )
         {
-            // Calculate new index.
-            int index = index_offset + j;
-            if ( ( index < 0 ) || ( index >= powder_pattern.size() ) )
-                continue;
-            double intensity = powder_pattern.intensity( index );
-            intensity += peak_intensity * peak_points[j];
-            powder_pattern.set_intensity( index, intensity );
+            // Peak asymmetry just goes on and on, we essentially have to start at 2theta = 0.0.
+            Angle current_2theta = two_theta_start_;
+            Angle maximum_2theta_value_for_FCJ = two_theta + static_cast<double>(((static_cast<int>(peak_points.size())-1)/2)) * two_theta_step_;
+            std::vector< Angle > two_phi_values;
+            size_t j( 0 );
+            do
+            {
+                current_2theta = two_theta_start_ + j * two_theta_step_;
+                if ( j < powder_pattern.size() )
+                    two_phi_values.push_back( current_2theta );
+                ++j;
+            }
+            while ( current_2theta < maximum_2theta_value_for_FCJ );
+            std::vector< double > peak_points_2 = finger_cox_jephcoat_.asymmetric_peak( two_theta, two_phi_values, FWHM_ );
+            for ( size_t index( 0 ); index != peak_points_2.size(); ++index )
+            {
+                double intensity = powder_pattern.intensity( index );
+                intensity += peak_intensity * peak_points_2[index];
+                powder_pattern.set_intensity( index, intensity );
+            }
+        }
+        else
+        {
+            int peak_centre = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
+            int index_offset = peak_centre - ((static_cast<int>(peak_points.size())-1)/2);
+            for ( size_t j ( 0 ); j != peak_points.size(); ++j )
+            {
+                // Calculate new index.
+                int index = index_offset + j;
+                if ( ( index < 0 ) || ( index >= powder_pattern.size() ) )
+                    continue;
+                double intensity = powder_pattern.intensity( index );
+                intensity += peak_intensity * peak_points[j];
+                powder_pattern.set_intensity( index, intensity );
+            }
         }
     }
     powder_pattern.normalise_highest_peak();
@@ -365,7 +403,7 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
 
 bool PowderPatternCalculator::is_systematic_absence( const MillerIndices H ) const
 {
-    // Note that we skip the first symmetry operator, which is guaranteed to be the identity
+    // Note that we skip the first symmetry operator, which is guaranteed to be the identity.
     for ( size_t i( 1 ); i != crystal_structure_.space_group().nsymmetry_operators(); ++i )
     {
         if ( H * crystal_structure_.space_group().symmetry_operator(i).rotation() == H )

@@ -73,6 +73,8 @@ public:
     static Angle from_radians( const double value ) { return Angle( value ); }
     static Angle from_degrees( const double value ) { return Angle( value * degrees2radians ); }
 
+    static Angle angle_30_degrees()  { return Angle( CONSTANT_PI/6.0 ); }
+    static Angle angle_60_degrees()  { return Angle( CONSTANT_PI/3.0 ); }
     static Angle angle_90_degrees()  { return Angle( 0.5*CONSTANT_PI ); }
     static Angle angle_120_degrees() { return Angle( (2.0/3.0)*CONSTANT_PI ); }
     static Angle angle_180_degrees() { return Angle( CONSTANT_PI ); }

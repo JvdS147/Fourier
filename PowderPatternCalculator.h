@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Angle.h"
+#include "FingerCoxJephcoat.h"
 #include "PointGroup.h"
 #include "ReflectionList.h"
 #include "Wavelength.h"
@@ -57,7 +58,7 @@ public:
 
     ReflectionList reflection_list() const { return reflection_list_; }
 
-    // A March-Dollase model is used
+    // A March-Dollase model is used.
     void set_preferred_orientation( const MillerIndices & miller_indices, const double r );
 
     void unset_preferred_orientation() { include_preferred_orientation_ = false; }
@@ -65,6 +66,14 @@ public:
     bool include_preferred_orientation() const { return include_preferred_orientation_; }
     MillerIndices preferred_orientation_direction() const { return preferred_orientation_direction_; }
     double r() const { return r_; }
+
+    void set_finger_cox_jephcoat( const FingerCoxJephcoat & finger_cox_jephcoat );
+
+    void unset_finger_cox_jephcoat() { include_finger_cox_jephcoat_ = false; }
+
+    bool include_finger_cox_jephcoat() const { return include_finger_cox_jephcoat_; }
+    FingerCoxJephcoat finger_cox_jephcoat() const { return finger_cox_jephcoat_; }
+
 
 // Same for eta and/or peak shape
 
@@ -97,7 +106,9 @@ private:
     bool include_preferred_orientation_;
     MillerIndices preferred_orientation_direction_;
     double r_;
-    const CrystalStructure & crystal_structure_; // Creating a copy would be too expensive given that we have tens of thousands of atoms
+    bool include_finger_cox_jephcoat_;
+    FingerCoxJephcoat finger_cox_jephcoat_;
+    const CrystalStructure & crystal_structure_; // Creating a copy would be too expensive given that we have tens of thousands of atoms.
     // But what if the crystal structure goes out of scope and the destructor is called? We need a smart pointer here.
     PointGroup laue_class_;
     
