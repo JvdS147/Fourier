@@ -93,7 +93,7 @@ include_preferred_orientation_(false),
 preferred_orientation_direction_( 0, 0, 0 ),
 r_(1.0),
 include_finger_cox_jephcoat_(false),
-finger_cox_jephcoat_( 0.0, 0.0 ),
+finger_cox_jephcoat_( 0.0001, 0.0001 ),
 crystal_structure_(crystal_structure)
 {
     if ( ! crystal_structure.space_group_symmetry_has_been_applied() )

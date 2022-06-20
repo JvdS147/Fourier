@@ -76,8 +76,8 @@ void FingerCoxJephcoat::set_HSL( const double H, const double S, const double L 
 
 void FingerCoxJephcoat::set_A( const double A )
 {
-    if ( A < 0.0 )
-        throw std::runtime_error( "FingerCoxJephcoat::set_A(): A < 0.0." );
+    if ( A < 0.0001 )
+        throw std::runtime_error( "FingerCoxJephcoat::set_A(): A < 0.0001." );
     A_ = A;
 }
 
@@ -85,8 +85,8 @@ void FingerCoxJephcoat::set_A( const double A )
 
 void FingerCoxJephcoat::set_B( const double B )
 {
-    if ( B < 0.0 )
-        throw std::runtime_error( "FingerCoxJephcoat::set_B(): B < 0.0." );
+    if ( B < 0.0001 )
+        throw std::runtime_error( "FingerCoxJephcoat::set_B(): B < 0.0001." );
     B_ = B;
 }
 

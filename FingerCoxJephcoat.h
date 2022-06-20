@@ -46,8 +46,12 @@ class FingerCoxJephcoat
 public:
 
     // Note that internally, this class only works with H/L and S/L.
+    // In practice, H/L and S/L cannot be 0.0 but must at least be, say, 0.0001.
+    // If they are 0.0001, then it is as if the peaks are symmetric.
     FingerCoxJephcoat( const double H, const double S, const double L );
 
+    // In practice, A and B cannot be 0.0 but must at least be, say, 0.0001.
+    // If they are 0.0001, then it is as if the peaks are symmetric.
     FingerCoxJephcoat( const double A, const double B );
 
     // DASH reports "H plus S over L" (HPSL) and "H minus S over L" (HMSL).
