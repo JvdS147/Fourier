@@ -110,7 +110,7 @@ private:
     FingerCoxJephcoat finger_cox_jephcoat_;
     const CrystalStructure & crystal_structure_; // Creating a copy would be too expensive given that we have tens of thousands of atoms.
     // But what if the crystal structure goes out of scope and the destructor is called? We need a smart pointer here.
-    PointGroup laue_class_;
+    PointGroup Laue_class_;
     
     bool is_systematic_absence( const MillerIndices miller_indices ) const;
     std::set< MillerIndices > calculate_equivalent_reflections( const MillerIndices miller_indices ) const;

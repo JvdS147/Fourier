@@ -98,7 +98,7 @@ crystal_structure_(crystal_structure)
 {
     if ( ! crystal_structure.space_group_symmetry_has_been_applied() )
         throw std::runtime_error( "PowderPatternCalculator::PowderPatternCalculator( CrystalStructure ):: space-group symmetry has not been applied for input crystal structure." );
-    laue_class_ = crystal_structure_.space_group().laue_class();
+    Laue_class_ = crystal_structure_.space_group().Laue_class();
 }
 
 // ********************************************************************************
@@ -125,9 +125,9 @@ void PowderPatternCalculator::set_preferred_orientation( const MillerIndices & m
     Vector3D PO_vector = reciprocal_lattice_point( preferred_orientation_direction_, crystal_structure_.crystal_lattice() );
     Vector3D H = reciprocal_lattice_point( reflection, crystal_structure_.crystal_lattice() );
     double reference_dot_product = absolute( PO_vector * H );
-    for ( size_t i( 0 ); i != laue_class_.nsymmetry_operators(); ++i )
+    for ( size_t i( 0 ); i != Laue_class_.nsymmetry_operators(); ++i )
     {
-        MillerIndices equivalent_reflection = reflection * laue_class_.symmetry_operator( i );
+        MillerIndices equivalent_reflection = reflection * Laue_class_.symmetry_operator( i );
         // Now check that the March-Dollase PO corrections are the same for all of them
         Vector3D H = reciprocal_lattice_point( equivalent_reflection, crystal_structure_.crystal_lattice() );
         double current_dot_product = absolute( PO_vector * H );
@@ -420,8 +420,8 @@ bool PowderPatternCalculator::is_systematic_absence( const MillerIndices H ) con
 std::set< MillerIndices > PowderPatternCalculator::calculate_equivalent_reflections( const MillerIndices miller_indices ) const
 {
     std::set< MillerIndices > result;
-    for ( size_t i( 0 ); i != laue_class_.nsymmetry_operators(); ++i )
-        result.insert( miller_indices * laue_class_.symmetry_operator( i ) );
+    for ( size_t i( 0 ); i != Laue_class_.nsymmetry_operators(); ++i )
+        result.insert( miller_indices * Laue_class_.symmetry_operator( i ) );
     return result;
 }
 

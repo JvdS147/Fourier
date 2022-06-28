@@ -61,6 +61,8 @@ public:
 
     explicit SpaceGroup( const std::vector< SymmetryOperator > & symmetry_operators, const std::string & name = "" );
 
+   // SpaceGroup( const std::vector< SymmetryOperator > & representative_symmetry_operators, const bool has_inversion, const Vector3D & position_of_inversion, const Centring & centring, const std::string & name = "" );
+
     static SpaceGroup P21c();
     static SpaceGroup C2c();
 
@@ -114,13 +116,15 @@ public:
     PointGroup point_group() const;
 
     // The point group augmented with the inversion.
-    PointGroup laue_class() const;
+    PointGroup Laue_class() const;
 
     std::string crystal_system() const;
 
     Centring centring() const { return centring_; }
 
     void print_multiplication_table() const;
+
+    void generate_code() const;
 
     void show() const;
 

@@ -300,7 +300,7 @@ PointGroup SpaceGroup::point_group() const
 // ********************************************************************************
 
 // The point group augmented with the inversion.
-PointGroup SpaceGroup::laue_class() const
+PointGroup SpaceGroup::Laue_class() const
 {
     PointGroup result = point_group();
     if ( ! has_inversion_ )
@@ -379,6 +379,48 @@ void SpaceGroup::print_multiplication_table() const
 
 // ********************************************************************************
 
+void SpaceGroup::generate_code() const
+{
+        std::cout << std::endl;
+        std::cout << std::endl;
+    std::cout << "    std::vector< SymmetryOperator > symmetry_operators;" << std::endl;
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+        std::cout << "    symmetry_operators.push_back( SymmetryOperator( \"" + symmetry_operators_[i].to_string() + "\" ) );" << std::endl;
+    std::cout << "    SpaceGroup space_group( symmetry_operators );" << std::endl;
+        std::cout << std::endl;
+        std::cout << std::endl;
+    std::cout << "    std::vector< SymmetryOperator > symmetry_operators;" << std::endl;
+    for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
+        std::cout << "    symmetry_operators.push_back( SymmetryOperator( \"" + representative_symmetry_operators_[i].to_string() + "\" ) );" << std::endl;
+    std::cout << "    SpaceGroup space_group( symmetry_operators );" << std::endl;
+}
+
+// ********************************************************************************
+
+void SpaceGroup::show() const
+{
+    std::cout << "Symmetry operators:" << std::endl;
+    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
+        std::cout << symmetry_operators_[i].to_string() << std::endl;
+    std::cout << "Representative symmetry operators:" << std::endl;
+    for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
+        std::cout << representative_symmetry_operators_[i].to_string() << std::endl;
+    std::cout << "Centring vectors:" << std::endl;
+    centring_.show();
+    if ( has_inversion_ )
+    {
+        if ( has_inversion_at_origin_ )
+            std::cout << "Has inversion at origin" << std::endl;
+        else
+            std::cout << "Has inversion at: " << position_of_inversion_.to_string() << std::endl;
+    }
+    else
+        std::cout << "No inversion" << std::endl;
+    std::cout << "Name: " << name_ << std::endl;
+}
+
+// ********************************************************************************
+
 // Decomposes the space group into:
 // 1. Presence of inversion yes / no and its position.
 // 2. List of centring vectors.
@@ -444,6 +486,20 @@ void SpaceGroup::decompose()
         if ( ! found )
             representative_symmetry_operators_.push_back( symmetry_operators_[i] );
     }
+    if ( has_inversion_ )
+    {
+        for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
+        {
+            if ( nearly_equal( representative_symmetry_operators_[i].rotation().determinant(), -1.0 ) )
+            {
+                if ( has_inversion_at_origin_ )
+                    symmetry_operators_[i].rotation() =  -1.0 * representative_symmetry_operators_[i].rotation();
+                else
+                    representative_symmetry_operators_[i] = representative_symmetry_operators_[i] * SymmetryOperator( inversion, position_of_inversion_ );
+            }
+        }
+    }
+    // @@ And now we must do the same for the centring vectors.
     // Now determine the centring.
     centring_ = Centring( centring_vectors );
     // Check for duplicates.
@@ -452,30 +508,6 @@ void SpaceGroup::decompose()
         nexpected_symmetry_operators *= 2;
     if ( nexpected_symmetry_operators != symmetry_operators_.size() )
         throw std::runtime_error( "SpaceGroup::decompose(): number of symmetry operators not consistent." );
-}
-
-// ********************************************************************************
-
-void SpaceGroup::show() const
-{
-    std::cout << "Symmetry operators:" << std::endl;
-    for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
-        std::cout << symmetry_operators_[i].to_string() << std::endl;
-    std::cout << "Representative symmetry operators:" << std::endl;
-    for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
-        std::cout << representative_symmetry_operators_[i].to_string() << std::endl;
-    std::cout << "Centring vectors:" << std::endl;
-    centring_.show();
-    if ( has_inversion_ )
-    {
-        if ( has_inversion_at_origin_ )
-            std::cout << "Has inversion at origin" << std::endl;
-        else
-            std::cout << "Has inversion at: " << position_of_inversion_.to_string() << std::endl;
-    }
-    else
-        std::cout << "No inversion" << std::endl;
-    std::cout << "Name: " << name_ << std::endl;
 }
 
 // ********************************************************************************
@@ -534,9 +566,7 @@ void check_if_closed( const std::vector< SymmetryOperator > & symmetry_operators
                 }
             }
             if ( ! found )
-            {
-                throw std::runtime_error( "SpaceGroup::check_if_closed( std::vector< SymmetryOperator > ): operator not found." );
-            }
+                throw std::runtime_error( "SpaceGroup::check_if_closed( std::vector< SymmetryOperator > ): operator " + result.to_string() + " not found." );
         }
     }
 }
