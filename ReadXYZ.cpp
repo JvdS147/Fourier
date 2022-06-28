@@ -83,10 +83,10 @@ void read_xyz( const FileName & file_name, std::vector< Atom > & atoms )
         {
             if ( words.size() != 4 )
                 throw std::runtime_error( "read_xyz(): atom line does not contain four items." );
-            Atom atom( Element( words[ 0 ]), Vector3D( string2double( words[ 1 ] ),
-                                                       string2double( words[ 2 ] ),
-                                                       string2double( words[ 3 ] ) ),
-                                                       words[ 0 ]+size_t2string(atom_number) );
+            Atom atom( Element( words[ 0 ] ), Vector3D( string2double( words[ 1 ] ),
+                                                        string2double( words[ 2 ] ),
+                                                        string2double( words[ 3 ] ) ),
+                                                       words[ 0 ]+size_t2string( atom_number ) );
             atoms.push_back( atom );
         }
         ++atom_number;

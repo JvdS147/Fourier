@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Vector3D.h"
 
 #include <iostream>
+#include <stdexcept>
 
 // ********************************************************************************
 
@@ -59,6 +60,24 @@ AnisotropicDisplacementParameters::AnisotropicDisplacementParameters( const Symm
 AnisotropicDisplacementParameters::AnisotropicDisplacementParameters( const double u_iso )
 {
     data_ = SymmetricMatrix3D( u_iso );
+}
+
+// ********************************************************************************
+
+double AnisotropicDisplacementParameters::value( size_t i, size_t j ) const
+{
+    if ( ( 2 < i ) || ( 2 < j ) )
+        throw std::runtime_error( "AnisotropicDisplacementParameters::value(): index out of bounds." );
+    return data_.value( i, j );
+}
+
+// ********************************************************************************
+
+void AnisotropicDisplacementParameters::set_value( size_t i, size_t j, const double value )
+{
+    if ( ( 2 < i ) || ( 2 < j ) )
+        throw std::runtime_error( "AnisotropicDisplacementParameters::value(): index out of bounds." );
+    data_.set_value( i, j, value );
 }
 
 // ********************************************************************************

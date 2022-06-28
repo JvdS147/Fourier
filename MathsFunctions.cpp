@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Returns the x-values and weights necessary for Gauss-Legendre quadrature.
 // x1 is the lower limit for integration, x2 the upper limit. npoints is the number of points.
-// x contains the x values, w contains the weights
+// x contains the x values, w contains the weights.
 void Gauss_Legendre_quadrature( const double x1, const double x2, const size_t npoints, std::vector< double > & x, std::vector< double > & w )
 {
     double tolerance = 1.0e-14;
@@ -50,7 +50,7 @@ void Gauss_Legendre_quadrature( const double x1, const double x2, const size_t n
     {
         double dydx;
         double z1;
-        // The following estimates the root. The estimate is pretty accuracte.
+        // The following estimates the root. The estimate is pretty accurate.
         // Note that I have also seen cos( CONSTANT_PI * ( i - 0.25 ) / ( npoints + 0.5 ) ) on the internet, but that is not a good approximation at all.
         // In fact, that approximation is poor enough that it may converge to the wrong root.
         double z = cos( CONSTANT_PI * ( i + 0.75 ) / ( npoints + 0.5 ) );
@@ -443,7 +443,7 @@ size_t Poisson_distribution( const double mean )
 size_t Poisson_distribution_exact( const double mean )
 {
     if ( mean < 0.0 )
-        throw std::runtime_error( "poisson_distribution(): mean cannot be negative." );
+        throw std::runtime_error( "Poisson_distribution_exact(): mean cannot be negative." );
     // The following is exact but numerically unstable for values greater than about 800
     // because exp( -mean ) sooner or later becomes 0.0
     double L = exp( -mean );
@@ -464,7 +464,7 @@ size_t Poisson_distribution_exact( const double mean )
 size_t Poisson_distribution_Gaussian_0( const double mean )
 {
     if ( mean < 0.0 )
-        throw std::runtime_error( "poisson_distribution(): mean cannot be negative." );
+        throw std::runtime_error( "Poisson_distribution(): mean cannot be negative." );
     return round_to_size_t( std::abs( normal_distribution( mean, sqrt( mean ) ) ) );
 }
 
@@ -473,7 +473,7 @@ size_t Poisson_distribution_Gaussian_0( const double mean )
 size_t Poisson_distribution_Gaussian_1( const double mean )
 {
     if ( mean < 0.0 )
-        throw std::runtime_error( "poisson_distribution(): mean cannot be negative." );
+        throw std::runtime_error( "Poisson_distribution_Gaussian_1(): mean cannot be negative." );
     return round_to_size_t( std::abs( normal_distribution( mean-0.5, sqrt( mean ) ) ) );
 }
 
@@ -482,7 +482,7 @@ size_t Poisson_distribution_Gaussian_1( const double mean )
 size_t Poisson_distribution_Gaussian_2( const double mean )
 {
     if ( mean < 0.0 )
-        throw std::runtime_error( "poisson_distribution(): mean cannot be negative." );
+        throw std::runtime_error( "Poisson_distribution_Gaussian_2(): mean cannot be negative." );
     return round_to_size_t( std::abs( normal_distribution( mean+0.5, sqrt( mean ) ) ) );
 }
 

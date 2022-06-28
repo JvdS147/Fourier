@@ -71,7 +71,7 @@ double SymmetricMatrix3D::value( size_t i, size_t j ) const
 {
     if ( i < j )
         std::swap( i, j );
-    if ( i > 2 )
+    if ( 2 < i )
         throw std::runtime_error( "SymmetricMatrix3D::value(): out of bounds." );
     return data_[ ((i*(i+1))/2) + j ];
 }
@@ -82,7 +82,7 @@ void SymmetricMatrix3D::set_value( size_t i, size_t j, const double value )
 {
     if ( i < j )
         std::swap( i, j );
-    if ( i > 2 )
+    if ( 2 < i )
         throw std::runtime_error( "SymmetricMatrix3D::set_value(): out of bounds." );
     data_[ ((i*(i+1))/2) + j ] = value;
 }

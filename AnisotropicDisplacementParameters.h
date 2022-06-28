@@ -45,23 +45,23 @@ class AnisotropicDisplacementParameters
 {
 public:
 
-    // Default constructor
+    // Default constructor.
     AnisotropicDisplacementParameters();
 
     // Must be points (atomic coordinates) in Cartesian coordinates, not necessarily centred around the origin.
     AnisotropicDisplacementParameters( const std::vector< Vector3D > & points );
 
-    // Expects U_cart
+    // Expects U_cart.
     AnisotropicDisplacementParameters( const SymmetricMatrix3D & matrix );
 
     explicit AnisotropicDisplacementParameters( const double u_iso );
 
-    // In keeping with the silly C++ convention: zero-based
+    // In keeping with the silly C++ convention: zero-based.
     // Returns U_cart, which is independent of the unit cell.
-    double value( size_t i, size_t j ) const { return data_.value( i, j ); }
+    double value( size_t i, size_t j ) const;
 
     // Requires U_cart, which is independent of the unit cell.
-    void set_value( size_t i, size_t j, const double value ) { data_.set_value( i, j, value ); }
+    void set_value( size_t i, size_t j, const double value );
 
     SymmetricMatrix3D U_star( const CrystalLattice & crystal_lattice ) const;
     
@@ -88,10 +88,10 @@ private:
 
 };
 
-// The following is what is needed to transform the ADPs when the unit cell is transformed with a transformation matrix
+// The following is what is needed to transform the ADPs when the unit cell is transformed with a transformation matrix.
 AnisotropicDisplacementParameters transform_adps( const AnisotropicDisplacementParameters & ADPs, Matrix3D transformation, CrystalLattice crystal_lattice );
 
-// The following is what is needed to rotate the ADPs as part of a symmetry operation
+// The following is what is needed to rotate the ADPs as part of a symmetry operation.
 AnisotropicDisplacementParameters rotate_adps( const AnisotropicDisplacementParameters & ADPs, const Matrix3D & rotation, const CrystalLattice & crystal_lattice );
 
 // Of course, this should be done inside the class, but then we must store a CrystalLattice in the class
