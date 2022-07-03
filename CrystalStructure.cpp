@@ -537,7 +537,7 @@ void CrystalStructure::reduce_to_primitive()
         std::cout << "CrystalStructure::reduce_to_primitive(): warning: already primitive." << std::endl;
             return;
     }
-    Matrix3D centred2primitive = centred_to_primitive( space_group().centring() );
+    Matrix3D centred2primitive = space_group().centring().to_primitive();
     Matrix3D transformation_matrix_inverse_transpose( centred2primitive );
     transformation_matrix_inverse_transpose.invert();
     transformation_matrix_inverse_transpose.transpose();

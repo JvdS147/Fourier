@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "PowderPatternCalculator.h"
 #include "3DCalculations.h"
 #include "Angle.h"
+#include "CrystallographicCalculations.h"
 #include "CrystalStructure.h"
 #include "MathsFunctions.h"
 #include "PointGroup.h"

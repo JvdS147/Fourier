@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Centring.h"
+#include "Matrix3D.h"
 #include "StringFunctions.h"
 
 #include <stdexcept>
@@ -44,7 +45,7 @@ Centring::Centring()
 Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_vectors_(centring_vectors)
 {
     if ( centring_vectors_.empty() )
-        throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): a centring must have at least one centring vector." );
+        throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): error: a centring must have at least one centring vector." );
     // Make the zero vector the first centring vector.
     bool zero_vector_found( false );
     for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
@@ -57,14 +58,14 @@ Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_
         }
     }
     if ( ! zero_vector_found )
-        throw std::runtime_error( "Centring::Centring(): zero vector not found." );
+        throw std::runtime_error( "Centring::Centring(): error: zero vector not found." );
     // Check for duplicates
     for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
     {
         for ( size_t j( i+1 ); j != centring_vectors_.size(); ++j )
         {
             if ( nearly_equal( centring_vectors_[i], centring_vectors_[j] ) )
-                throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): duplicate vector found." );
+                throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): error: duplicate vector found." );
         }
     }
     centring_type_ = U; // Unknown
@@ -109,7 +110,7 @@ Centring::Centring( std::string centring_name )
         centring_name = to_upper( centring_name );
     }
     if ( centring_name == "U" )
-        throw std::runtime_error( "Centring::Centring( std::string ): cannot construct unknown centring with this constructor." );
+        throw std::runtime_error( "Centring::Centring( std::string ): error: cannot construct unknown centring with this constructor." );
     if ( centring_name == "J" )
     {
         centring_vectors_.reserve( 1000 );
@@ -170,7 +171,64 @@ Centring::Centring( std::string centring_name )
         centring_type_ = F;
     }
     else
-        throw std::runtime_error( "Centring::Centring( std::string ): centring name not recognised." );
+        throw std::runtime_error( "Centring::Centring( std::string ): error: centring name not recognised." );
+}
+
+// ********************************************************************************
+
+Vector3D Centring::centring_vector( const size_t i ) const
+{
+    if ( i < centring_vectors_.size() )
+        return centring_vectors_[i];
+    throw std::runtime_error( "Centring::centring_vector( size_t ): error: index out of bounds." );
+}
+
+// ********************************************************************************
+
+Matrix3D Centring::to_primitive() const
+{
+    if ( is_primitive() )
+    {
+        std::cout << "Centring::to_primitive(): warning: centring is primitive." << std::endl;
+        return Matrix3D();
+    }
+    if ( centring_type() == A )
+        return Matrix3D(  1.0,  0.0,  0.0,
+                          0.0,  0.5,  0.5,
+                          0.0, -0.5,  0.5 );
+    if ( centring_type() == B )
+        return Matrix3D(  0.5,  0.0,  0.5,
+                          0.0,  1.0,  0.0,
+                         -0.5,  0.0,  0.5 );
+    if ( centring_type() == C )
+        return Matrix3D(  0.5,  0.5,  0.0,
+                         -0.5,  0.5,  0.0,
+                          0.0,  0.0,  1.0 );
+    if ( centring_type() == D )
+        throw std::runtime_error( "Centring::to_primitive(): centring D not yet implemented." );
+    if ( centring_type() == F )
+        return Matrix3D(  0.0,  0.5,  0.5,
+                          0.5,  0.0,  0.5,
+                          0.5,  0.5,  0.0 );
+    if ( centring_type() == I )
+        return Matrix3D( -0.5,  0.5,  0.5,
+                          0.5, -0.5,  0.5,
+                          0.5,  0.5, -0.5 );
+    if ( centring_type() == R_OBVERSE )
+        return Matrix3D( 2.0/3.0, 1.0/3.0, 1.0/3.0,
+                         1.0/3.0, 2.0/3.0, 2.0/3.0,
+                           0.0,     0.0,     1.0 );
+    if ( centring_type() == R_REVERSE )
+        return Matrix3D( 1.0/3.0, 2.0/3.0, 2.0/3.0,
+                         2.0/3.0, 1.0/3.0, 1.0/3.0,
+                           0.0,     0.0,     1.0 );
+    if ( centring_type() == U )
+        throw std::runtime_error( "Centring::to_primitive(): error: no transformation matrix for centring U." );
+    if ( centring_type() == J )
+        return Matrix3D(  0.1,  0.0,  0.0,
+                          0.0,  0.1,  0.0,
+                          0.0,  0.0,  0.1 );
+    throw std::runtime_error( "Centring::to_primitive(): centring not yet implemented." );
 }
 
 // ********************************************************************************

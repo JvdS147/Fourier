@@ -86,6 +86,8 @@ public:
 
     void invert();
 
+    SymmetryOperator & operator*=( const SymmetryOperator & rhs );
+
     // cif format: "x,y,-z+1/2".
     std::string to_string() const;
 
