@@ -126,10 +126,10 @@ SpaceGroup SpaceGroup::from_generators( const std::vector< SymmetryOperator > & 
         while ( ! new_symmetry_operator.is_nearly_the_identity() );
         cyclic_groups.push_back( cyclic_group );
     }
-    // Multiply all groups by each other.
+    // Multiply all cyclic groups by each other.
     std::vector< SymmetryOperator > symmetry_operators;
     symmetry_operators.push_back( SymmetryOperator() );
-    if ( cyclic_groups.empty() )
+    if ( cyclic_groups.size() == 0 )
         return SpaceGroup( symmetry_operators, inversion_found, translation_of_inversion, expand_centring_generators( centring_generators ), name );
     for ( size_t i( 0 ); i != cyclic_groups.size(); ++i )
     {
@@ -139,6 +139,8 @@ SpaceGroup SpaceGroup::from_generators( const std::vector< SymmetryOperator > & 
                 symmetry_operators.push_back( cyclic_groups[i][j] );
         }
     }
+    if ( cyclic_groups.size() == 1 )
+        return SpaceGroup( symmetry_operators, inversion_found, translation_of_inversion, expand_centring_generators( centring_generators ), name );
     for ( size_t iGroup( 0 ); iGroup != cyclic_groups.size()-1; ++iGroup )
     {
         for ( size_t jGroup( iGroup+1 ); jGroup != cyclic_groups.size(); ++jGroup )
@@ -151,6 +153,21 @@ SpaceGroup SpaceGroup::from_generators( const std::vector< SymmetryOperator > & 
                     if ( ! nearly_contains( symmetry_operators, new_symmetry_operator ) )
                         symmetry_operators.push_back( new_symmetry_operator );
                 }
+            }
+        }
+    }
+    if ( cyclic_groups.size() == 2 )
+        return SpaceGroup( symmetry_operators, inversion_found, translation_of_inversion, expand_centring_generators( centring_generators ), name );
+    size_t oldsize = symmetry_operators.size();
+    for ( size_t iGroup( 0 ); iGroup != cyclic_groups.size(); ++iGroup )
+    {
+        for ( size_t i( 0 ); i != cyclic_groups[iGroup].size(); ++i )
+        {
+            for ( size_t j( 0 ); j != oldsize; ++j )
+            {
+                SymmetryOperator new_symmetry_operator = cyclic_groups[iGroup][i] * symmetry_operators[j];
+                if ( ! nearly_contains( symmetry_operators, new_symmetry_operator ) )
+                    symmetry_operators.push_back( new_symmetry_operator );
             }
         }
     }
