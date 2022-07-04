@@ -655,7 +655,7 @@ void solve_without_guessing( Sudoku & result, bool & error_caught )
                         if ( check_if_we_are_the_only_possibility( slice ) )
                         {
                             result.update_slice( slice );
-         //                   std::cout << "N-checks did something after holistic()." << std::endl;
+//                            std::cout << "N-checks did something after holistic()." << std::endl;
                         }
                     }
                 }
@@ -671,7 +671,7 @@ void solve_without_guessing( Sudoku & result, bool & error_caught )
                         if ( check_if_we_are_the_only_possibility( slice ) )
                         {
                             result.update_slice( slice );
-         //                   std::cout << "N-checks did something after apply_X_Wings()." << std::endl;
+//                            std::cout << "N-checks did something after apply_X_Wings()." << std::endl;
                         }
                     }
                 }
@@ -687,7 +687,7 @@ void solve_without_guessing( Sudoku & result, bool & error_caught )
                         if ( check_if_we_are_the_only_possibility( slice ) )
                         {
                             result.update_slice( slice );
-         //                   std::cout << "N-checks did something after empty_rectangle()." << std::endl;
+//                            std::cout << "N-checks did something after empty_rectangle()." << std::endl;
                         }
                     }
                 }
@@ -718,12 +718,12 @@ Sudoku solve( const Sudoku & sudoku )
     {
         if ( sudoku_guesses.stack_pointer() > max_sp )
             max_sp = sudoku_guesses.stack_pointer();
-    //    std::cout << "stack pointer = " << sudoku_guesses.stack_pointer() << ", max. stack pointer = " << max_sp << std::endl;
+//        std::cout << "stack pointer = " << sudoku_guesses.stack_pointer() << ", max. stack pointer = " << max_sp << std::endl;
         ++niterations;
-
         solve_without_guessing( result, error_caught );
-
-        if ( ( ! error_caught ) && ( ! result.there_are_contradictions() ) )
+        if ( result.solved() )
+            std::cout << "The sudoku has been solved without the need for guessing." << std::endl;
+        else if ( ( ! error_caught ) && ( ! result.there_are_contradictions() ) )
         {
             // There were no more changes with our normal methods.
             // Take each square with only two possibilities and see if one value leads to a contradiction, in which case it is solved by setting it to the other value.
@@ -740,6 +740,8 @@ Sudoku solve( const Sudoku & sudoku )
                 square = OneSudokuSquare( square.value( 0 ) );
                 result.update_square( square_index, square );
                 solve_without_guessing( result, error_caught_2 );
+                if ( result.solved() )
+                    break;
                 if ( error_caught_2 || result.there_are_contradictions() )
                 {
                     // Undo last guess
@@ -747,13 +749,11 @@ Sudoku solve( const Sudoku & sudoku )
                     OneSudokuSquare square = result.square( square_index );
                     square.unset( square.value( 0 ) );
                     result.update_square( square_index, square );
-    //                std::cout << "We solved a square by contradiction." << std::endl;
+//                    std::cout << "We solved a square by contradiction." << std::endl;
                     solve_without_guessing( result, error_caught_2 );
                 }
                 else // Try the second value
                 {
-                    if ( result.solved() )
-                        throw std::runtime_error( "Programming error 1." );
                     // Undo last guess
                     result = sudoku_guesses.pop();
                     sudoku_guesses.push( result );
@@ -768,7 +768,7 @@ Sudoku solve( const Sudoku & sudoku )
                         OneSudokuSquare square = result.square( square_index );
                         square.unset( square.value( 1 ) );
                         result.update_square( square_index, square );
-            //            std::cout << "We solved a square by contradiction." << std::endl;
+//                        std::cout << "We solved a square by contradiction." << std::endl;
                         solve_without_guessing( result, error_caught_2 );
                     }
                     else // We have not learned anything new, restore the old state
@@ -787,7 +787,7 @@ Sudoku solve( const Sudoku & sudoku )
         if ( error_caught || ( ! result.solved() ) || result.there_are_contradictions() )
         {
             ++nguesses;
-     //       std::cout << "nguesses = " << nguesses << std::endl;
+//            std::cout << "nguesses = " << nguesses << std::endl;
             if ( error_caught || result.there_are_contradictions() )
             {
                 bool found( false );

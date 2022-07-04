@@ -257,6 +257,14 @@ void SymmetryOperator::invert()
 
 // ********************************************************************************
 
+SymmetryOperator & SymmetryOperator::operator*=( const SymmetryOperator & rhs )
+{
+    *this = SymmetryOperator( rotation() * rhs.rotation(), rotation() * rhs.translation() + translation() );
+    return *this;
+}
+
+// ********************************************************************************
+
 std::string SymmetryOperator::to_string() const
 {
     std::string result;

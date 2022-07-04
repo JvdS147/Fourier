@@ -25,7 +25,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "CrystalStructures.h"
+#include "CrystalStructuresDatabase.h"
 
 #include "CrystalStructure.h"
 
@@ -38,38 +38,18 @@ CrystalStructure NaCl()
     result.add_atom( Atom( Element( "Na" ), Vector3D( 0.0, 0.0, 0.0 ), "Na1", 1.0, AnisotropicDisplacementParameters( 0.01 ) ) );
     result.add_atom( Atom( Element( "Cl" ), Vector3D( 0.0, 0.5, 0.0 ), "Cl1", -1.0, AnisotropicDisplacementParameters( 0.01 ) ) );
     result.set_crystal_lattice( CrystalLattice( 5.6393, 5.6393, 5.6393, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() ) );
-    std::vector< SymmetryOperator > symmetry_operators;
-    symmetry_operators.push_back( SymmetryOperator( "x,y,z" ) );
-    symmetry_operators.push_back( SymmetryOperator( "z,x,y" ) );
-    symmetry_operators.push_back( SymmetryOperator( "y,z,x" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-x,-y,z" ) );
-    symmetry_operators.push_back( SymmetryOperator( "z,-x,-y" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-y,z,-x" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-z,x,-y" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-y,-z,x" ) );
-    symmetry_operators.push_back( SymmetryOperator( "y,-z,-x" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-x,y,-z" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-z,-x,y" ) );
-    symmetry_operators.push_back( SymmetryOperator( "x,-y,-z" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-y,-x,-z" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-z,-y,-x" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-x,-z,-y" ) );
-    symmetry_operators.push_back( SymmetryOperator( "y,x,-z" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-z,y,x" ) );
-    symmetry_operators.push_back( SymmetryOperator( "x,-z,y" ) );
-    symmetry_operators.push_back( SymmetryOperator( "z,-y,x" ) );
-    symmetry_operators.push_back( SymmetryOperator( "x,z,-y" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-x,z,y" ) );
-    symmetry_operators.push_back( SymmetryOperator( "y,-x,z" ) );
-    symmetry_operators.push_back( SymmetryOperator( "z,y,-x" ) );
-    symmetry_operators.push_back( SymmetryOperator( "-y,x,z" ) );
-    SpaceGroup space_group( symmetry_operators );
-    space_group.add_inversion_at_origin();
-    space_group.add_centring( Centring( "F" ) );
+    std::vector< SymmetryOperator > generators;
+    generators.push_back( SymmetryOperator( "x,y+0.5,z+0.5" ) );
+    generators.push_back( SymmetryOperator( "x+0.5,y,z+0.5" ) );
+    generators.push_back( SymmetryOperator( "-x,-y,z" ) );
+    generators.push_back( SymmetryOperator( "-x,y,-z" ) );
+    generators.push_back( SymmetryOperator( "z,x,y" ) );
+    generators.push_back( SymmetryOperator( "y,x,-z" ) );
+    generators.push_back( SymmetryOperator( "-x,-y,-z" ) );
+    SpaceGroup space_group = SpaceGroup::from_generators( generators );
     result.set_space_group( space_group );
     return result;
 }
 
 // ********************************************************************************
-
 

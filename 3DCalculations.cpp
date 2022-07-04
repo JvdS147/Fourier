@@ -28,15 +28,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "3DCalculations.h"
 #include "Angle.h"
 #include "BasicMathsFunctions.h"
-#include "Centring.h"
 #include "CollectionOfPoints.h"
 #include "CoordinateFrame.h"
-#include "CrystalLattice.h"
 #include "Matrix3D.h"
-#include "MillerIndices.h"
-//#include "NormalisedVector3D.h"
+#include "NormalisedVector3D.h"
 #include "Plane.h"
-#include "SpaceGroup.h"
 #include "SymmetricMatrix3D.h"
 #include "Vector2D.h"
 #include "Vector3DCalculations.h"
@@ -44,26 +40,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
-
-// ********************************************************************************
-
-Vector3D reciprocal_lattice_point( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice )
-{
-    return ( miller_indices.h() * crystal_lattice.a_star_vector() +
-             miller_indices.k() * crystal_lattice.b_star_vector() +
-             miller_indices.l() * crystal_lattice.c_star_vector() );
-}
-
-// ********************************************************************************
-
-NormalisedVector3D reciprocal_lattice_direction( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice )
-{
-    return normalised_vector( miller_indices.h() * crystal_lattice.a_star_vector() +
-                              miller_indices.k() * crystal_lattice.b_star_vector() +
-                              miller_indices.l() * crystal_lattice.c_star_vector() );
-}
-
-// ********************************************************************************
 
 // Gram-Schmidt orthogonalisation
 NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const Vector3D & r )
@@ -402,43 +378,6 @@ double operator*( const Vector3D & lhs, const NormalisedVector3D & rhs )
 
 // ********************************************************************************
 
-//MillerIndices operator*( const Matrix3D & matrix, const MillerIndices & Miller_indices )
-//{
-//    return MillerIndices( round_to_int( matrix.value( 0, 0 ) * Miller_indices.h() + matrix.value( 0, 1 ) * Miller_indices.k() + matrix.value( 0, 2 ) * Miller_indices.l() ),
-//                          round_to_int( matrix.value( 1, 0 ) * Miller_indices.h() + matrix.value( 1, 1 ) * Miller_indices.k() + matrix.value( 1, 2 ) * Miller_indices.l() ),
-//                          round_to_int( matrix.value( 2, 0 ) * Miller_indices.h() + matrix.value( 2, 1 ) * Miller_indices.k() + matrix.value( 2, 2 ) * Miller_indices.l() )
-//                        );
-//}
-
-// ********************************************************************************
-
-MillerIndices operator*( const MillerIndices & Miller_indices, const Matrix3D & matrix )
-{
-    return MillerIndices( round_to_int( Miller_indices.h() * matrix.value( 0, 0 ) + Miller_indices.k() * matrix.value( 1, 0 ) + Miller_indices.l() * matrix.value( 2, 0 ) ),
-                          round_to_int( Miller_indices.h() * matrix.value( 0, 1 ) + Miller_indices.k() * matrix.value( 1, 1 ) + Miller_indices.l() * matrix.value( 2, 1 ) ),
-                          round_to_int( Miller_indices.h() * matrix.value( 0, 2 ) + Miller_indices.k() * matrix.value( 1, 2 ) + Miller_indices.l() * matrix.value( 2, 2 ) )
-                        );
-}
-
-// ********************************************************************************
-
-MillerIndices operator*( const MillerIndices & Miller_indices, const SymmetricMatrix3D & matrix )
-{
-    return MillerIndices( round_to_int( Miller_indices.h() * matrix.value( 0, 0 ) + Miller_indices.k() * matrix.value( 1, 0 ) + Miller_indices.l() * matrix.value( 2, 0 ) ),
-                          round_to_int( Miller_indices.h() * matrix.value( 0, 1 ) + Miller_indices.k() * matrix.value( 1, 1 ) + Miller_indices.l() * matrix.value( 2, 1 ) ),
-                          round_to_int( Miller_indices.h() * matrix.value( 0, 2 ) + Miller_indices.k() * matrix.value( 1, 2 ) + Miller_indices.l() * matrix.value( 2, 2 ) )
-                        );
-}
-
-// ********************************************************************************
-
-double operator*( const MillerIndices & miller_indices, const Vector3D & vector_3D )
-{
-    return miller_indices.h() * vector_3D.x() + miller_indices.k() * vector_3D.y() + miller_indices.l() * vector_3D.z();
-}
-
-// ********************************************************************************
-
 Matrix3D rotation_about_x( const Angle angle )
 {
     return Matrix3D( 1.0, 0.0           , 0.0           ,
@@ -655,108 +594,6 @@ Angle signed_torsion( const Vector3D & r1, const Vector3D & r2, const Vector3D &
     else
         s = -sign( d ); // The minus is to ensure we get the same results as Mercury
     return s * torsion;
-}
-
-// ********************************************************************************
-
-Matrix3D centred_to_primitive( const Centring & centring )
-{
-    if ( centring.is_primitive() )
-    {
-        std::cout << "centred_to_primitive( Centring ): warning: centring is primitive." << std::endl;
-        return Matrix3D();
-    }
-    if ( centring.centring_type() == Centring::A )
-        return Matrix3D(  1.0,  0.0,  0.0,
-                          0.0,  0.5,  0.5,
-                          0.0, -0.5,  0.5 );
-    if ( centring.centring_type() == Centring::B )
-        return Matrix3D(  0.5,  0.0,  0.5,
-                          0.0,  1.0,  0.0,
-                         -0.5,  0.0,  0.5 );
-    if ( centring.centring_type() == Centring::C )
-        return Matrix3D(  0.5,  0.5,  0.0,
-                         -0.5,  0.5,  0.0,
-                          0.0,  0.0,  1.0 );
-    if ( centring.centring_type() == Centring::D )
-        throw std::runtime_error( "centred_to_primitive( Centring ): centring D not yet implemented." );
-    if ( centring.centring_type() == Centring::F )
-        return Matrix3D(  0.0,  0.5,  0.5,
-                          0.5,  0.0,  0.5,
-                          0.5,  0.5,  0.0 );
-    if ( centring.centring_type() == Centring::I )
-        return Matrix3D( -0.5,  0.5,  0.5,
-                          0.5, -0.5,  0.5,
-                          0.5,  0.5, -0.5 );
-    if ( centring.centring_type() == Centring::R_OBVERSE )
-        return Matrix3D( 2.0/3.0, 1.0/3.0, 1.0/3.0,
-                         1.0/3.0, 2.0/3.0, 2.0/3.0,
-                           0.0,     0.0,     1.0 );
-    if ( centring.centring_type() == Centring::R_REVERSE )
-        return Matrix3D( 1.0/3.0, 2.0/3.0, 2.0/3.0,
-                         2.0/3.0, 1.0/3.0, 1.0/3.0,
-                           0.0,     0.0,     1.0 );
-    if ( centring.centring_type() == Centring::U )
-        throw std::runtime_error( "centred_to_primitive( Centring ): error: no transformation matrix for centring U." );
-    if ( centring.centring_type() == Centring::J )
-        return Matrix3D(  0.1,  0.0,  0.0,
-                          0.0,  0.1,  0.0,
-                          0.0,  0.0,  0.1 );
-    throw std::runtime_error( "centred_to_primitive( Centring ): centring not yet implemented." );
-}
-
-// ********************************************************************************
-
-bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs )
-{
-    return true;
-}
-
-// ********************************************************************************
-
-void add_centring_to_space_group_after_transformation( Matrix3D tranformation_matrix, SpaceGroup & space_group )
-{
-    double d = tranformation_matrix.determinant();
-    if ( ! nearly_integer( d ) )
-        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : determinant is not an integer." );
-    if ( nearly_zero( d ) )
-        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : determinant is zero." );
-    if ( d < 0.0 )
-        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : determinant is negative." );
-    size_t D = round_to_int( tranformation_matrix.determinant() );
-    if ( D == 1 )
-        return;
-    // I have not been able to find a smart way to extract the possible additional lattice points
-    // from the transformation matrix, so we simply try them all.
-    // We want to find the points [ f/D, g/D, h/D ], with D the determinant, that lie within the unit cell
-    // but that is not one of the current lattice points. So f/D, g/D and h/D are not allowed all to be integers at once.
-    // f/D must be in the range [ 0, 1 >. 
-    tranformation_matrix.transpose();
-    // tranformation_matrix /= d;
-    std::vector< Vector3D > centring_vectors;
-    for ( size_t f( 0 ); f != D; ++f )
-    {
-        for ( size_t g( 0 ); g != D; ++g )
-        {
-            for ( size_t h( 0 ); h != D; ++h )
-            {
-                Vector3D trial_vector( f/d, g/d, h/d );
-                // I guess it would be more efficient to divide the transformation matrix by d and
-                // to construct the trial vector as [ f, g, h ].
-                Vector3D lp = tranformation_matrix * trial_vector; // lp = (trial) lattice point in the old coordinate frame.
-                if ( ! nearly_integer( lp.x() ) )
-                    continue;
-                if ( ! nearly_integer( lp.y() ) )
-                    continue;
-                if ( ! nearly_integer( lp.z() ) )
-                    continue;
-                centring_vectors.push_back( trial_vector );
-            }
-        }
-    }
-    if ( centring_vectors.size() != D )
-        throw std::runtime_error( "add_centring_to_space_group_after_transformation() : centring_vectors.size() != D." );
-    space_group.add_centring( Centring( centring_vectors ) );
 }
 
 // ********************************************************************************

@@ -61,7 +61,11 @@ public:
 
     explicit SpaceGroup( const std::vector< SymmetryOperator > & symmetry_operators, const std::string & name = "" );
 
-   // SpaceGroup( const std::vector< SymmetryOperator > & representative_symmetry_operators, const bool has_inversion, const Vector3D & position_of_inversion, const Centring & centring, const std::string & name = "" );
+    SpaceGroup( const std::vector< SymmetryOperator > & representative_symmetry_operators, const bool has_inversion, const Vector3D & translation_of_inversion, const Centring & centring, const std::string & name = "" );
+
+    // The three unit-cell translations cannot be specified because all elements of the translational part of a symmetry operator are forced to be in the range [ 0.0, 1.0 >.
+    // We cannot make this a constructor because its arguments cannot be distinguished from the constructor taking a list of symmetry operators.
+    static SpaceGroup from_generators( const std::vector< SymmetryOperator > & generators, const std::string & name = "" );
 
     static SpaceGroup P21c();
     static SpaceGroup C2c();
@@ -86,7 +90,8 @@ public:
 
     bool has_inversion() const { return has_inversion_; }
 
-    Vector3D position_of_inversion() const { return position_of_inversion_; }
+    // The translation part of the inversion. The position of the inversion = translation / 2.
+    Vector3D translation_of_inversion() const;
 
     bool has_inversion_at_origin() const { return has_inversion_at_origin_; }
 
@@ -134,7 +139,7 @@ private:
     Centring centring_;
     bool has_inversion_;
     bool has_inversion_at_origin_;
-    Vector3D position_of_inversion_;
+    Vector3D translation_of_inversion_;
     std::string name_;
 
     void decompose();

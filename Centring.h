@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class Matrix3D;
+
 #include "Vector3D.h"
 
 #include <cstddef> // For definition of size_t
@@ -65,7 +67,11 @@ public:
 
     size_t size() const { return centring_vectors_.size(); }
 
+    Vector3D centring_vector( const size_t i ) const;
+
     bool is_primitive() const { return size() == 1; }
+
+    Matrix3D to_primitive() const;
 
     bool contains( const Vector3D & centring_vector, const double tolerance = 0.000001 ) const;
 

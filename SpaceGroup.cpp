@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SpaceGroup.h"
 #include "3DCalculations.h"
 #include "BasicMathsFunctions.h"
+#include "CrystallographicCalculations.h"
 #include "PointGroup.h"
 #include "Utilities.h"
 
@@ -64,6 +65,113 @@ SpaceGroup::SpaceGroup( const std::vector< SymmetryOperator > & symmetry_operato
     if ( ! identity_found )
         throw std::runtime_error( "SpaceGroup::SpaceGroup(): identity not found." );
     decompose();
+}
+
+// ********************************************************************************
+
+SpaceGroup::SpaceGroup( const std::vector< SymmetryOperator > & representative_symmetry_operators, const bool has_inversion, const Vector3D & translation_of_inversion, const Centring & centring, const std::string & name ):name_(name)
+{
+    std::vector< SymmetryOperator > symmetry_operators( representative_symmetry_operators );
+    for ( size_t i( 0 ); i != representative_symmetry_operators.size(); ++i )
+    {
+        for ( size_t j( 1 ); j != centring.size(); ++j )
+            symmetry_operators.push_back( SymmetryOperator( Matrix3D(), centring.centring_vector( j ) ) * representative_symmetry_operators[i] );
+    }
+    if ( has_inversion )
+    {
+        SymmetryOperator inversion( Matrix3D( -1.0 ), adjust_for_translations( translation_of_inversion ) );
+        size_t old_size = symmetry_operators.size();
+        for ( size_t i( 0 ); i != old_size; ++i )
+            symmetry_operators.push_back( inversion * symmetry_operators[i] );
+    }
+    symmetry_operators_ = symmetry_operators;
+    decompose();
+}
+
+// ********************************************************************************
+
+SpaceGroup SpaceGroup::from_generators( const std::vector< SymmetryOperator > & generators, const std::string & name )
+{
+    if ( generators.empty() )
+        throw std::runtime_error( "SpaceGroup::from_generators(): error: no generators specified." );
+    // For each of the generators, create a cyclic group, or establish that it is the identity or establish that it is the inversion or etablish that it is a centring vector.
+    // A space group like F1 would be problematic with an algorithm that assumes that we only get standard space groups.
+    bool inversion_found( false );
+    Vector3D translation_of_inversion;
+    std::vector< SymmetryOperator > centring_generators;
+    std::vector< std::vector< SymmetryOperator > > cyclic_groups;
+    for ( size_t i( 0 ); i != generators.size(); ++i )
+    {
+        if ( generators[i].rotation().is_nearly_the_inversion() )
+        {
+            if ( inversion_found )
+                throw std::runtime_error( "SpaceGroup::from_generators(): error: inversion found more than once." );
+            inversion_found = true;
+            translation_of_inversion = generators[i].translation();
+            continue;
+        }
+        if ( generators[i].rotation().is_nearly_the_identity() )
+        {
+            if ( ! generators[i].translation().nearly_zero() )
+                centring_generators.push_back( generators[i] );
+            continue;
+        }
+        std::vector< SymmetryOperator > cyclic_group;
+        SymmetryOperator new_symmetry_operator = generators[i];
+        do
+        {
+            cyclic_group.push_back( new_symmetry_operator );
+            new_symmetry_operator *= generators[i];
+        }
+        while ( ! new_symmetry_operator.is_nearly_the_identity() );
+        cyclic_groups.push_back( cyclic_group );
+    }
+    // Multiply all cyclic groups by each other.
+    std::vector< SymmetryOperator > symmetry_operators;
+    symmetry_operators.push_back( SymmetryOperator() );
+    if ( cyclic_groups.size() == 0 )
+        return SpaceGroup( symmetry_operators, inversion_found, translation_of_inversion, expand_centring_generators( centring_generators ), name );
+    for ( size_t i( 0 ); i != cyclic_groups.size(); ++i )
+    {
+        for ( size_t j( 0 ); j != cyclic_groups[i].size(); ++j )
+        {
+            if ( ! nearly_contains( symmetry_operators, cyclic_groups[i][j] ) ) // @@ I do not think this is necessary.
+                symmetry_operators.push_back( cyclic_groups[i][j] );
+        }
+    }
+    if ( cyclic_groups.size() == 1 )
+        return SpaceGroup( symmetry_operators, inversion_found, translation_of_inversion, expand_centring_generators( centring_generators ), name );
+    for ( size_t iGroup( 0 ); iGroup != cyclic_groups.size()-1; ++iGroup )
+    {
+        for ( size_t jGroup( iGroup+1 ); jGroup != cyclic_groups.size(); ++jGroup )
+        {
+            for ( size_t i( 0 ); i != cyclic_groups[iGroup].size(); ++i )
+            {
+                for ( size_t j( 0 ); j != cyclic_groups[jGroup].size(); ++j )
+                {
+                    SymmetryOperator new_symmetry_operator = cyclic_groups[iGroup][i] * cyclic_groups[jGroup][j];
+                    if ( ! nearly_contains( symmetry_operators, new_symmetry_operator ) )
+                        symmetry_operators.push_back( new_symmetry_operator );
+                }
+            }
+        }
+    }
+    if ( cyclic_groups.size() == 2 )
+        return SpaceGroup( symmetry_operators, inversion_found, translation_of_inversion, expand_centring_generators( centring_generators ), name );
+    size_t oldsize = symmetry_operators.size();
+    for ( size_t iGroup( 0 ); iGroup != cyclic_groups.size(); ++iGroup )
+    {
+        for ( size_t i( 0 ); i != cyclic_groups[iGroup].size(); ++i )
+        {
+            for ( size_t j( 0 ); j != oldsize; ++j )
+            {
+                SymmetryOperator new_symmetry_operator = cyclic_groups[iGroup][i] * symmetry_operators[j];
+                if ( ! nearly_contains( symmetry_operators, new_symmetry_operator ) )
+                    symmetry_operators.push_back( new_symmetry_operator );
+            }
+        }
+    }
+    return SpaceGroup( symmetry_operators, inversion_found, translation_of_inversion, expand_centring_generators( centring_generators ), name );
 }
 
 // ********************************************************************************
@@ -155,6 +263,15 @@ SymmetryOperator SpaceGroup::symmetry_operator( const size_t i ) const
 
 // ********************************************************************************
 
+Vector3D SpaceGroup::translation_of_inversion() const
+{
+    if ( ! has_inversion() )
+        throw std::runtime_error( "SpaceGroup::translation_of_inversion(): the space group has no inversion." );
+    return translation_of_inversion_;
+}
+
+// ********************************************************************************
+
 // i = 0, 1, 2 for x, y, z.
 // I think that the diagonal in some cubic space groups can be a floating axis, so this
 // will not always work.
@@ -178,7 +295,7 @@ bool SpaceGroup::contains_non_standard_symmetry_operator() const
     {
         if ( ! has_inversion_at_origin_ )
         {
-            if ( is_non_standard_translation( position_of_inversion_ ) )
+            if ( is_non_standard_translation( translation_of_inversion_ ) )
                 return true;
         }
     }
@@ -201,7 +318,7 @@ void SpaceGroup::reduce_to_primitive()
         std::cout << "SpaceGroup::reduce_to_primitive(): warning: already primitive." << std::endl;
             return;
     }
-    Matrix3D matrix = centred_to_primitive( centring_ );
+    Matrix3D matrix = centring_.to_primitive();
     matrix.transpose();
     Matrix3D inverse = matrix;
     inverse.invert();
@@ -409,7 +526,7 @@ void SpaceGroup::show() const
         if ( has_inversion_at_origin_ )
             std::cout << "Has inversion at origin" << std::endl;
         else
-            std::cout << "Has inversion at: " << position_of_inversion_.to_string() << std::endl;
+            std::cout << "Has inversion with translation: " << translation_of_inversion_.to_string() << std::endl;
     }
     else
         std::cout << "No inversion" << std::endl;
@@ -430,7 +547,6 @@ void SpaceGroup::decompose()
     std::vector< Vector3D > centring_vectors;
     centring_vectors.push_back( Vector3D() );
     std::vector< Vector3D > inversion_translation_vectors;
-    Matrix3D inversion( -1.0 );
     for ( size_t i( 1 ); i != symmetry_operators_.size(); ++i )
     {
         double determinant = symmetry_operators_[i].rotation().determinant();
@@ -441,7 +557,7 @@ void SpaceGroup::decompose()
         }
         else if ( nearly_equal( determinant, -1.0 ) )
         {
-            if ( nearly_equal( symmetry_operators_[i].rotation(), inversion ) )
+            if ( symmetry_operators_[i].rotation().is_nearly_the_inversion() )
             {
                 has_inversion_ = true;
                 inversion_translation_vectors.push_back( symmetry_operators_[i].translation() );
@@ -461,7 +577,7 @@ void SpaceGroup::decompose()
             if ( value < smallest_value )
             {
                 smallest_value = value;
-                position_of_inversion_ = inversion_translation_vectors[i];
+                translation_of_inversion_ = inversion_translation_vectors[i];
             }
         }
         if ( nearly_zero( smallest_value ) )
@@ -485,6 +601,7 @@ void SpaceGroup::decompose()
     }
     if ( has_inversion_ )
     {
+        Matrix3D inversion( -1.0 );
         for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
         {
             if ( nearly_equal( representative_symmetry_operators_[i].rotation().determinant(), -1.0 ) )
@@ -492,7 +609,7 @@ void SpaceGroup::decompose()
                 if ( has_inversion_at_origin_ )
                     symmetry_operators_[i].rotation() =  -1.0 * representative_symmetry_operators_[i].rotation();
                 else
-                    representative_symmetry_operators_[i] = representative_symmetry_operators_[i] * SymmetryOperator( inversion, position_of_inversion_ );
+                    representative_symmetry_operators_[i] = representative_symmetry_operators_[i] * SymmetryOperator( inversion, translation_of_inversion_ );
             }
         }
     }

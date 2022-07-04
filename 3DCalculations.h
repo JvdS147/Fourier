@@ -34,39 +34,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "BasicMathsFunctions.h"
 
 class Angle;
-class Centring;
 class CollectionOfPoints;
 class CoordinateFrame;
-class CrystalLattice;
-class CrystalStructure;
 class Matrix3D;
-class MillerIndices;
 class NormalisedVector3D;
 class Plane;
-class SpaceGroup;
 class SymmetricMatrix3D;
 class Vector2D;
 class Vector3D;
 
 #include <vector>
-
-//struct SpecialPositionsReport
-//{
-//    size_t number_of_atoms_in_unit_cell_; // Could make it a ChemicalFormula.
-//    // We could enumerate the number of atoms found per point group, but two atoms that are on two special positions with the same point group are not necesarily the same atom.
-//    std::vector< size_t > point_group_orders_;
-//    std::vector< size_t > natoms_per_point_group_order_; // Same size as point_group_orders_
-//    size_t natoms_on_special_positions_; // Sum of natoms_per_point_group_order_
-//    size_t natoms_with_symmetry_copies; // Benzene in P-1 would return six (three carbon, three hydrogen).
-//    size_t nsymmetry_operators_;
-//    size_t nmolecules_;
-//};
-
-//SpecialPositionsReport special_positions_report()
-
-Vector3D reciprocal_lattice_point( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice );
-
-NormalisedVector3D reciprocal_lattice_direction( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice );
 
 // Gram-Schmidt orthogonalisation
 NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const Vector3D & r );
@@ -83,9 +60,6 @@ Vector2D projection( const Plane & plane, const Vector3D & point );
 double root_mean_square_devation_from_mean_plane( const CollectionOfPoints & points, const Plane & plane );
 
 double root_mean_square_devation_from_mean_plane( const std::vector< Vector3D > & points, const Plane & plane );
-
-// Easier: apply rotational part of symmetry operator to Ucif
-//AnisotropicDisplacementParameters operator*( const SymmetryOperator & lhs, const AnisotropicDisplacementParameters rhs );
 
 // Try to use the overload with CollectionOfPoints.
 SymmetricMatrix3D covariance_matrix( const std::vector< Vector3D > & points );
@@ -134,12 +108,6 @@ double operator*( const NormalisedVector3D & lhs, const Vector3D & rhs );
 // The transposition is implied.
 double operator*( const Vector3D & lhs, const NormalisedVector3D & rhs );
 
-//MillerIndices operator*( const Matrix3D & matrix, const MillerIndices & miller_indices );
-MillerIndices operator*( const MillerIndices & miller_indices, const Matrix3D & matrix );
-MillerIndices operator*( const MillerIndices & miller_indices, const SymmetricMatrix3D & matrix );
-
-double operator*( const MillerIndices & miller_indices, const Vector3D & vector_3D );
-
 // Counter-clockwise, rotation axis coming out of the plane of the paper.
 Matrix3D rotation_about_x( const Angle angle );
 Matrix3D rotation_about_y( const Angle angle );
@@ -187,14 +155,6 @@ Angle angle( const Plane & lhs, const Plane & rhs );
 
 // The order of the points determines the sign of the torsion.
 Angle signed_torsion( const Vector3D & r1, const Vector3D & r2, const Vector3D & r3, const Vector3D & r4 );
-
-Matrix3D centred_to_primitive( const Centring & centring );
-
-bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs );
-
-// The transformation has already been applied to the space group.
-// If e.g. the transformation matrix codes P-1 to I-1, it adds [ 1/2, 1/2, 1/2 ] to the symmetry operators.
-void add_centring_to_space_group_after_transformation( Matrix3D tranformation_matrix, SpaceGroup & space_group );
 
 #endif // DCALCULATIONS_H
 
