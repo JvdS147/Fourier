@@ -209,7 +209,7 @@ public:
     // fragment in the asymmetric unit. Will fail if the floating axis is along the diagonal.
     // If the space group has a polar axis but the molecule is either not chiral or the absolute chirality
     // was not determined, it may be necessary to allow an inversion.
-    void move_com_close_to_origin( const bool add_inversion );
+    void move_com_close_to_origin( const bool add_inversion = false );
 
     // Needed for volume calculations: all atoms in the unit cell + a thin layer on every surface of thickness (greatest VdW radius + probe_radius).
     void pack_crystal( const double probe_radius );
