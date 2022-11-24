@@ -61,7 +61,7 @@ std::string Refcode::family() const
 // XXXXXX00 is allowed
 bool Refcode::format_is_correct( std::string refcode )
 {
-    // Length must be six or eight
+    // Length must be six or eight.
     if ( ( refcode.length() != 6 ) &&
          ( refcode.length() != 8 ) )
         return false;

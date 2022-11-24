@@ -40,7 +40,7 @@ public:
     Refcode();
 
     // Throws if format incorrect
-    Refcode( const std::string & refcode );
+    explicit Refcode( const std::string & refcode );
 
     std::string value() const { return refcode_; }
 
