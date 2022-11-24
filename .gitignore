@@ -1,3 +1,5 @@
 *.o
 *.exe
+compile_headers_standalone.sh
+AMS_*
 
