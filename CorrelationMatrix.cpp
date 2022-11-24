@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Utilities.h"
 
 #include <fstream>
+#include <iostream>
 #include <stdexcept>
 
 // ********************************************************************************
@@ -114,6 +115,90 @@ void CorrelationMatrix::save( const FileName & file_name ) const
         }
         text_file_writer.write_line();
     }
+}
+
+// ********************************************************************************
+
+// Divides the entries into clusters, all entries more similar than threshold are put into a cluster.
+// If this leads to inconsistencies, e.g. because A = B, B = C, but A != C, then A = C.
+std::vector< std::vector< size_t > > CorrelationMatrix::clusters( const double threshold ) const
+{
+    std::vector< std::vector< size_t > > result;
+    std::vector< bool > done( size(), false );
+    {
+        for ( size_t i( 0 ); i != size(); ++i )
+        {
+            if ( done[i] )
+                continue;
+            std::vector< size_t > one_cluster;
+            one_cluster.push_back( i );
+            done[i] = true;
+            for ( size_t j( i+1 ); j < size(); ++j )
+            {
+                if ( done[j] )
+                    continue;
+                if ( value( i, j ) > threshold  )
+                {
+                    one_cluster.push_back( j );
+                    done[j] = true;
+//                    // The following is to ensure that if A = B and B = C, then A = C.
+//                    // This may not necessarily follow from the correlation value,
+//                    // because it is possible that A and C are the beginning and the end
+//                    // of a temperature series.
+//                    for ( size_t k( j+1 ); k < size(); ++k )
+//                    {
+//                        if ( done[k] )
+//                            continue;
+//                        if ( ( value( j, k ) > threshold ) && ( ! ( value( i, k ) > threshold) )  )
+//                        {
+//                            one_cluster.push_back( k );
+//                            done[k] = true;
+//                        }
+//                    }
+                }
+            }
+            result.push_back( one_cluster );
+        }
+    }
+    // @@ We may still have inconsistencies here.
+    // @@ Depending on how we handle the inconsistencies, the lists of indices may not be ordered when we get here.
+    return result;
+}
+
+// ********************************************************************************
+
+std::vector< std::vector< size_t > > CorrelationMatrix::clusters( const double grey_area_threshold, const double threshold ) const
+{
+    std::vector< std::vector< size_t > > result;
+    std::vector< bool > done( size(), false );
+    {
+        for ( size_t i( 0 ); i != size(); ++i )
+        {
+            if ( done[i] )
+                continue;
+            std::vector< size_t > one_cluster;
+            one_cluster.push_back( i );
+            done[i] = true;
+            for ( size_t j( i+1 ); j < size(); ++j )
+            {
+                if ( done[j] )
+                    continue;
+                if ( value( i, j ) > threshold  )
+                {
+                    one_cluster.push_back( j );
+                    done[j] = true;
+                }
+                else if ( value( i, j ) > grey_area_threshold  )
+                {
+                    std::cout << "Warning: similarity " << i << ", " << j << " is " << value( i, j ) << std::endl;
+                }
+            }
+            result.push_back( one_cluster );
+        }
+    }
+    // @@ We may still have inconsistencies here.
+    // @@ Depending on how we handle the inconsistencies, the lists of indices may not be ordered when we get here.
+    return result;
 }
 
 // ********************************************************************************

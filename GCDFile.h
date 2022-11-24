@@ -1,8 +1,8 @@
-#ifndef RESULTSFILE_H
-#define RESULTSFILE_H
+#ifndef GCDFILE_H
+#define GCDFILE_H
 
 /* *********************************************
-Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,56 +30,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class FileName;
 
+#include "Refcode.h"
+
 #include <string>
 #include <vector>
 
 /*
-//set1 structure_001_00 -28213.7328 done ---- -1 jobs/job0 ---- none
-//set1 structure_001_01 -28213.70532 done ---- -1 jobs/job1 ---- none
-//set1 structure_002_00 -28213.73293 done ---- -1 jobs/job2 ---- none
-//set1 structure_002_01 -28213.70614 done ---- -1 jobs/job3 ---- none
-
-Only entries with "done" status are kept
-
 */
-class RESULTSFile
+class GCDFile
 {
 public:
 
     // Default constructor
- //   RESULTSFile();
+ //   GCDFile();
 
-    RESULTSFile( const FileName & file_name, const size_t natoms );
+    explicit GCDFile( const FileName & file_name );
 
-    size_t size() const { return names_.size(); }
-    bool empty() const { return names_.empty(); }
+    size_t size() const { return refcodes_.size(); }
+    bool empty() const { return refcodes_.empty(); }
 
     // Throws if i out of bounds.
-    std::string name( const size_t i ) const;
-
-    // Returns the energy in kcal/mol, lowest energy is 0.0.
-    // Throws if i out of bounds.
-    double energy( const size_t i ) const;
-
-    std::vector< double > energies() const;
-
-    // Returns the energy as read from the RESULTS file.
-    // Throws if i out of bounds.
-    double raw_energy( const size_t i ) const;
-
-    double lowest_energy() const { return lowest_energy_; }
-
-    size_t natoms() const { return natoms_; }
-
-    // Single point energies have names like *_00, *_01, *_02 etc. This function removes _?? from the end of the name.
-    void reduce_to_base_name();
+    Refcode refcode( const size_t i ) const;
 
 private:
-    size_t natoms_;
-    std::vector< std::string > names_;
-    std::vector< double > raw_energies_;
-    double lowest_energy_;
-//    std::vector< std::string > status_;
+    std::vector< Refcode > refcodes_;
 };
 
-#endif // RESULTSFILE_H
+#endif // GCDFILE_H

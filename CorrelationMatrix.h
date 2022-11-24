@@ -71,6 +71,13 @@ public:
     // @@@not yet implemented>
     void save_lower_triangle( const FileName & file_name ) const;
 
+    // Divides the entries into clusters, all entries more similar than threshold are put into a cluster.
+    // If this leads to inconsistencies, e.g. because A = B, B = C, but A != C, then A = C.
+    std::vector< std::vector< size_t > > clusters( const double threshold ) const;
+
+    // Prints warning when similarity is higher than grey_area_threshold but lower than threshold.
+    std::vector< std::vector< size_t > > clusters( const double grey_area_threshold, const double threshold ) const;
+
 private:
     double* data_ptr_;
     size_t dimension_;
