@@ -1,8 +1,8 @@
-#ifndef AMS_CONVERT_FLX2XYZ_H
-#define AMS_CONVERT_FLX2XYZ_H
+#ifndef GCDFILE_H
+#define GCDFILE_H
 
 /* *********************************************
-Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,7 +30,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 class FileName;
 
-void convert_flx2xyz( const FileName & input_file_name );
+#include "Refcode.h"
 
-#endif // AMS_CONVERT_FLX2XYZ_H
+#include <string>
+#include <vector>
 
+/*
+*/
+class GCDFile
+{
+public:
+
+    // Default constructor
+ //   GCDFile();
+
+    explicit GCDFile( const FileName & file_name );
+
+    size_t size() const { return refcodes_.size(); }
+    bool empty() const { return refcodes_.empty(); }
+
+    // Throws if i out of bounds.
+    Refcode refcode( const size_t i ) const;
+
+private:
+    std::vector< Refcode > refcodes_;
+};
+
+#endif // GCDFILE_H

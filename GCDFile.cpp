@@ -25,60 +25,32 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "Refcode.h"
-#include "StringFunctions.h"
+#include "GCDFile.h"
+#include "TextFileReader.h"
 
 #include <stdexcept>
 
 // ********************************************************************************
 
-Refcode::Refcode(): refcode_("XXXXXX01")
+GCDFile::GCDFile( const FileName & file_name )
 {
-}
-
-// ********************************************************************************
-
-// Throws if format incorrect
-Refcode::Refcode( const std::string & refcode )
-{
-    if ( ! format_is_correct( refcode ) )
-        throw std::runtime_error( "Refcode::Refcode(): incorrect format: " + refcode );
-    refcode_ = to_upper( refcode );
-}
-
-// ********************************************************************************
-
-// Strips digits and returns first six alphabetical characters
-std::string Refcode::family() const
-{
-    return refcode_.substr( 0, 6 );
-}
-
-// ********************************************************************************
-
-// Convenience function
-// Capitalisation is ignored
-// XXXXXX00 is allowed
-bool Refcode::format_is_correct( std::string refcode )
-{
-    // Length must be six or eight.
-    if ( ( refcode.length() != 6 ) &&
-         ( refcode.length() != 8 ) )
-        return false;
-    // First six characters must be alphabetical characters
-    for ( size_t i( 0 ); i != 6; ++i )
+    TextFileReader text_file_reader( file_name );
+    std::vector< std::string > words;
+    while ( text_file_reader.get_next_line( words ) )
     {
-        if ( ! std::isalpha( refcode[i] ) )
-            return false;
+        if ( words.size() != 1 )
+            throw std::runtime_error( "GCDFile::GCDFile( FileName ): words.size() != 1." );
+        refcodes_.push_back( Refcode( words[0] ) );
     }
-    if ( refcode.length() == 6 )
-        return true;
-    // Last two must be digits
-    if ( ! std::isdigit( refcode[6] ) )
-        return false;
-    if ( ! std::isdigit( refcode[7] ) )
-        return false;
-    return true;
+}
+
+// ********************************************************************************
+
+Refcode GCDFile::refcode( const size_t i ) const
+{
+    if ( i < size() )
+        return refcodes_[i];
+    throw std::runtime_error( "GCDFile::refcode( size_t ): out of bounds." );
 }
 
 // ********************************************************************************

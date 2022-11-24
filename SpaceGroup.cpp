@@ -498,13 +498,10 @@ void SpaceGroup::print_multiplication_table() const
 
 void SpaceGroup::generate_code() const
 {
-        std::cout << std::endl;
-        std::cout << std::endl;
     std::cout << "    std::vector< SymmetryOperator > symmetry_operators;" << std::endl;
     for ( size_t i( 0 ); i != symmetry_operators_.size(); ++i )
         std::cout << "    symmetry_operators.push_back( SymmetryOperator( \"" + symmetry_operators_[i].to_string() + "\" ) );" << std::endl;
     std::cout << "    SpaceGroup space_group( symmetry_operators );" << std::endl;
-        std::cout << std::endl;
         std::cout << std::endl;
     std::cout << "    std::vector< SymmetryOperator > symmetry_operators;" << std::endl;
     for ( size_t i( 0 ); i != representative_symmetry_operators_.size(); ++i )
@@ -539,7 +536,7 @@ void SpaceGroup::show() const
 // ********************************************************************************
 
 // Decomposes the space group into:
-// 1. Presence of inversion yes / no and its position.
+// 1. Presence of inversion yes / no and its translation.
 // 2. List of centring vectors.
 // 3. Whatever is left such that multiplication with all of the above would generate the original set of space-group symmetry operators again.
 void SpaceGroup::decompose()

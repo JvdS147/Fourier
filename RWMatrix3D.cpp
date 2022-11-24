@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -25,58 +25,32 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "AMS_Convert_flx2xyz.h"
+#include "RWMatrix3D.h"
+
 #include "FileName.h"
-#include "TextFileReader_2.h"
-#include "TextFileWriter.h"
+#include "Matrix3D.h"
+#include "TextFileReader.h"
 #include "Utilities.h"
 
 #include <stdexcept>
+#include <iostream>
 
-// 3
-//      C    1        O1_0        -5.837466094        0.4745566298        -2.042695814    7           O2                   0    2    3
-//      N    2        C1_0        -5.222830376        0.3042018964       -0.8392345753    3           C3                   0    1    4    5
-//      O    3       H36_0        -6.437558802       -0.2925495275        -2.141493922    0            H                   0    1
-//
-//Flexible torsions
-//    0
-//
-//Fixed torsions
-//    0
-//
-//Flexible inversions
-//    0
-//
-//Fixed inversions
-//    0
-//
-//Rings
-//    0
+//[ [ , , ], [ , , ], [ , , ] ]
 
 // ********************************************************************************
 
-void convert_flx2xyz( const FileName & input_file_name )
+void read( const FileName & file_name, Matrix3D & matrix )
 {
-    TextFileReader_2 input_file( input_file_name );
-    TextFileWriter output_file( replace_extension( input_file_name, "xyz" ) );
-    // Read number of atoms
-    size_t iLine( 0 );
-    std::string line = input_file.line( iLine );
-    std::vector< std::string > words = split( line );
-    if ( words.size() != 1 )
-        throw std::runtime_error( "convert_flx2xyz(): unexpected file format." );
-    // Technically an error here if number of atoms is negative
-    size_t natoms = string2integer( words[0] );
-    if ( natoms == 0 )
-        throw std::runtime_error( "convert_flx2xyz(): unexpected file format." );
-    output_file.write_line( words[0] );
-    output_file.write_line();
-    for ( size_t i( 0 ); i != natoms; ++i )
-    {
-        ++iLine;
-        words = split( input_file.line( iLine ) );
-        output_file.write_line( pad( words[0], 2 ) + " " + pad_plus( words[3], 15 ) + " " + pad_plus( words[4], 15 ) + " " + pad_plus( words[5], 15 ) );
-    }
+
+}
+
+// ********************************************************************************
+
+void write( const FileName & file_name, const Matrix3D & matrix )
+{
+//    write_line( "[ [ " + double2string( matrix.value( 0, 0 ) ) + ", " + double2string( matrix.value( 0, 1 ) ) + ", " + double2string( matrix.value( 0, 2 ) ) + " ]," +
+//                 " [ " + double2string( matrix.value( 1, 0 ) ) + ", " + double2string( matrix.value( 1, 1 ) ) + ", " + double2string( matrix.value( 1, 2 ) ) + " ]," +
+//                 " [ " + double2string( matrix.value( 2, 0 ) ) + ", " + double2string( matrix.value( 2, 1 ) ) + ", " + double2string( matrix.value( 2, 2 ) ) + " ] ]");
 }
 
 // ********************************************************************************

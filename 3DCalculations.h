@@ -54,6 +54,7 @@ Vector3D change_of_basis( const Vector3D & point, const CoordinateFrame & before
 Plane plane( const CollectionOfPoints & points );
 
 // The basis in the plane is generated with Plane::coordinate_frame().
+// @@ In practice this only makes sense for a std::vector< Vector3D > (i.e. a CollectionOfPoints).
 Vector2D projection( const Plane & plane, const Vector3D & point );
 
 double root_mean_square_devation_from_mean_plane( const CollectionOfPoints & points, const Plane & plane );
