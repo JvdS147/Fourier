@@ -31,7 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class CrystalStructure;
 class FileName;
 
-// Can only read extremely simple cifs such as those written out by Mercury, GRACE or the MD in MS.
+// Can only read extremely simple cifs such as those written out by Mercury, GRACE or the MD in Materials Studio.
 void read_cif( const FileName & file_name, CrystalStructure & crystal_structure );
 
 // Entirely text based: removes all lines with five fields or more of which the first field starts with "H" or "D",

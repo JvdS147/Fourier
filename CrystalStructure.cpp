@@ -102,6 +102,19 @@ void CrystalStructure::remove_H_and_D()
 
 // ********************************************************************************
 
+void CrystalStructure::set_global_Uiso( const double Uiso )
+{
+    for ( size_t i( 0 ); i != atoms_.size(); ++i )
+    {
+        if ( atoms_[ i ].element().is_H_or_D() )
+            atoms_[ i ].set_Uiso( 1.2 * Uiso );
+        else
+            atoms_[ i ].set_Uiso( Uiso );
+    }
+}
+
+// ********************************************************************************
+
 void CrystalStructure::set_atom( const size_t i, const Atom & atom )
 {
     atoms_[i] = atom;

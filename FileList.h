@@ -71,6 +71,8 @@ public:
 
     void push_back( const FileName & file_name ) { file_names_.push_back( file_name ); }
 
+    void erase( const size_t i );
+
     void reserve( const size_t nvalues ) { file_names_.reserve( nvalues ); }
     size_t size() const { return file_names_.size(); }
     bool empty() const { return file_names_.empty(); }
@@ -88,7 +90,7 @@ public:
     // This is wasteful and an iterator would be much more elegant
     FileName value( const size_t i ) const;
 
-    // This really needs a flag to indicate if the directory name should explicitly be included / deleted / left as-is
+    // @@ This really needs a flag to indicate if the directory name should explicitly be included / deleted / left as-is
     void save( const FileName & file_name ) const;
 
 private:
@@ -99,7 +101,7 @@ private:
     void initialise_from_file_2( const FileName & file_name );
 };
 
-//FileList merge( const FileList & lhs, const FileList & rhs );
+FileList merge( const FileList & lhs, const FileList & rhs );
 
 #endif // FILELIST_H
 

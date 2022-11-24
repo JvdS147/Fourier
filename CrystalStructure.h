@@ -93,6 +93,9 @@ public:
 
     void remove_H_and_D();
 
+    // Hydrogen atoms are assigned 1.2 * the global Uiso value.
+    void set_global_Uiso( const double Uiso );
+
     // Replaces an existing atom, enables making changes to atoms in the crystal
     // The alternative would have been to make atom(size_t) return a reference.
     // To keep all other attributes of the atom use something like:
@@ -109,7 +112,7 @@ public:
     // Checks if there are overlapping atoms
     // Checks if any atom labels are duplicate
     void basic_checks() const;
-    
+
     void make_atom_labels_unique();
 
     std::set< Element > elements() const;
@@ -174,13 +177,13 @@ public:
     PointGroup point_is_on_special_position( Vector3D & point, const double tolerance = 0.01 ) const;
 
     PointGroup point_is_on_special_position_const( Vector3D point, const double tolerance = 0.01 ) const;
-    
+
     // @@ Can't be const because it calls perceive_molecules()
     PointGroup molecule_is_on_special_position( const size_t i, const double tolerance = 0.01 ) const;
 
     // Must have called perceive_molecules() first.
     SpecialPositionsReport special_positions_report() const;
-    
+
     // @@ This is problematic because MoleculeInCrystal stores copies of all the atoms.
     void move_molecule( const size_t i, const Vector3D shift );
 
@@ -285,7 +288,7 @@ public:
                              std::vector< std::vector< Vector3D > > & positions );
 
     void save_xyz( const FileName & file_name ) const;
-    
+
     void save_cif( const FileName & file_name ) const;
 
     void calculate_topological_attributes();
@@ -302,7 +305,7 @@ private:
     CrystalLattice crystal_lattice_;
     std::vector< Atom > atoms_;
     std::vector< MoleculeInCrystal > molecules_;
-    std::vector< bool > suppressed_; //
+    std::vector< bool > suppressed_;
     std::string name_;
     bool space_group_symmetry_has_been_applied_;
     ConnectivityTable connectivity_table_;

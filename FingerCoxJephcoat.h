@@ -45,13 +45,14 @@ class FingerCoxJephcoat
 {
 public:
 
-    // Note that internally, this class only works with H/L and S/L.
+    // Note that internally, this class only works with A = H/L and B = S/L.
     // In practice, H/L and S/L cannot be 0.0 but must at least be, say, 0.0001.
     // If they are 0.0001, then it is as if the peaks are symmetric.
     FingerCoxJephcoat( const double H, const double S, const double L );
 
     // In practice, A and B cannot be 0.0 but must at least be, say, 0.0001.
     // If they are 0.0001, then it is as if the peaks are symmetric.
+    // A = H/L, B = S/L.
     FingerCoxJephcoat( const double A, const double B );
 
     // DASH reports "H plus S over L" (HPSL) and "H minus S over L" (HMSL).
@@ -75,8 +76,8 @@ public:
     std::vector< double > asymmetric_peak_H_is_S( const Angle two_theta, const std::vector< Angle > & two_phi_values, const double FWHM ) const;
 
 private:
-    double A_;
-    double B_;
+    double A_; // H/L.
+    double B_; // S/L.
     double eta_;
     size_t N_;
     std::vector< double > x_i_;

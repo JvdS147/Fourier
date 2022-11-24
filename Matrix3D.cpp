@@ -58,18 +58,18 @@ Matrix3D::Matrix3D( const double a00, const double a01, const double a02,
 
 double Matrix3D::value( const size_t i, const size_t j ) const
 {
-    if ( ( 2 < i ) || ( 2 < j ) )
-        throw std::runtime_error( "Matrix3D::value(): index out of bounds." );
-    return data_[i][j];
+    if ( ( i < 3 ) || ( j < 3 ) )
+        return data_[i][j];
+    throw std::runtime_error( "Matrix3D::value(): index out of bounds." );
 }
 
 // ********************************************************************************
 
 void Matrix3D::set_value( const size_t i, const size_t j, const double value )
 {
-    if ( ( 2 < i ) || ( 2 < j ) )
-        throw std::runtime_error( "Matrix3D::set_value(): index out of bounds." );
-    data_[i][j] = value;
+    if ( ( i < 3 ) || ( j < 3 ) )
+        data_[i][j] = value;
+    throw std::runtime_error( "Matrix3D::set_value(): index out of bounds." );
 }
 
 // ********************************************************************************
@@ -131,40 +131,44 @@ double Matrix3D::trace() const
 
 void Matrix3D::swap_rows( const size_t i, const size_t j )
 {
-    if ( ( 2 < i ) || ( 2 < j ) )
-        throw std::runtime_error( "Matrix3D::swap_rows(): index out of bounds." );
-    std::swap( data_[i][0], data_[j][0] );
-    std::swap( data_[i][1], data_[j][1] );
-    std::swap( data_[i][2], data_[j][2] );
+    if ( ( i < 3 ) || ( j < 3 ) )
+    {
+        std::swap( data_[i][0], data_[j][0] );
+        std::swap( data_[i][1], data_[j][1] );
+        std::swap( data_[i][2], data_[j][2] );
+    }
+    throw std::runtime_error( "Matrix3D::swap_rows(): index out of bounds." );
 }
 
 // ********************************************************************************
 
 void Matrix3D::swap_columns( const size_t i, const size_t j )
 {
-    if ( ( 2 < i ) || ( 2 < j ) )
-        throw std::runtime_error( "Matrix3D::swap_columns(): index out of bounds." );
-    std::swap( data_[0][i], data_[0][j] );
-    std::swap( data_[1][i], data_[1][j] );
-    std::swap( data_[2][i], data_[2][j] );    
+    if ( ( i < 3 ) || ( j < 3 ) )
+    {
+        std::swap( data_[0][i], data_[0][j] );
+        std::swap( data_[1][i], data_[1][j] );
+        std::swap( data_[2][i], data_[2][j] );    
+    }
+    throw std::runtime_error( "Matrix3D::swap_columns(): index out of bounds." );
 }
 
 // ********************************************************************************
 
 double Matrix3D::maximum_absolute_value_in_row( const size_t i ) const
 {
-    if ( 2 < i )
-        throw std::runtime_error( "Matrix3D::maximum_absolute_value_in_row(): index out of bounds." );
-    return std::max( std::abs( data_[i][0] ), std::max( std::abs( data_[i][1] ), std::abs( data_[i][2] ) ) );
+    if ( i < 3 )
+        return std::max( std::abs( data_[i][0] ), std::max( std::abs( data_[i][1] ), std::abs( data_[i][2] ) ) );
+    throw std::runtime_error( "Matrix3D::maximum_absolute_value_in_row(): index out of bounds." );
 }
 
 // ********************************************************************************
 
 double Matrix3D::maximum_absolute_value_in_column( const size_t i ) const
 {
-    if ( 2 < i )
-        throw std::runtime_error( "Matrix3D::maximum_absolute_value_in_column(): index out of bounds." );
-    return std::max( std::abs( data_[0][i] ), std::max( std::abs( data_[1][i] ), std::abs( data_[2][i] ) ) );    
+    if ( i < 3 )
+        return std::max( std::abs( data_[0][i] ), std::max( std::abs( data_[1][i] ), std::abs( data_[2][i] ) ) );    
+    throw std::runtime_error( "Matrix3D::maximum_absolute_value_in_column(): index out of bounds." );
 }
 
 // ********************************************************************************
