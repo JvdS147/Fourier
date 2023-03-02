@@ -101,6 +101,7 @@ public:
     void read_mdi( const FileName & file_name );
     void read_brml( const FileName & file_name );
     void read_txt( const FileName & file_name );
+//    void read_cif( const FileName & file_name );
     void save_xye( const FileName & file_name, const bool include_wave_length ) const;
 
     // Writes to std::cout the code that is necessary to generate the PowderPattern object.

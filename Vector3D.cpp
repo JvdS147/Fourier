@@ -55,18 +55,18 @@ Vector3D::Vector3D( const double x, const double y, const double z )
 
 double Vector3D::value( const size_t i ) const
 {
-    if ( 2 < i )
-        throw std::runtime_error( "Vector3D::value(): index out of bounds." );
-    return data_[i];
+    if ( i < 3 )
+        return data_[i];
+    throw std::runtime_error( "Vector3D::value(): index out of bounds." );
 }
 
 // ********************************************************************************
 
 void Vector3D::set_value( const size_t i, const double value )
 {
-    if ( 2 < i )
-        throw std::runtime_error( "Vector3D::set_value(): index out of bounds." );
-    data_[i] = value;
+    if ( i < 3 )
+        data_[i] = value;
+    throw std::runtime_error( "Vector3D::set_value(): index out of bounds." );
 }
 
 // ********************************************************************************

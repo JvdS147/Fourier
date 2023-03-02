@@ -520,6 +520,108 @@ void PowderPattern::read_txt( const FileName & file_name )
 
 // ********************************************************************************
 
+// We have a couple of problems here:
+// The cif may be huge and full of other stuff that we do not need (it may even have multiple structures
+// with multiple powder diffraction patterns)
+//_pd_meas_2theta_range_min  0.50000
+//_pd_meas_2theta_range_max  49.99654
+//_pd_meas_2theta_range_inc  0.00100
+//_pd_meas_number_of_points  49575
+//
+//loop_
+//   _pd_meas_intensity_total
+//   _pd_calc_intensity_total
+//   _pd_proc_intensity_bkg_calc
+//   _pd_proc_ls_weight
+//  878.115218   0            0           0         
+//  845.112609   0            0           0         
+//  830.491604   0            0           0         
+//  848.287054   0            0           0         
+//  874.178024   0            0           0         
+//  834.93539    0            0           0         
+//
+//void PowderPattern::read_cif( const FileName & file_name )
+//{
+//    *this = PowderPattern();
+//    TextFileReader text_file_reader( file_name );
+//    text_file_reader.set_skip_empty_lines( true );
+//    std::vector< std::string > words;
+//  //  size_t stage( 1 );
+//    Angle two_theta_start;
+//    Angle two_theta_step;
+//    Angle two_theta_end;
+//    size_t number_of_points( 0 );
+// //   size_t i( 0 );
+//    bool found_pd_meas_2theta_range_min( false );
+//    bool found_pd_meas_2theta_range_max( false );
+//    bool found_pd_meas_2theta_range_inc( false );
+//    bool found_pd_meas_number_of_points( false );
+//    while ( text_file_reader.get_next_line( words ) )
+//    {
+//        if ( words[0] == "_pd_meas_2theta_range_min" )
+//        {
+//            if ( words.size() == 1 )
+//                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_min does not have value." );
+//            two_theta_start = Angle::from_degrees( string2double( words[1] ) );
+//            found_pd_meas_2theta_range_min = true;
+//            continue;
+//        }
+//        if ( words[0] == "_pd_meas_2theta_range_max" )
+//        {
+//            if ( words.size() == 1 )
+//                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_max does not have value." );
+//            two_theta_end = Angle::from_degrees( string2double( words[1] ) );
+//            found_pd_meas_2theta_range_max = true;
+//            continue;
+//        }
+//        if ( words[0] == "_pd_meas_2theta_range_inc" )
+//        {
+//            if ( words.size() == 1 )
+//                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_inc does not have value." );
+//            two_theta_step = Angle::from_degrees( string2double( words[1] ) );
+//            found_pd_meas_2theta_range_inc = true;
+//            continue;
+//        }
+//        if ( words[0] == "_pd_meas_number_of_points" )
+//        {
+//            if ( words.size() == 1 )
+//                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_number_of_points does not have value." );
+//            number_of_points = string2size_t( words[1] );
+//            found_pd_meas_number_of_points = true;
+//            continue;
+//        }
+//         
+//      
+//        if ( words.size() == 3 )
+//        {
+//            if ( stage != 1 )
+//                throw std::runtime_error( "PowderPattern::read_cif(): keyword out of place." );
+//            two_theta_start = Angle::from_degrees( string2double( words[0] ) );
+//            two_theta_step  = Angle::from_degrees( string2double( words[1] ) );
+//            two_theta_end   = Angle::from_degrees( string2double( words[2] ) );
+//            stage = 3;
+//            continue;
+//        }
+//       
+//        push_back( ( i * two_theta_step ) + two_theta_start, string2double( words[0] ) );
+//        ++i;
+//    }
+//    if ( ! found_pd_meas_2theta_range_min )
+//        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_min not found." );
+//    if ( ! found_pd_meas_2theta_range_max )
+//        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_max not found." );
+//    if ( ! found_pd_meas_2theta_range_inc )
+//        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_inc not found." );
+//    if ( found_pd_meas_number_of_points )
+//    {
+//        // Consistency check.
+//        
+//    }
+//
+//}
+
+// ********************************************************************************
+
 void PowderPattern::save_xye( const FileName & file_name, const bool include_wave_length ) const
 {
     TextFileWriter text_file_writer( file_name );

@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "TextFileReader.h"
 #include "TextFileWriter.h"
 
+#include <stdexcept>
+
 // ********************************************************************************
 
 FileList::FileList() : prepend_file_name_with_basedirectory_(true)
@@ -71,9 +73,13 @@ FileList::FileList( const std::string & base_directory, const std::vector< FileN
 
 FileName FileList::value( const size_t i ) const
 {
-    if ( prepend_file_name_with_basedirectory_ && file_names_[ i ].directory().empty() )
-        return FileName( base_directory_, file_names_[ i ].file_name(), file_names_[ i ].extension() );
-    return file_names_[ i ];
+    if ( i < file_names_.size() )
+    {
+        if ( prepend_file_name_with_basedirectory_ && file_names_[ i ].directory().empty() )
+            return FileName( base_directory_, file_names_[ i ].file_name(), file_names_[ i ].extension() );
+        return file_names_[ i ];
+    }
+    throw std::runtime_error( " FileList::value(): index out of bounds." );
 }
 
 // ********************************************************************************
@@ -89,9 +95,20 @@ void FileList::save( const FileName & file_name ) const
 
 void FileList::initialise_from_file( const FileName & file_name )
 {
-    
     initialise_from_file_2( file_name );
     base_directory_ = file_name.directory();
+}
+
+// ********************************************************************************
+
+void FileList::erase( const size_t i )
+{
+    if ( i < file_names_.size() )
+    {
+        file_names_[i] = file_names_[ file_names_.size() - 1 ];
+        file_names_.pop_back();
+    }
+    throw std::runtime_error( "FileList::erase(): index out of bounds." );
 }
 
 // ********************************************************************************
@@ -113,6 +130,18 @@ void FileList::initialise_from_file_2( const FileName & file_name )
         else
             file_names_.push_back( FileName( words[0] ) );
     }
+}
+
+// ********************************************************************************
+
+FileList merge( const FileList & lhs, const FileList & rhs )
+{
+    if ( lhs.base_directory() != rhs.base_directory() )
+        throw std::runtime_error( "merge( FileList, FileList ): base directories differ." );
+    FileList result( lhs );
+    for ( size_t i( 0 ); i != rhs.size(); ++i )
+        result.push_back( rhs.value( i ) );
+    return result;
 }
 
 // ********************************************************************************

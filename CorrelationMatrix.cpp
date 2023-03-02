@@ -54,11 +54,14 @@ double CorrelationMatrix::value( size_t i, size_t j ) const
 {
     if ( i < j )
         std::swap( i, j );
-    if ( dimension_ < (i+1) )
+    if ( i < dimension_ )
+    {
+        if ( i == j )
+            return value_on_diagonal_;
+        return data_ptr_[ ((i*(i-1))/2) + j ];
+    }
+    else
         throw std::runtime_error( "CorrelationMatrix::element(): out of bounds ( " + size_t2string(i) + " > " + size_t2string(dimension_) + " )" );
-    if ( i == j )
-        return value_on_diagonal_;
-    return data_ptr_[ ((i*(i-1))/2) + j ];
 }
 
 // ********************************************************************************
@@ -67,11 +70,14 @@ void CorrelationMatrix::set_value( size_t i, size_t j, const double value )
 {
     if ( i < j )
         std::swap( i, j );
-    if ( i > (dimension_-1) )
+    if ( i < dimension_ )
+    {
+        if ( i == j )
+            return;
+        data_ptr_[ ((i*(i-1))/2) + j ] = value;
+    }
+    else
         throw std::runtime_error( "CorrelationMatrix::set_element(): out of bounds ( " + size_t2string(i) + " > " + size_t2string(dimension_) + " )" );
-    if ( i == j )
-        return;
-    data_ptr_[ ((i*(i-1))/2) + j ] = value;
 }
 
 // ********************************************************************************

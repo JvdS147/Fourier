@@ -51,7 +51,7 @@ public:
 
     size_t size() const { return dimension_; }
 
-    // In keeping with the silly C++ convention: zero-based
+    // In keeping with the silly C++ convention: zero-based.
     double value( size_t i, size_t j ) const;
 
     void set_value( size_t i, size_t j, const double value );
@@ -60,10 +60,10 @@ public:
     
     void set_value_on_diagonal( const double value ) { value_on_diagonal_ = value; }
 
-    // Diagonal is not included
+    // Diagonal is not included.
     double largest_value() const;
 
-    // Diagonal is not included
+    // Diagonal is not included.
     double smallest_value() const;
 
     void save( const FileName & file_name ) const;

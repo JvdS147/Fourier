@@ -53,18 +53,18 @@ Vector2D::Vector2D( const double x, const double y )
 
 double Vector2D::value( const size_t i ) const
 {
-    if ( 1 < i )
-        throw std::runtime_error( "Vector2D::value(): index out of bounds." );
-    return data_[i];
+    if ( i < 2 )
+        return data_[i];
+    throw std::runtime_error( "Vector2D::value(): index out of bounds." );
 }
 
 // ********************************************************************************
 
 void Vector2D::set_value( const size_t i, const double value )
 {
-    if ( 1 < i )
-        throw std::runtime_error( "Vector2D::set_value(): index out of bounds." );
-    data_[i] = value;
+    if ( i < 2 )
+        data_[i] = value;
+    throw std::runtime_error( "Vector2D::set_value(): index out of bounds." );
 }
 
 // ********************************************************************************
