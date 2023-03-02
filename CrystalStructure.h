@@ -148,7 +148,7 @@ public:
     // @@ If a molecule on a special position is present and it has been expanded and saved to cif by Mercury,
     // this method gives the wrong answer because.
     // @@ Should this be made such that it can only be applied once? (I.e. is ignored when called again after first call.)
-    void apply_space_group_symmetry();
+    void apply_space_group_symmetry( const bool relabel_atoms = true );
 
     // Moves atoms, currently only using integer translations, but symmetry operators
     // should also be included, so that the atoms form connected molecules.

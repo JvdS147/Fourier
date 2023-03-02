@@ -92,6 +92,9 @@ bool nearly_contains( const std::vector< T > & values, const T & value )
 // Basically generates a quick and dirty ASCII histogram (rotated by 90 degrees).
 std::string ASCII_histogram( const double min, const double max, const double value, const size_t max_size, const char c );
 
+// 1/0, true/false, t/f, yes/no, y/n, not case sensitive
+bool string2bool( const std::string & input );
+
 // For internal use only.
 double string2double_2( const std::string & input, const bool float_allowed );
 
@@ -151,6 +154,8 @@ std::string size_t2string( const size_t input, const size_t padded_length = 0, c
 // If the length of the input value is longer than the padded length, a string with
 // the length of the input value is returned (so the value is never corrupted).
 std::string int2string( const int input, const size_t padded_length = 0, const char padding_character = '0' );
+
+std::string bool2string( const bool input );
 
 #endif // UTILITIES_H
 

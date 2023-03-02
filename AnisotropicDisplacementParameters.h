@@ -103,5 +103,8 @@ SymmetricMatrix3D U_cart_2_U_star( const SymmetricMatrix3D & U_cart, const Cryst
 SymmetricMatrix3D U_cif_2_U_star ( const SymmetricMatrix3D & U_cif , const CrystalLattice & crystal_lattice );
 SymmetricMatrix3D U_cif_2_U_cart ( const SymmetricMatrix3D & U_cif , const CrystalLattice & crystal_lattice );
 
+// May well produce nonsense.
+AnisotropicDisplacementParameters average( const AnisotropicDisplacementParameters & lhs, const AnisotropicDisplacementParameters & rhs );
+
 #endif // ANISOTROPICDISPLACEMENTPARAMETERS_H
 

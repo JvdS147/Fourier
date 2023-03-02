@@ -244,10 +244,12 @@ void PowderPatternCalculator::calculate_structure_factors()
         double cosine_term( 0.0 );
         double sine_term( 0.0 );
         // This can be sped up by sorting the list into lists of atoms of the same element.
-        double f0_H = Element( 1 ).scattering_factor( sine_theta_over_lambda );
-        double f0_C = Element( 6 ).scattering_factor( sine_theta_over_lambda );
-        double f0_N = Element( 7 ).scattering_factor( sine_theta_over_lambda );
-        double f0_O = Element( 8 ).scattering_factor( sine_theta_over_lambda );
+        double f0_H  = Element(  1 ).scattering_factor( sine_theta_over_lambda );
+        double f0_C  = Element(  6 ).scattering_factor( sine_theta_over_lambda );
+        double f0_N  = Element(  7 ).scattering_factor( sine_theta_over_lambda );
+        double f0_O  = Element(  8 ).scattering_factor( sine_theta_over_lambda );
+        double f0_Cl = Element( 17 ).scattering_factor( sine_theta_over_lambda );
+        double f0_I  = Element( 53 ).scattering_factor( sine_theta_over_lambda );
         for ( size_t j( 0 ); j != crystal_structure_.natoms(); ++j )
         {
             double x = crystal_structure_.atom(j).position().x();
@@ -262,6 +264,8 @@ void PowderPatternCalculator::calculate_structure_factors()
                 case  6 : f0 = f0_C; break;
                 case  7 : f0 = f0_N; break;
                 case  8 : f0 = f0_O; break;
+                case 17 : f0 = f0_Cl; break;
+                case 53 : f0 = f0_I; break;
                 default : f0 = crystal_structure_.atom(j).element().scattering_factor( sine_theta_over_lambda );
             }
             f0 *= crystal_structure_.atom(j).occupancy();

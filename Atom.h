@@ -78,6 +78,8 @@ public:
     void set_occupancy( const double occupancy ) { occupancy_ = occupancy; }
 
     ADPsType ADPs_type() const { return ADPs_type_; }
+
+    void reset_ADPs_type();
     
     // If ADPs_type_ is NONE or ISOTROPIC, returns diagonal matrix with 0.0 or with Uiso_
     AnisotropicDisplacementParameters anisotropic_displacement_parameters() const;
@@ -110,6 +112,16 @@ private:
     std::string disorder_group_;
     std::string topological_attributes_;
 };
+
+// Throws if element not the same, also averages ADPs, which means that the atoms must have been
+// transformed to coincide (e.g. if they are symmetry-related).
+// In general, two atoms that need to be averaged were probably related by symmetry
+// and the symmetry operator is a fundamental part of the averaging process,
+// e.g. because the ADPs must adhere to the site symmetry.
+// Currently, this information is spread over several functions,
+// but ideally this function takes a SymmetryOperator. But... the translation part would be canonicalised...
+// ... and for the ADPs we need the full point group, not just the one symmetry operator.
+Atom average( const Atom & lhs, const Atom & rhs );
 
 #endif // ATOM_H
 

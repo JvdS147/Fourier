@@ -33,7 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 //#include "BasicMathsFunctions.h"
 
-//class Angle;
+class AnisotropicDisplacementParameters;
 class Centring;
 //class CollectionOfPoints;
 //class CoordinateFrame;
@@ -42,7 +42,7 @@ class CrystalStructure;
 class Matrix3D;
 class MillerIndices;
 class NormalisedVector3D;
-//class Plane;
+class PointGroup;
 class SpaceGroup;
 class SymmetricMatrix3D;
 class SymmetryOperator;
@@ -85,6 +85,10 @@ std::vector< SymmetryOperator > centring_generators( const Centring & centring )
 Centring expand_centring_generators( const std::vector< SymmetryOperator > & generators );
 
 bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs );
+
+// Takes and ADP matrix which may have been affected by e.g. rounding errors and adjusts it to
+// comply with the site symmetry.
+AnisotropicDisplacementParameters adjust_to_site_symmetry( const AnisotropicDisplacementParameters & adps, const PointGroup & point_group, const CrystalLattice & crystal_lattice );
 
 #endif // CRYSTALLOGRAPHICCALCULATIONS_H
 
