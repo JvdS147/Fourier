@@ -32,6 +32,10 @@ class CorrelationMatrix;
 class FileList;
 
 // Uses powder patterns and Rene de Gelder's similarity measure, expects file_list to contain .cif files.
+// Uses simulated powder diffraction patterns from 3.0 to 35.0 degrees 2theta.
+// Uses l = 1.0 degrees 2theta.
 CorrelationMatrix calculate_correlation_matrix( const FileList & file_list );
+
+FileList select_diverse_structures( const FileList & file_list, const double similarity_limit );
 
 #endif // SIMILARITYANALYSIS_H

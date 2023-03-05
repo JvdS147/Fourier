@@ -79,6 +79,9 @@ public:
 
     ADPsType ADPs_type() const { return ADPs_type_; }
     
+    // Set ADP type to NONE.
+    void reset_ADPs_type();
+
     // If ADPs_type_ is NONE or ISOTROPIC, returns diagonal matrix with 0.0 or with Uiso_
     AnisotropicDisplacementParameters anisotropic_displacement_parameters() const;
 

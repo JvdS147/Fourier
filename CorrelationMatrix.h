@@ -32,6 +32,7 @@ class FileName;
 
 #include <cstddef> // For definition of size_t
 #include <string>
+#include <vector>
 
 /*
   A correlation matrix (or similarity matrix).

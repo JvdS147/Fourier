@@ -91,3 +91,26 @@ CorrelationMatrix calculate_correlation_matrix( const FileList & file_list )
 }
     
 // ********************************************************************************
+
+FileList select_diverse_structures( const FileList & file_list, const double similarity_limit )
+{
+    if ( file_list.size() < 2 )
+        return file_list;
+    FileList result;
+    std::vector< bool > done( file_list.size(), false );
+    CorrelationMatrix correlation_matrix = calculate_correlation_matrix( file_list );
+    for ( size_t i( 0 ); i != file_list.size()-1; ++i )
+    {
+        if ( ! done[i] )
+            result.push_back( file_list.value( i ) );
+        for ( size_t j( i+1 ); j != file_list.size(); ++j )
+        {
+            if ( correlation_matrix.value( i, j ) > similarity_limit )
+                done[j] = true;
+        }
+    }
+    return result;
+}
+
+// ********************************************************************************
+

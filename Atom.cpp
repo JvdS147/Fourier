@@ -81,6 +81,13 @@ occupancy_(1.0)
 
 // ********************************************************************************
 
+void Atom::reset_ADPs_type()
+{
+    ADPs_type_ = NONE;
+}
+
+// ********************************************************************************
+
 AnisotropicDisplacementParameters Atom::anisotropic_displacement_parameters() const
 {
     if ( ADPs_type_ == NONE )
@@ -90,7 +97,6 @@ AnisotropicDisplacementParameters Atom::anisotropic_displacement_parameters() co
     if ( ADPs_type_ == ANISOTROPIC )
         return anisotropic_displacement_parameters_;
     throw std::runtime_error( "Error." );
-
 }
 
 // ********************************************************************************
@@ -113,7 +119,6 @@ double Atom::Uiso() const
     if ( ADPs_type_ == ANISOTROPIC )
         return anisotropic_displacement_parameters_.U_iso();
     throw std::runtime_error( "Error." );
-
 }
 
 // ********************************************************************************
