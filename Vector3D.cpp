@@ -66,7 +66,8 @@ void Vector3D::set_value( const size_t i, const double value )
 {
     if ( i < 3 )
         data_[i] = value;
-    throw std::runtime_error( "Vector3D::set_value(): index out of bounds." );
+    else
+        throw std::runtime_error( "Vector3D::set_value(): index out of bounds." );
 }
 
 // ********************************************************************************
