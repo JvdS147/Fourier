@@ -90,7 +90,7 @@ public:
 
     bool there_are_contradictions() const;
 
-    // Returns the three slices that contain this quare
+    // Returns the three slices that contain this square
     // index 0 is ROW, index 1 is COLUMN and index 2 is SQUARE
     static std::vector< size_t > square2slices( const size_t square_index );
 

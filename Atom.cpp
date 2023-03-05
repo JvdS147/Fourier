@@ -131,3 +131,34 @@ void Atom::set_Uiso( const double Uiso )
 }
 
 // ********************************************************************************
+
+// Throws if element not the same, also averages ADPs, which means that the atoms must have been
+// transformed to coincide (e.g. if they are symmetry-related).
+Atom average( const Atom & lhs, const Atom & rhs )
+{
+    if ( lhs.element() != rhs.element() )
+        throw std::runtime_error( "average( Atom, Atom ): Error: elements must be the same." );
+    Atom result( lhs );
+    result.set_position( ( lhs.position() + rhs.position() ) / 2.0 );
+    result.set_occupancy( ( lhs.occupancy() + rhs.occupancy() ) / 2.0 );
+    if ( rhs.ADPs_type() == Atom::NONE )
+        return result;
+    if ( ( rhs.ADPs_type() == Atom::ISOTROPIC ) && ( rhs.ADPs_type() == Atom::ISOTROPIC ) )
+    {
+        result.set_Uiso( ( lhs.Uiso() + rhs.Uiso() ) / 2.0 );
+        return result;
+    }
+    if ( lhs.ADPs_type() == Atom::NONE )
+    {
+        if ( rhs.ADPs_type() == Atom::ISOTROPIC )
+            result.set_Uiso( rhs.Uiso() );
+        else // rhs.ADPs_type() == Atom::ANISOTROPIC
+            result.set_anisotropic_displacement_parameters( rhs.anisotropic_displacement_parameters() );
+        return result;
+    }
+    result.set_anisotropic_displacement_parameters( average( lhs.anisotropic_displacement_parameters(), rhs.anisotropic_displacement_parameters() ) );
+    return result;
+}
+
+// ********************************************************************************
+

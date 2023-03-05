@@ -194,3 +194,11 @@ SymmetricMatrix3D U_cif_2_U_cart( const SymmetricMatrix3D & U_cif, const Crystal
 
 // ********************************************************************************
 
+AnisotropicDisplacementParameters average( const AnisotropicDisplacementParameters & lhs, const AnisotropicDisplacementParameters & rhs )
+{
+    AnisotropicDisplacementParameters result;
+    return AnisotropicDisplacementParameters( ( lhs.U_cart() + rhs.U_cart() ) / 2.0 );
+}
+
+// ********************************************************************************
+

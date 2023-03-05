@@ -187,24 +187,28 @@ bool Matrix3D::is_diagonal() const
 
 double Matrix3D::minor_matrix_determinant( const size_t row, const size_t col ) const
 {
-    double minor_matrix[2][2];
-    size_t minor_row( 0 );
-    size_t minor_col( 0 );
-    for ( size_t i( 0 ); i != 3; ++i )
+    if ( ( row < 3 ) && ( col < 3 ) )
     {
-        if ( i == row )
-            continue;
-        minor_col = 0;
-        for ( size_t j( 0 ); j != 3; ++j )
+        double minor_matrix[2][2];
+        size_t minor_row( 0 );
+        size_t minor_col( 0 );
+        for ( size_t i( 0 ); i != 3; ++i )
         {
-            if ( j == col )
+            if ( i == row )
                 continue;
-            minor_matrix[minor_row][minor_col] = data_[i][j];
-            ++minor_col;
+            minor_col = 0;
+            for ( size_t j( 0 ); j != 3; ++j )
+            {
+                if ( j == col )
+                    continue;
+                minor_matrix[minor_row][minor_col] = data_[i][j];
+                ++minor_col;
+            }
+            ++minor_row;
         }
-        ++minor_row;
+        return minor_matrix[0][0]*minor_matrix[1][1] - minor_matrix[0][1]*minor_matrix[1][0];
     }
-    return minor_matrix[0][0]*minor_matrix[1][1] - minor_matrix[0][1]*minor_matrix[1][0];
+    throw std::runtime_error( "Matrix3D::minor_matrix_determinant(): index out of bounds." );
 }
 
 // ********************************************************************************

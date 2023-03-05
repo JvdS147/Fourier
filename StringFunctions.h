@@ -47,6 +47,8 @@ bool is_upper_case_letter( const char argument );
 
 bool is_lower_case_letter( const char argument );
 
+bool is_letter( const char argument );
+
 bool is_digit( const char argument );
 
 // Removes all occurences of char c from input string.

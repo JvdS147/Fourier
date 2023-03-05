@@ -49,10 +49,39 @@ std::string ASCII_histogram( const double min, const double max, const double va
 
 // ********************************************************************************
 
+// 1/0, true/false, t/f, yes/no, y/n, not case sensitive
+bool string2bool( const std::string & input )
+{
+    if ( input == "1" )
+        return true;
+    if ( input == "0" )
+        return false;
+    std::string input_2 = to_upper( input );
+    if ( input_2 == "Y" )
+        return true;
+    if ( input_2 == "N" )
+        return false;
+    if ( input_2 == "YES" )
+        return true;
+    if ( input_2 == "NO" )
+        return false;
+    if ( input_2 == "T" )
+        return true;
+    if ( input_2 == "F" )
+        return false;
+    if ( input_2 == "TRUE" )
+        return true;
+    if ( input_2 == "FALSE" )
+        return false;
+    throw std::runtime_error( "string2bool(): input string >" + input + "< is not a valid boolean value." );
+}
+
+// ********************************************************************************
+
 double string2double_2( const std::string & input, const bool float_allowed )
 {
     if ( input.empty() )
-        throw std::runtime_error( "string2double_2(): input string is empty" );
+        throw std::runtime_error( "string2double_2(): input string is empty." );
     double result( 0.0 );
     bool is_negative( false );
     size_t iPos( 0 );
@@ -217,3 +246,13 @@ std::string int2string( const int input, const size_t padded_length, const char 
 }
 
 // ********************************************************************************
+
+std::string bool2string( const bool input )
+{
+    if ( input )
+        return "1";
+    return "0";
+}
+
+// ********************************************************************************
+

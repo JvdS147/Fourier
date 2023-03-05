@@ -87,6 +87,13 @@ bool is_lower_case_letter( const char argument )
 
 // ********************************************************************************
 
+bool is_letter( const char argument )
+{
+    return ( is_lower_case_letter( argument ) || is_upper_case_letter( argument ) );
+}
+
+// ********************************************************************************
+
 bool is_digit( const char argument )
 {
     return ( ( '0' <= argument ) && ( argument <= '9' ) );

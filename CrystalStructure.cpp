@@ -231,12 +231,11 @@ void CrystalStructure::reduce_to_asymmetric_unit( const double tolerance )
 
 // ********************************************************************************
 
-void CrystalStructure::apply_space_group_symmetry()
+void CrystalStructure::apply_space_group_symmetry( const bool relable_atoms )
 {
     if ( space_group_symmetry_has_been_applied_ )
         std::cout << "CrystalStructure::apply_space_group_symmetry(): WARNING: space group has already been applied." << std::endl;
     std::vector< Atom > atoms;
-
     for ( size_t j( 1 ); j != space_group_.nsymmetry_operators(); ++j )
     {
         for ( size_t i( 0 ); i != natoms(); ++i )
@@ -253,12 +252,12 @@ void CrystalStructure::apply_space_group_symmetry()
                 {
                     new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), space_group_.symmetry_operator( j ).rotation(), crystal_lattice_ ) );
                 }
-                new_atom.set_label( atom( i ).label() + "_" + size_t2string( j ) );
+                if ( relable_atoms )
+                    new_atom.set_label( atom( i ).label() + "_" + size_t2string( j ) );
                 atoms.push_back( new_atom );
             }
         }
     }
-
     add_atoms( atoms );
     space_group_symmetry_has_been_applied_ = true;
 }
@@ -527,10 +526,8 @@ void CrystalStructure::supercell( const size_t u, const size_t v, const size_t w
                 for ( size_t l( 0 ); l != natoms(); ++l )
                 {
                     Atom new_atom( atoms_[l] );
-                    Vector3D new_position = atoms_[l].position(); // Fractional coordinates in the old unit cell
-                    new_position = crystal_lattice_.fractional_to_orthogonal_matrix() * new_position; // Orthogonal coordinates (independent of unit cell)
-                    new_position += i * crystal_lattice_.a_vector() + j * crystal_lattice_.b_vector() + k * crystal_lattice_.c_vector();
-                    new_position = new_crystal_lattice.orthogonal_to_fractional( new_position ); // Fractional coordinates in the new unit cell
+                    Vector3D new_position = atoms_[l].position();
+                    new_position = Vector3D( ( new_position.x() + i ) / u, ( new_position.y() + j ) / v, ( new_position.z() + k ) / w );
                     new_atom.set_position( new_position );
                     new_atom.set_label( atoms_[l].label() + "_" + size_t2string( i ) + "_" + size_t2string( j ) + "_" + size_t2string( k ) );
                     result.add_atom( new_atom );

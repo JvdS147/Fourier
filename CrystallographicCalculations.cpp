@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Matrix3D.h"
 #include "MillerIndices.h"
 #include "NormalisedVector3D.h"
-//#include "Plane.h"
+#include "PointGroup.h"
 #include "SpaceGroup.h"
 //#include "SymmetricMatrix3D.h"
 #include "SymmetryOperator.h"
@@ -204,6 +204,29 @@ Centring expand_centring_generators( const std::vector< SymmetryOperator > & gen
 bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs )
 {
     return true;
+}
+
+// ********************************************************************************
+
+AnisotropicDisplacementParameters adjust_to_site_symmetry( const AnisotropicDisplacementParameters & adps, const PointGroup & point_group, const CrystalLattice & crystal_lattice )
+{
+    // We need U_star
+    SymmetricMatrix3D U_star = adps.U_star( crystal_lattice );
+    SymmetricMatrix3D sum( U_star );
+    for ( size_t i( 1 ); i != point_group.nsymmetry_operators(); ++i )
+        sum += Matrix3D2SymmetricMatrix3D( point_group.symmetry_operator( i ) * U_star * transpose( point_group.symmetry_operator( i ) ) );
+    U_star = sum / point_group.nsymmetry_operators();
+    SymmetricMatrix3D U_cart = U_star_2_U_cart( U_star, crystal_lattice );
+    // Some values are now e.g. 2.23E-34, round them to 0.0, but not for the diagonal.
+//    for ( size_t i( 0 ); i != 3; ++i )
+//    {
+//        for ( size_t j( i+1 ); j != 3; ++j )
+//        {
+//            if ( nearly_zero( U_cart.value( i, j ) ) )
+//                U_cart.set_value( i, j, 0.0 );
+//        }
+//    }
+    return AnisotropicDisplacementParameters( U_cart );
 }
 
 // ********************************************************************************
