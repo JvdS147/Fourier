@@ -2,7 +2,7 @@
 #define PHYSICALCONSTANTS_H
 
 /* *********************************************
-Copyright (c) 2013-2022, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2023, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
