@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "LinearRegression.h"
 
 #include "BasicMathsFunctions.h"
-#include "MathsFunctions.h"
 
 // ********************************************************************************
 
@@ -55,7 +54,7 @@ void linear_regression( const std::vector< double > & x, const std::vector< doub
         Sxx += square( x[i] ) * ss;
         Sxy += x[i] * y[i] * ss;
     }
-    double Delta = S * Sxx - square( Sx );;
+    double Delta = S * Sxx - square( Sx );
     a = ( Sxx*Sy - Sx*Sxy ) / Delta;
     b = ( S*Sxy - Sx*Sy ) / Delta;
 }
@@ -64,16 +63,29 @@ void linear_regression( const std::vector< double > & x, const std::vector< doub
 
 void linear_regression( const std::vector< double > & x, const std::vector< double > & y, double & a, double & b )
 {
-    std::vector< double > s;
-    s.reserve( x.size() );
-    for ( size_t i( 0 ); i != x.size(); ++i )
-        s.push_back( 1.0 );
-    linear_regression( x, y, s, a, b );
+    size_t N = x.size();
+    if ( y.size() != N )
+        throw std::runtime_error( "linear_regression(): Error: sizes must be equal." );
+    if ( N < 2 )
+        throw std::runtime_error( "linear_regression(): Error: need at least two points." );
+    double Sx  = 0.0;
+    double Sy  = 0.0;
+    double Sxx = 0.0;
+    double Sxy = 0.0;
+    for ( size_t i( 0 ); i != N; ++i )
+    {
+        Sx  += x[i];
+        Sy  += y[i];
+        Sxx += square( x[i] );
+        Sxy += x[i] * y[i];
+    }
+    double Delta = N * Sxx - square( Sx );
+    a = ( Sxx*Sy - Sx*Sxy ) / Delta;
+    b = ( N*Sxy - Sx*Sy ) / Delta;
 }
 
 // ********************************************************************************
 
-// x values, y values, returns a*exp(b*x)
 void fit_exponential( const std::vector< double > & x, const std::vector< double > & y, double & a, double & b )
 {
     std::vector< double > lny;
@@ -82,6 +94,36 @@ void fit_exponential( const std::vector< double > & x, const std::vector< double
         lny.push_back( ln( y[i] ) );
     linear_regression( x, lny, a, b );
     a = exp( a );
+}
+
+// ********************************************************************************
+
+LinearFunction linear_regression( const std::vector< double > & x, const std::vector< double > & y, const std::vector< double > & s )
+{
+    double a;
+    double b;
+    linear_regression( x, y, s, a, b );
+    return LinearFunction( a, b );
+}
+
+// ********************************************************************************
+
+LinearFunction linear_regression( const std::vector< double > & x, const std::vector< double > & y )
+{
+    double a;
+    double b;
+    linear_regression( x, y, a, b );
+    return LinearFunction( a, b );
+}
+
+// ********************************************************************************
+
+ExponentialFunction fit_exponential( const std::vector< double > & x, const std::vector< double > & y )
+{
+    double a;
+    double b;
+    fit_exponential( x, y, a, b );
+    return ExponentialFunction( a, b );
 }
 
 // ********************************************************************************

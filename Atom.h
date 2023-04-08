@@ -79,8 +79,6 @@ public:
 
     ADPsType ADPs_type() const { return ADPs_type_; }
 
-    void reset_ADPs_type();
-    
     // Set ADP type to NONE.
     void reset_ADPs_type();
 

@@ -33,13 +33,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <string>
 
-double function_01( const double x )
-{
-    return exp( x );
-}
-
 void test_maths( TestSuite & test_suite )
 {
+
+    ExponentialFunction function_01( 1.0, 1.0 );
+
     std::cout << "Now running tests for Maths." << std::endl;
     {
     double a = 6.884;

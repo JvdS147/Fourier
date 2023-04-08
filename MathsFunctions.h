@@ -34,17 +34,49 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstddef> // For definition of size_t.
 #include <vector>
 
-typedef double (*Function)( const double x );
+class Function
+{
+public:
+
+    virtual double operator()( const double x ) const = 0;
+
+};
+
+class LinearFunction : public Function
+{
+public:
+
+    LinearFunction( const double a, const double b );
+
+    double operator()( const double x ) const;
+
+private:
+    double a_;
+    double b_;
+};
+
+class ExponentialFunction : public Function
+{
+public:
+
+    ExponentialFunction( const double a, const double b );
+
+    double operator()( const double x ) const;
+
+private:
+    double a_;
+    double b_;
+};
 
 // Returns the x-values and weights necessary for Gauss-Legendre quadrature.
 // x1 is the lower limit for integration, x2 the upper limit. npoints is the number of points.
 // x contains the x values, w contains the weights.
 void Gauss_Legendre_quadrature( const double x1, const double x2, const size_t npoints, std::vector< double > & x, std::vector< double > & w );
 
-double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance = TOLERANCE );
+double bisection( const Function & f, const double target_y_value, const double initial_x_value, const double tolerance = TOLERANCE );
 
 // Simple linear interpolation between sampling points.
-double integral( const Function f, const double start, const double end, const size_t npoints );
+double integral( const Function & f, const double start, const double end, const size_t npoints );
 
 // Assumes that the std::vector< double > represents f(x) values at a regular interval.
 // Simple linear interpolation between sampling points.
@@ -59,9 +91,9 @@ double integral( const std::vector< double > & y_i, const double interval );
 // Some quick numerical tests with sin(x), exp(x) and f(x) = constant show that this is a really poor way
 // to calculate an integral and the function integral() gives vastly superior results, especially
 // if very few points (say, 10) are used.
-double integral_Monte_Carlo( const Function f, const double start, const double end, const size_t npoints );
+double integral_Monte_Carlo( const Function & f, const double start, const double end, const size_t npoints );
 
-double integral_Gauss_Legendre_quadrature( const Function f, const double start, const double end, const size_t npoints );
+double integral_Gauss_Legendre_quadrature( const Function & f, const double start, const double end, const size_t npoints );
 
 double Legendre_polynomial( const size_t order, const double x );
 void Legendre_polynomial_and_derivative( const size_t order, const double x, double & y, double & dydx );

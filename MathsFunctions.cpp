@@ -35,6 +35,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // ********************************************************************************
 
+LinearFunction::LinearFunction( const double a, const double b ):
+a_(a),
+b_(b)
+{
+}
+
+// ********************************************************************************
+
+double LinearFunction::operator()( const double x ) const
+{
+    return a_ + b_*x;
+}
+
+// ********************************************************************************
+
+ExponentialFunction::ExponentialFunction( const double a, const double b ):
+a_(a),
+b_(b)
+{
+}
+
+// ********************************************************************************
+
+double ExponentialFunction::operator()( const double x ) const
+{
+    return a_*exp(b_*x);
+}
+
+// ********************************************************************************
+
 // Returns the x-values and weights necessary for Gauss-Legendre quadrature.
 // x1 is the lower limit for integration, x2 the upper limit. npoints is the number of points.
 // x contains the x values, w contains the weights.
@@ -70,7 +100,7 @@ void Gauss_Legendre_quadrature( const double x1, const double x2, const size_t n
 
 // ********************************************************************************
 
-double bisection( const Function f, const double target_y_value, const double initial_x_value, const double tolerance )
+double bisection( const Function & f, const double target_y_value, const double initial_x_value, const double tolerance )
 {
     double increment( 0.01 );
     double left_bracket  = initial_x_value - increment;
@@ -95,7 +125,7 @@ double bisection( const Function f, const double target_y_value, const double in
 
 // ********************************************************************************
 
-double integral( const Function f, const double start, const double end, const size_t npoints )
+double integral( const Function & f, const double start, const double end, const size_t npoints )
 {
     if ( npoints == 0 )
         throw std::runtime_error( "integral(): npoints == 0." );
@@ -136,7 +166,7 @@ double integral( const std::vector< double > & y_i, const double interval )
 
 // ********************************************************************************
 
-double integral_Monte_Carlo( const Function f, const double start, const double end, const size_t npoints )
+double integral_Monte_Carlo( const Function & f, const double start, const double end, const size_t npoints )
 {
     double result( 0.0 );
     if ( npoints == 0 )
@@ -149,7 +179,7 @@ double integral_Monte_Carlo( const Function f, const double start, const double 
 
 // ********************************************************************************
 
-double integral_Gauss_Legendre_quadrature( const Function f, const double start, const double end, const size_t npoints )
+double integral_Gauss_Legendre_quadrature( const Function & f, const double start, const double end, const size_t npoints )
 {
     if ( npoints == 0 )
         throw std::runtime_error( "integral_Gauss_Legendre_quadrature(): npoints == 0." );
