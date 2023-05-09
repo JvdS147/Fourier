@@ -51,7 +51,7 @@ public:
 
     // Does not understand anything about equivalence, so (100) is not the same as (-100).
     // Returns size() if not found.
-    size_t index( const MillerIndices & miller_indices );
+    size_t index( const MillerIndices & miller_indices ) const;
 
     // The index is zero-based
     // We don't actually sort the lists, but create a sorted map

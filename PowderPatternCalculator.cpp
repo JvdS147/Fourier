@@ -154,7 +154,7 @@ void PowderPatternCalculator::calculate( PowderPattern & powder_pattern )
 {
     calculate_reflection_list();
     calculate_structure_factors();
-    calculate_powder_pattern( powder_pattern );
+    calculate( reflection_list_, powder_pattern );
 }
 
 // ********************************************************************************
@@ -312,18 +312,18 @@ void PowderPatternCalculator::calculate_structure_factors()
 
 // ********************************************************************************
 
-void PowderPatternCalculator::set_structure_factors_to_1()
-{
-    for ( size_t i( 0 ); i != reflection_list_.size(); ++i )
-        reflection_list_.set_F_squared( i, 1.0 );
-}
+//void PowderPatternCalculator::set_structure_factors_to_1()
+//{
+//    for ( size_t i( 0 ); i != reflection_list_.size(); ++i )
+//        reflection_list_.set_F_squared( i, 1.0 );
+//}
 
 // ********************************************************************************
 
-void PowderPatternCalculator::calculate_powder_pattern( PowderPattern & powder_pattern )
-{
-    calculate( reflection_list_, powder_pattern );
-}
+//void PowderPatternCalculator::calculate_powder_pattern( PowderPattern & powder_pattern )
+//{
+//    calculate( reflection_list_, powder_pattern );
+//}
 
 // ********************************************************************************
 

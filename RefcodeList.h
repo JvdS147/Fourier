@@ -1,5 +1,5 @@
-#ifndef REFCODE_H
-#define REFCODE_H
+#ifndef REFCODELIST_H
+#define REFCODELIST_H
 
 /* *********************************************
 Copyright (c) 2013-2023, Cornelis Jan (Jacco) van de Streek
@@ -28,41 +28,55 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include <iosfwd>
-#include <string>
+class FileName;
 
-// A CSD reference code.
-// The refcode is always capitalised.
-class Refcode
+#include "Mapping.h"
+#include "Refcode.h"
+
+#include <vector>
+
+// @@ There is currently no sort() function.
+class RefcodeList
 {
 public:
 
-    // Returns XXXXXX00.
-    Refcode();
+    RefcodeList();
 
-    // Throws if format incorrect.
-    explicit Refcode( const std::string & refcode );
+    RefcodeList( const std::vector< std::string > & values );
 
-    std::string value() const { return refcode_; }
+    void push_back( const Refcode & refcode );
 
-    // Strips digits and returns first six alphabetical characters
-    Refcode family() const;
+    void reserve( const size_t nvalues );
+    size_t size() const { return refcodes_.size(); }
 
-    // Convenience function
-    // Capitalisation is ignored
-    // XXXXXX00 is allowed
-    static bool format_is_correct( const std::string & refcode );
+    bool contains( const Refcode & refcode ) const;
 
-    bool operator==( const Refcode & rhs ) const;
+    // Returns size() if not found.
+    size_t index( const Refcode & refcode ) const;
 
-    std::string to_string() const;
+    // The index is zero-based.
+    // We don't actually sort the lists, but create a sorted map.
+    Refcode refcode( const size_t i ) const { return refcodes_[ sorted_map_[ i ] ];   }
+
+    void set_refcode( const size_t i, const Refcode & refcode ) { refcodes_[ sorted_map_[ i ] ] = refcode; }
+
+    // Converts each entry to its refcode family, then removes duplicates.
+    void convert_to_unique_families();
+
+    void read_gcd( const FileName & file_name );
+
+    // For debugging.
+    void show() const;
+
+    // The extension should be .gcd .
+    void save( const FileName & file_name ) const;
 
 private:
-    std::string refcode_;
+    std::vector< Refcode > refcodes_;
+    // We don't actually sort the list, but create a sorted map.
+    Mapping sorted_map_;
 
 };
 
-std::ostream & operator<<( std::ostream & os, const Refcode & refcode );
-
-#endif // REFCODE_H
+#endif // REFCODELIST_H
 

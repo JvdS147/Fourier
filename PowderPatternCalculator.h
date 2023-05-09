@@ -91,9 +91,10 @@ public:
     // Sets all structure factors to 1, to get an artificial powder pattern to compare lattices.
     // There is no need for this to be in the class, the same could be achieved through a combination
     // of other member functions.
-    void set_structure_factors_to_1();
+// This is the default after calling calculate_reflection_list(), so there is no need for this member function.
+//    void set_structure_factors_to_1();
 
-    void calculate_powder_pattern( PowderPattern & powder_pattern );
+//    void calculate_powder_pattern( PowderPattern & powder_pattern );
     void calculate( const ReflectionList & reflection_list, PowderPattern & powder_pattern );
 
 private:

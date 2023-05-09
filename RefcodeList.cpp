@@ -25,52 +25,65 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "ReflectionList.h"
-#include "Sort.h"
+#include "RefcodeList.h"
+//#include "Sort.h"
 #include "TextFileReader.h"
 #include "TextFileWriter.h"
-#include "Utilities.h"
+//#include "Utilities.h"
 
-#include <algorithm>
+//#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
 
 // ********************************************************************************
 
-ReflectionList::ReflectionList()
+RefcodeList::RefcodeList()
 {
 }
 
 // ********************************************************************************
 
-void ReflectionList::push_back( const MillerIndices & miller_indices, const double F_squared, const double d_spacing, const size_t multiplicity )
+RefcodeList::RefcodeList( const std::vector< std::string > & values )
 {
-    miller_indices_.push_back( miller_indices );
-    F_squared_.push_back( F_squared );
-    d_spacings_.push_back( d_spacing );
-    multiplicity_.push_back( multiplicity );
+    for ( size_t i( 0 ); i != values.size(); ++i )
+        push_back( Refcode( values[ i ] ) );
+}
+
+// ********************************************************************************
+
+void RefcodeList::push_back( const Refcode & refcode )
+{
+    refcodes_.push_back( refcode );
     sorted_map_.push_back();
-    sort_by_d_spacing();
 }
 
 // ********************************************************************************
 
-void ReflectionList::reserve( const size_t nvalues )
+void RefcodeList::reserve( const size_t nvalues )
 {
-    miller_indices_.reserve( nvalues );
-    F_squared_.reserve( nvalues );
-    d_spacings_.reserve( nvalues );
-    multiplicity_.reserve( nvalues );
+    refcodes_.reserve( nvalues );
 }
 
 // ********************************************************************************
 
-size_t ReflectionList::index( const MillerIndices & miller_indices ) const
+bool RefcodeList::contains( const Refcode & refcode ) const
 {
     for ( size_t i( 0 ); i != size(); ++i )
     {
-        if ( this->miller_indices( i ) == miller_indices )
+        if ( refcodes_[ i ] == refcode )
+            return true;
+    }
+    return false;
+}
+
+// ********************************************************************************
+
+size_t RefcodeList::index( const Refcode & refcode ) const
+{
+    for ( size_t i( 0 ); i != size(); ++i )
+    {
+        if ( this->refcode( i ) == refcode )
             return i;
     }
     return size();
@@ -78,58 +91,48 @@ size_t ReflectionList::index( const MillerIndices & miller_indices ) const
 
 // ********************************************************************************
 
-void ReflectionList::sort_by_d_spacing()
+// Converts each entry to its refcode family, then removes duplicates.
+void RefcodeList::convert_to_unique_families()
 {
-    // We don't actually sort the lists, but create a sorted map
-    sorted_map_ = sort( d_spacings_, true );
+    RefcodeList new_list;
+    for ( size_t i( 0 ); i != refcodes_.size(); ++i )
+    {
+        if ( ! new_list.contains( refcode( i ).family() ) )
+            new_list.push_back( refcode( i ).family() );
+    }
+    *this = new_list;
 }
 
 // ********************************************************************************
 
-//  -6  -3  -8    1.71    4.74
-//   6   3   8   -1.06    4.75
-//  -6  -3  -9    4.34    4.63
-//   6   3   9   -0.95    4.77
-//    void push_back( const MillerIndices & miller_indices, const double F_squared, const double d_spacing, const size_t multiplicity );
-
-void ReflectionList::read_hkl( const FileName & file_name )
+void RefcodeList::read_gcd( const FileName & file_name )
 {
-    *this = ReflectionList();
+    *this = RefcodeList();
     TextFileReader text_file_reader( file_name );
     std::vector< std::string > words;
     while ( text_file_reader.get_next_line( words ) )
     {
-        if ( words.size() != 5 )
-            throw std::runtime_error( "ReflectionList::read_hkl(): cannot interpret line \"" + text_file_reader.get_line() + "\"" );
-        push_back( MillerIndices( string2integer( words[0] ), string2integer( words[1] ), string2integer( words[2] ) ), string2double( words[3] ), 0.0, 0 );
+        if ( words.size() != 1 )
+            throw std::runtime_error( "RefcodeList::read_gcd(): cannot interpret line \"" + text_file_reader.get_line() + "\"" );
+        push_back( Refcode( words[0] ) );
     }
 }
 
 // ********************************************************************************
 
-void ReflectionList::show() const
+void RefcodeList::show() const
 {
     for ( size_t i( 0 ); i != size(); ++i )
-    {
-        std::cout << miller_indices(i) << std::endl;
-        std::cout << F_squared(i) << std::endl;
-        std::cout << d_spacing(i) << std::endl;
-    }
+        std::cout << refcode( i ).value() << std::endl;
 }
 
 // ********************************************************************************
 
-void ReflectionList::save( const FileName & file_name ) const
+void RefcodeList::save( const FileName & file_name ) const
 {
     TextFileWriter text_file_writer( file_name );
-    text_file_writer.write_line( " h   k   l  d-spacing   F^2  mult" );
-    for ( size_t i( 0 ); i != d_spacings_.size(); ++i )
-        text_file_writer.write_line( int2string( miller_indices(i).h(), 3, ' ' ) + " " +
-                                     int2string( miller_indices(i).k(), 3, ' ' ) + " " +
-                                     int2string( miller_indices(i).l(), 3, ' ' ) + " " +
-                                     double2string( d_spacing(i), 5, 8 ) + " " +
-                                     double2string( F_squared(i), 2, 12 ) + " " +
-                                     size_t2string( multiplicity(i), 2, ' ' ) );
+    for ( size_t i( 0 ); i != refcodes_.size(); ++i )
+        text_file_writer.write_line( refcode( i ).value() );
 }
 
 // ********************************************************************************

@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Refcode.h"
 #include "StringFunctions.h"
 
+#include <sstream>
 #include <stdexcept>
 
 // ********************************************************************************
@@ -38,7 +39,7 @@ Refcode::Refcode(): refcode_("XXXXXX01")
 
 // ********************************************************************************
 
-// Throws if format incorrect
+// Throws if format incorrect.
 Refcode::Refcode( const std::string & refcode )
 {
     if ( ! format_is_correct( refcode ) )
@@ -48,18 +49,18 @@ Refcode::Refcode( const std::string & refcode )
 
 // ********************************************************************************
 
-// Strips digits and returns first six alphabetical characters
-std::string Refcode::family() const
+// Strips digits and returns first six alphabetical characters.
+Refcode Refcode::family() const
 {
-    return refcode_.substr( 0, 6 );
+    return Refcode( refcode_.substr( 0, 6 ) );
 }
 
 // ********************************************************************************
 
-// Convenience function
-// Capitalisation is ignored
-// XXXXXX00 is allowed
-bool Refcode::format_is_correct( std::string refcode )
+// Convenience function.
+// Capitalisation is ignored.
+// XXXXXX00 is allowed.
+bool Refcode::format_is_correct( const std::string & refcode )
 {
     // Length must be six or eight.
     if ( ( refcode.length() != 6 ) &&
@@ -79,6 +80,28 @@ bool Refcode::format_is_correct( std::string refcode )
     if ( ! std::isdigit( refcode[7] ) )
         return false;
     return true;
+}
+
+// ********************************************************************************
+
+std::string Refcode::to_string() const
+{
+    return refcode_;
+}
+
+// ********************************************************************************
+
+bool Refcode::operator==( const Refcode & rhs ) const
+{
+    return ( refcode_ == rhs.refcode_ );
+}
+
+// ********************************************************************************
+
+std::ostream & operator<<( std::ostream & os, const Refcode & refcode )
+{
+    os << refcode.to_string();
+    return os;
 }
 
 // ********************************************************************************
