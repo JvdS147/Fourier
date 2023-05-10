@@ -36,6 +36,9 @@ class FileList;
 // Uses l = 1.0 degrees 2theta.
 CorrelationMatrix calculate_correlation_matrix( const FileList & file_list );
 
+// Structure factors are set to 1.0, so only compares unit cells.
+CorrelationMatrix calculate_correlation_matrix_1( const FileList & file_list );
+
 FileList select_diverse_structures( const FileList & file_list, const double similarity_limit );
 
 #endif // SIMILARITYANALYSIS_H
