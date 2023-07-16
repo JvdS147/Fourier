@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "Utilities.h"
 #include "Vector3D.h" // Should not have been necessary
 
+#include <cmath>
 #include <fstream>
 #include <stdexcept>
 
@@ -52,7 +53,9 @@ PowderPattern::PowderPattern()
 
 PowderPattern::PowderPattern( const Angle two_theta_start, const Angle two_theta_end, const Angle two_theta_step )
 {
-    size_t npoints = round_to_int( ( (two_theta_end-two_theta_start) / two_theta_step ) ) + 1;
+    size_t npoints = round_to_int( ( ( two_theta_end - two_theta_start ) / two_theta_step ) ) + 1;
+    if ( ( ( ( two_theta_start + (npoints-1)*two_theta_step ) - two_theta_end ) / two_theta_step ) > 0.1 )
+        std::cout << "PowderPattern::PowderPattern(): Warning: start and end not commensurate with step." << std::endl;
     two_theta_values_.reserve( npoints );
     for ( size_t i( 0 ); i != npoints; ++i )
         two_theta_values_.push_back( ( i * two_theta_step ) + two_theta_start );
@@ -139,7 +142,7 @@ size_t PowderPattern::find_two_theta( const Angle two_theta_value ) const
         return 0;
     if ( two_theta_value > two_theta_end() )
         return size()-1;
-    // Initialise with guess based on uniform 2 theta step
+    // Initialise with guess based on uniform 2 theta step.
     size_t lower_index = ( two_theta_value - two_theta_start() ) / average_two_theta_step();
     while ( ( lower_index != 0 ) && ( two_theta( lower_index ) >= two_theta_value ) )
     {
@@ -165,7 +168,7 @@ size_t PowderPattern::find_two_theta( const Angle two_theta_value ) const
 
 // ********************************************************************************
 
-// Multiplies intensities and ESDs by factor
+// Multiplies intensities and ESDs by factor.
 void PowderPattern::scale( const double factor )
 {
     for ( size_t i( 0 ); i != size(); ++i )
@@ -207,15 +210,25 @@ Angle PowderPattern::two_theta_end() const
 // ********************************************************************************
 
 // Uses average_two_theta_step() to add new points. Intensities and ESDs are initialised to 0.0.
-void PowderPattern::set_two_theta_start( const Angle two_theta_start ) const
+void PowderPattern::set_two_theta_start( const Angle two_theta_start )
 {
+    if ( empty() )
+        throw std::runtime_error( "PowderPattern::set_two_theta_start(): no data points." );
+    if ( ( two_theta_values_[ 0 ] - 0.5*average_two_theta_step() ) > two_theta_start )
+        throw std::runtime_error( "PowderPattern::set_two_theta_start(): adding data points not implemented yet." );
+        
 }
 
 // ********************************************************************************
 
 // Uses average_two_theta_step() to add new points. Intensities and ESDs are initialised to 0.0.
-void PowderPattern::set_two_theta_end( const Angle two_theta_end ) const
+void PowderPattern::set_two_theta_end( const Angle two_theta_end )
 {
+    if ( empty() )
+        throw std::runtime_error( "PowderPattern::set_two_theta_end(): no data points." );
+    if ( ( two_theta_values_[ size()-1 ] + 0.5*average_two_theta_step() ) < two_theta_end )
+        throw std::runtime_error( "PowderPattern::set_two_theta_end(): adding data points not implemented yet." );
+        
 }
 
 // ********************************************************************************
@@ -223,6 +236,18 @@ void PowderPattern::set_two_theta_end( const Angle two_theta_end ) const
 double PowderPattern::cumulative_intensity() const
 {
     return add_doubles( intensities_ );
+}
+
+// ********************************************************************************
+
+double PowderPattern::cumulative_intensity( const Angle two_theta_start, const Angle two_theta_end ) const
+{
+    size_t iStart = find_two_theta( two_theta_start );
+    size_t iEnd = find_two_theta( two_theta_end );
+    double result( 0.0 );
+    for ( size_t i( iStart ); i != iEnd + 1 ; ++i )
+        result += intensities_[i];
+    return result;
 }
 
 // ********************************************************************************
@@ -420,7 +445,7 @@ void PowderPattern::read_mdi( const FileName & file_name )
     {
         for ( size_t j( 0 ); j != words.size(); ++j )
         {
-            // There is one dummy data point with value -1 after the last valid data point
+            // There is one dummy data point with value -1 after the last valid data point.
             if ( ( i == ndata_points ) && ( words[j] == "-1" ) && ( j == ( words.size() - 1 ) ) )
             {
                 we_are_done = true;
@@ -829,7 +854,7 @@ void PowderPattern::average_if_two_theta_equal()
 
 // ********************************************************************************
 
-// Check that the two patterns have the same range and 2theta step
+// Check that the two patterns have the same range and 2theta step.
 bool same_range( const PowderPattern & lhs, const PowderPattern & rhs )
 {
     if ( lhs.size() != rhs.size() )

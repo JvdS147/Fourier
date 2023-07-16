@@ -66,6 +66,7 @@ public:
     // Multiplies intensities and ESDs by factor.
     void scale( const double factor );
 
+// @@ no boundary checking.
     Angle two_theta( const size_t i ) const { return two_theta_values_[i]; }
     double intensity( const size_t i ) const { return intensities_[i]; }
     double estimated_standard_deviation( const size_t i ) const { return estimated_standard_deviations_[i]; }
@@ -87,13 +88,15 @@ public:
 // I would then be possible to reset it to the old values again.
 
     // Uses average_two_theta_step() to add new points. Intensities and ESDs are initialised to 0.0.
-    void set_two_theta_start( const Angle two_theta_start ) const;
+    void set_two_theta_start( const Angle two_theta_start );
 
     // Uses average_two_theta_step() to add new points. Intensities and ESDs are initialised to 0.0.
-    void set_two_theta_end( const Angle two_theta_end ) const;
+    void set_two_theta_end( const Angle two_theta_end );
 
     // Area under the pattern.
     double cumulative_intensity() const;
+
+    double cumulative_intensity( const Angle two_theta_start, const Angle two_theta_end ) const;
 
     void read_xye( const FileName & file_name );
     void read_xrdml( const FileName & file_name );
@@ -119,7 +122,8 @@ public:
     // Returns the scale factor.
     double normalise_total_signal( const double total_signal = 10000 );
 
-    // Simply subtracts the value from each 2theta value.
+    // Simply subtracts the value from each 2theta value, i.e. shifts to the left.
+    // Sample displacement shifts the powder pattern to the right.
     void correct_zero_point_error( const Angle two_theta_value );
 
     // ESD is initialised to std::max( sqrt( intensity ), intensity / 100.0 ), or to 4.4 if intensity < 20.
