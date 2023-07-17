@@ -570,7 +570,7 @@ Matrix3D CrystalLattice::Downs_G_star() const
 CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs, const double weight )
 {
     if ( ! nearly_integer( weight ) )
-        std::cout << "average(): warning: weight is not an integer, is that intended?" << std::endl;
+        std::cout << "average( CrystalLattice, CrystalLattice, double ): warning: weight is not an integer, is that intended?" << std::endl;
     CrystalLattice result( average( lhs.a(), rhs.a(), weight ),
                            average( lhs.b(), rhs.b(), weight ),
                            average( lhs.c(), rhs.c(), weight ),
