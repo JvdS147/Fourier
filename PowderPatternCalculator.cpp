@@ -98,7 +98,9 @@ finger_cox_jephcoat_( 0.0001, 0.0001 ),
 crystal_structure_(crystal_structure)
 {
     if ( ! crystal_structure.space_group_symmetry_has_been_applied() )
-        throw std::runtime_error( "PowderPatternCalculator::PowderPatternCalculator( CrystalStructure ):: space-group symmetry has not been applied for input crystal structure." );
+        std::cout << "PowderPatternCalculator::PowderPatternCalculator( CrystalStructure ): Warning: space-group symmetry has not been applied for input crystal structure."<< std::endl;
+//    if ( ! crystal_structure.space_group_symmetry_has_been_applied() )
+//        throw std::runtime_error( "PowderPatternCalculator::PowderPatternCalculator( CrystalStructure ): Error: space-group symmetry has not been applied for input crystal structure." );
     Laue_class_ = crystal_structure_.space_group().Laue_class();
 }
 
@@ -108,7 +110,7 @@ void PowderPatternCalculator::set_two_theta_step( const Angle two_theta_step )
 {
     two_theta_step_ = two_theta_step;
     if ( two_theta_step_ < Angle::from_degrees( TOLERANCE ) )
-         throw std::runtime_error( "PowderPatternCalculator::set_two_theta_step(): must be positive." );
+         throw std::runtime_error( "PowderPatternCalculator::set_two_theta_step(): Error: value must be positive." );
     // There is an approximation in the calculation of the powder pattern that expects the 2theta step to be small.
     if ( two_theta_step_ > Angle::from_degrees( 0.05 ) )
         std::cout << "PowderPatternCalculator::set_two_theta_step(): Warning: because of an internal approximation, 2theta step is expected to be small." << std::endl;
@@ -231,6 +233,8 @@ void PowderPatternCalculator::calculate_reflection_list( const bool exact )
 
 void PowderPatternCalculator::calculate_structure_factors()
 {
+    if ( ! crystal_structure_.space_group_symmetry_has_been_applied() )
+        throw std::runtime_error( "PowderPatternCalculator::calculate_structure_factors(): Error: space-group symmetry has not been applied for input crystal structure." );
 //    std::cout << "Now calculating F^2 values... " << std::endl;
     // For each reflection, calculate an intensity.
     for ( size_t i( 0 ); i != reflection_list_.size(); ++i )

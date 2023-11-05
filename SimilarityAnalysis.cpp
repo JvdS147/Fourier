@@ -105,7 +105,10 @@ CorrelationMatrix calculate_correlation_matrix_1( const FileList & file_list )
         CrystalStructure crystal_structure;
         std::cout << "Now reading cif... " + file_list.value( i ).full_name() << std::endl;
         read_cif( file_list.value( i ), crystal_structure );
+
+// @@ The following should not be necessary here
         crystal_structure.apply_space_group_symmetry();
+
         std::cout << "Now calculating powder pattern... " + size_t2string( i, 4, '0' ) << std::endl;
         PowderPatternCalculator powder_pattern_calculator( crystal_structure );
         powder_pattern_calculator.set_two_theta_start( two_theta_start );
