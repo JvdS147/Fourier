@@ -66,17 +66,15 @@ public:
     // Multiplies intensities and ESDs by factor.
     void scale( const double factor );
 
-// @@ no boundary checking.
-    Angle two_theta( const size_t i ) const { return two_theta_values_[i]; }
-    double intensity( const size_t i ) const { return intensities_[i]; }
-    double estimated_standard_deviation( const size_t i ) const { return estimated_standard_deviations_[i]; }
-    void set_two_theta( const size_t i, const Angle value ) { two_theta_values_[i] = value; }
+    Angle two_theta( const size_t i ) const;
+    double intensity( const size_t i ) const;
+    double estimated_standard_deviation( const size_t i ) const;
+    void set_two_theta( const size_t i, const Angle value );
+    // ESD is NOT updated.
+    void set_intensity( const size_t i, const double value );
+    void set_estimated_standard_deviation( const size_t i, const double value );
     Wavelength wavelength() const { return wavelength_; }
     void set_wavelength( const Wavelength & wavelength ) { wavelength_ = wavelength; }
-
-    // ESD is NOT updated.
-    void set_intensity( const size_t i, const double value ) { intensities_[i] = value; }
-    void set_estimated_standard_deviation( const size_t i, const double value ) { estimated_standard_deviations_[i] = value; }
 
     Angle average_two_theta_step() const;
 
@@ -124,6 +122,7 @@ public:
 
     // Simply subtracts the value from each 2theta value, i.e. shifts to the left.
     // Sample displacement shifts the powder pattern to the right.
+    // @@ Currently the complete opposite of the way it is defined in DASH. What about TOPAS?
     void correct_zero_point_error( const Angle two_theta_value );
 
     // ESD is initialised to std::max( sqrt( intensity ), intensity / 100.0 ), or to 4.4 if intensity < 20.
@@ -135,7 +134,7 @@ public:
 
     void add_constant_background( const double background );
 
-    // It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0
+    // It is recommended to call add_constant_background() because otherwise the background points with an average of 0.0 will remain 0.0.
     // For a maximum of about 10,000 counts, adding a background of at least 20 counts gives realistic Estimated Standard Deviations and
     // makes all points of the pattern behave as Gaussian.
     // Note that Poisson noise is only defined for positive integer values, so after adding noise all intensities are integers.
@@ -161,7 +160,7 @@ bool same_range( const PowderPattern & lhs, const PowderPattern & rhs );
 
 // This is NOT Rene de Gelder's normalised weighted cross correlation!
 // normalised_weighted_cross_correlation( A, B ) =  weighted_cross_correlation( A, B ) / sqrt( weighted_cross_correlation( A, A ) * weighted_cross_correlation( B, B ) )
-// This function is only public to enable speeding up the calculation of multiple weighted cross correlation functions (which would all need the same normalisation constants)
+// This function is only public to enable speeding up the calculation of multiple weighted cross correlation functions (which would all need the same normalisation constants).
 // Assumes uniform 2theta step size.
 double weighted_cross_correlation( const PowderPattern & lhs, const PowderPattern & rhs, Angle l = Angle( 3.0, Angle::DEGREES ) );
 

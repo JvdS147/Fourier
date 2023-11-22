@@ -37,40 +37,40 @@ class Vector3D;
 
 #include <vector>
 
-// The methyl group is attached to atom_1, away from atom_2
+// The methyl group is attached to atom_1, away from atom_2.
 // angle allows control over the rotation of the methyl group as it is attached.
-// Returns the coordinates of the three hydrogen atoms
-// Everything in Cartesian coordinates
+// Returns the coordinates of the three hydrogen atoms.
+// Everything in Cartesian coordinates.
 std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3D & atom_2, const Angle angle = Angle() );
 
 std::vector< Vector3D > add_methyl_group( const Vector3D & atom_1, const Vector3D & atom_2, const Vector3D & atom_3 );
 
-// The hydrogen atoms are attached to atom_1, away from atom_2
+// The hydrogen atoms are attached to atom_1, away from atom_2.
 // angle allows control over the rotation of the hydrogen atoms as they are attached.
-// Returns the coordinates of the nhydrogens hydrogen atoms
-// Everything in Cartesian coordinates
+// Returns the coordinates of the nhydrogens hydrogen atoms.
+// Everything in Cartesian coordinates.
 std::vector< Vector3D > add_hydrogen_atoms( const Vector3D & atom_1, const Vector3D & atom_2, const size_t nhydrogens = 6, const Angle angle = Angle() );
 
 // Add two hydrogen atoms to an sp3 nitrogen atom, with atom_H pointing at the lone pair of the nitrogen atom
-// (the two hydrogen atoms are added "pointing away" from atom_H)
+// (the two hydrogen atoms are added "pointing away" from atom_H).
 // It is as if you add three hydrogen atoms to a methyl group, with the direction of one hydrogen atom supplied by the user.
-// Returns the coordinates of the two hydrogen atoms
-// Everything in Cartesian coordinates
+// Returns the coordinates of the two hydrogen atoms.
+// Everything in Cartesian coordinates.
 std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_nitrogen( const Vector3D & atom_N, const Vector3D & atom_2, const Vector3D & atom_H );
 
-// Add two hydrogen atoms to an sp2 nitrogen atom
-// Returns the coordinates of the two hydrogen atoms
+// Add two hydrogen atoms to an sp2 nitrogen atom.
+// Returns the coordinates of the two hydrogen atoms.
 // atom_1 and atom_2 are required to define the plane in which the two atoms should lie.
-// Everything in Cartesian coordinates
+// Everything in Cartesian coordinates.
 std::vector< Vector3D > add_2_hydrogen_atoms_to_sp2_nitrogen( const Vector3D & atom_N, const Vector3D & atom_bound_to_N, const Vector3D & atom_1, const Vector3D & atom_2 );
 
-// Everything in Cartesian coordinates
+// Everything in Cartesian coordinates.
 Vector3D add_hydrogen_atom_to_sp2_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 );
 
-// Everything in Cartesian coordinates
+// Everything in Cartesian coordinates.
 Vector3D add_hydrogen_atom_to_sp3_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2, const Vector3D & neighbour_3 );
 
-// Everything in Cartesian coordinates
+// Everything in Cartesian coordinates.
 std::vector< Vector3D > add_2_hydrogen_atoms_to_sp3_atom( const Vector3D & central_atom, const Element element_central_atom, const Vector3D & neighbour_1, const Vector3D & neighbour_2 );
 
 void normalise_X_H_bonds( CrystalStructure & crystal_structure );
@@ -83,4 +83,7 @@ void normalise_Cu_Cl_bonds( CrystalStructure & crystal_structure );
 // Output: a std::vector with six points.
 void normalise_benzene_ring( CollectionOfPoints & points );
 
+void add_points_above_and_below_plane( const CollectionOfPoints & points, const double distance, Vector3D & centre_1, Vector3D & centre_2 );
+
 #endif // MODELBUILDING_H
+

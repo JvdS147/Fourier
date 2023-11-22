@@ -180,6 +180,64 @@ void PowderPattern::scale( const double factor )
 
 // ********************************************************************************
 
+Angle PowderPattern::two_theta( const size_t i ) const
+{
+    if ( i < size() )
+        return two_theta_values_[i];
+    throw std::runtime_error( "PowderPattern::two_theta(): index out of bounds." );
+}
+
+// ********************************************************************************
+
+double PowderPattern::intensity( const size_t i ) const
+{
+    if ( i < size() )
+        return intensities_[i];
+    throw std::runtime_error( "PowderPattern::intensity(): index out of bounds." );
+}
+
+// ********************************************************************************
+
+double PowderPattern::estimated_standard_deviation( const size_t i ) const
+{
+    if ( i < size() )
+        return estimated_standard_deviations_[i];
+    throw std::runtime_error( "PowderPattern::estimated_standard_deviation(): index out of bounds." );
+}
+
+// ********************************************************************************
+
+void PowderPattern::set_two_theta( const size_t i, const Angle value )
+{
+    if ( i < size() )
+        two_theta_values_[i] = value;
+    else
+        throw std::runtime_error( "PowderPattern::set_two_theta(): index out of bounds." );
+}
+
+// ********************************************************************************
+
+// ESD is NOT updated.
+void PowderPattern::set_intensity( const size_t i, const double value )
+{
+    if ( i < size() )
+        intensities_[i] = value;
+    else
+        throw std::runtime_error( "PowderPattern::set_intensity(): index out of bounds." );
+}
+
+// ********************************************************************************
+
+void PowderPattern::set_estimated_standard_deviation( const size_t i, const double value )
+{
+    if ( i < size() )
+        estimated_standard_deviations_[i] = value;
+    else
+        throw std::runtime_error( "PowderPattern::set_estimated_standard_deviation(): index out of bounds." );
+}
+
+// ********************************************************************************
+
 Angle PowderPattern::average_two_theta_step() const
 {
     if ( empty() )
@@ -923,7 +981,7 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
                                               const bool apply_smoothing,
                                               const size_t smoothing_window )
 {
-    if ( powder_pattern.size() == 0 )
+    if ( powder_pattern.empty() )
         return powder_pattern;
     PowderPattern result( powder_pattern );
     size_t size( powder_pattern.size() );

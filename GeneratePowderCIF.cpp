@@ -609,7 +609,7 @@ void GeneratePowderCIF::generate_R_input_file( const ZoomPolicy zoom_policy )
     output_file_R_.write_line();
     output_file_R_.write_line( "# Make empty plot" );
     output_file_R_.write_line( "plot( 0, 0, col = \"white\", xlim = c( 0.0, " + double2string( powder_pattern_.two_theta_end().value_in_degrees() ) + " ), ylim = c( y_min, y_max )," );
-    output_file_R_.write_line( " xlab = expression( 2*italic(theta) / degree ), las = 1, xaxs = \"i\", mgp = c( 2, 0.75, 0 ), ylab = \"\" )" );
+    output_file_R_.write_line( " xlab = expression( 2*italic(theta) / \"\\u00B0\" ), las = 1, xaxs = \"i\", mgp = c( 2, 0.75, 0 ), ylab = \"\" )" );
     output_file_R_.write_line();
     output_file_R_.write_line( "title( ylab = expression( italic(I) / counts ), line = 3 )" );
     output_file_R_.write_line();

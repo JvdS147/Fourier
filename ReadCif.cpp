@@ -376,7 +376,7 @@ void get_loop_items( TextFileReader & text_file_reader, std::vector< std::string
 
 // ********************************************************************************
 
-void deal_with_loop( TextFileReader & text_file_reader, CrystalStructure & crystal_structure )
+void deal_with_loop( TextFileReader & text_file_reader, CrystalStructure & crystal_structure, bool & symmetry_matrices_found )
 {
     std::vector< std::string > words;
     if ( ! text_file_reader.get_next_line( words ) )
@@ -401,6 +401,7 @@ void deal_with_loop( TextFileReader & text_file_reader, CrystalStructure & cryst
     if ( ( words[0].substr( 0, 9 ) == "_symmetry" ) || ( words[0].substr( 0, 18 ) == "_space_group_symop" ) )
     {
         deal_with_symmetry_loop( text_file_reader, loop_items, crystal_structure );
+        symmetry_matrices_found = true;
         return;
     }
     // For the moment we ignore everything else
@@ -467,6 +468,7 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
     Angle alpha;
     Angle beta;
     Angle gamma;
+    bool symmetry_matrices_found( false );
     std::vector< std::string > words;
     while ( text_file_reader.get_next_line( words ) )
     {
@@ -482,7 +484,7 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
         {
             if ( words.size() != 1 )
                 throw std::runtime_error( "read_cif(): loop_ keyword cannot have a value." );
-            deal_with_loop( text_file_reader, crystal_structure );
+            deal_with_loop( text_file_reader, crystal_structure, symmetry_matrices_found );
             continue;
         }
         if ( words.size() == 2 )
@@ -547,6 +549,8 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
         }
     }
     crystal_structure.set_name( name );
+    if ( ! symmetry_matrices_found )
+        throw std::runtime_error( "read_cif(): no symmetry matrices found." );
     if ( space_group_str != "" )
     {
         SpaceGroup space_group = crystal_structure.space_group();
@@ -601,3 +605,4 @@ void remove_hydrogen_atoms( const FileName & input_file_name )
 }
 
 // ********************************************************************************
+

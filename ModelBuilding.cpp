@@ -409,3 +409,12 @@ void normalise_benzene_ring( CollectionOfPoints & points )
 
 // ********************************************************************************
 
+void add_points_above_and_below_plane( const CollectionOfPoints & points, const double distance, Vector3D & centre_1, Vector3D & centre_2 )
+{
+    Plane plane( points.points_wrt_com() );
+    centre_1 = points.centre_of_mass() + distance * plane.normal();
+    centre_2 = points.centre_of_mass() - distance * plane.normal();
+}
+
+// ********************************************************************************
+

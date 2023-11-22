@@ -118,3 +118,4 @@ private:
 };
 
 #endif // POWDERPATTERNCALCULATOR_H
+
