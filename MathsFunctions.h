@@ -50,6 +50,9 @@ public:
 
     double operator()( const double x ) const;
 
+    double a() const { return a_; }
+    double b() const { return b_; }
+
 private:
     double a_;
     double b_;
@@ -62,6 +65,9 @@ public:
     ExponentialFunction( const double a, const double b );
 
     double operator()( const double x ) const;
+
+    double a() const { return a_; }
+    double b() const { return b_; }
 
 private:
     double a_;

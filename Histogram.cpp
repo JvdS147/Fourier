@@ -123,3 +123,34 @@ void Histogram::plot() const
 
 // ********************************************************************************
 
+std::vector< double > Histogram::x_values() const
+{
+    std::vector< double > result;
+    for ( size_t i( 0 ); i != data_.size(); ++i )
+        result.push_back( middle_of_bin( i ) );
+    return result;
+}
+
+// ********************************************************************************
+
+std::vector< double > Histogram::y_values() const
+{
+    std::vector< double > result;
+    for ( size_t i( 0 ); i != data_.size(); ++i )
+        result.push_back( data_[i] );
+    return result;
+}
+
+// ********************************************************************************
+
+void Histogram::values( const size_t iStart, const size_t iEnd, std::vector< double > & x_values, std::vector< double > & y_values ) const
+{
+    for ( size_t i( iStart ); i != iEnd+1; ++i )
+    {
+        x_values.push_back( middle_of_bin( i ) );
+        y_values.push_back( data_[i] );
+    }
+}
+
+// ********************************************************************************
+

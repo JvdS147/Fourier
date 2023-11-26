@@ -56,7 +56,7 @@ std::cout << histogram.lower_than_start() << std::endl;
 
 */
 
-// Limits are inclusive
+// Limits are inclusive.
 class Histogram
 {
 public:
@@ -67,7 +67,7 @@ public:
 
     void add_data( const double data );
 
-    // The index is zero-based
+    // The index is zero-based.
     size_t bin( const size_t i ) const;
 
     size_t size() const { return number_of_bins_; }
@@ -87,8 +87,16 @@ public:
 
     void show() const;
 
-    // A quick and dirty ASCII histogram
+    // A quick and dirty ASCII histogram.
     void plot() const;
+
+    // For use with linear regression.
+    std::vector< double > x_values() const;
+
+    std::vector< double > y_values() const;
+
+    // The last bin is not always completely filled and may have to be left off.
+    void values( const size_t iStart, const size_t iEnd, std::vector< double > & x_values, std::vector< double > & y_values ) const;
 
 private:
     double start_;
