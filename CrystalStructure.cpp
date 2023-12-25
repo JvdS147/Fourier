@@ -1087,7 +1087,6 @@ void CrystalStructure::collapse_supercell( const size_t u,
                                            const size_t w,
                                            const int drift_correction,
                                            const Vector3D & target_centre,
-                                           Matrix3D & transformation,
                                            Vector3D & actual_centre,
                                            std::vector< std::vector< Vector3D > > & positions )
 {

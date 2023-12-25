@@ -83,13 +83,13 @@ public:
         }
         all_items_found_ = true;
         if ( x_coordinate_index_ == loop_items_size_ )
-            all_items_found_ = false; // throw std::runtime_error( "read_cif(): _atom_site_fract_x missing from atom loop_." );
+            all_items_found_ = false;
         if ( y_coordinate_index_ == loop_items_size_ )
-            all_items_found_ = false; // throw std::runtime_error( "read_cif(): _atom_site_fract_y missing from atom loop_." );
+            all_items_found_ = false;
         if ( z_coordinate_index_ == loop_items_size_ )
-            all_items_found_ = false; // throw std::runtime_error( "read_cif(): _atom_site_fract_z missing from atom loop_." );
+            all_items_found_ = false;
         if ( ( site_label_index_ == loop_items_size_ ) && ( site_type_symbol_index_ == loop_items_size_ ) )
-            all_items_found_ = false; // throw std::runtime_error( "read_cif(): need one of _atom_site_label and _atom_site_type_symbol." );
+            all_items_found_ = false;
     }
     
     void interpret( const std::vector< std::string > & words, CrystalStructure & crystal_structure ) const
@@ -97,14 +97,7 @@ public:
         if ( ! all_items_found_ )
             return;
         if ( words.size() != loop_items_size_ )
-        {
-//            std::cout << "loop_items_size_ = " << loop_items_size_ << std::endl;
-//            for ( size_t i( 0 ); i != words.size(); ++i )
-//            {
-//                std::cout << words[i] << std::endl;
-//            }
             throw std::runtime_error( "read_cif(): atom line must have same number of items as specified in loop." );
-        }
         double x = string2double( words[x_coordinate_index_] );
         double y = string2double( words[y_coordinate_index_] );
         double z = string2double( words[z_coordinate_index_] );
@@ -219,18 +212,16 @@ public:
         double U13 = string2double( words[U13_index_] );
         double U23 = string2double( words[U23_index_] );
         SymmetricMatrix3D U_cif( U11, U22, U33, U12, U13, U23 );
-    // @@ Quick and dirty hack: we store Ucif here (should be Ucart) because we do not have the lattice yet. We do the transformation later.
+        // We store Ucif here (should be Ucart) because we do not have the lattice yet. We do the transformation later.
         AnisotropicDisplacementParameters adps = AnisotropicDisplacementParameters( U_cif );
         size_t i = crystal_structure.find_label( words[label_index_] );
         if ( i == crystal_structure.natoms() )
-        {
             std::cout << "read_cif(): warning: atom " + words[label_index_] + " is in aniso list but not in the list of atoms." << std::endl;
-    //        throw std::runtime_error( "read_cif(): atom " + words[label_index_] + " is in aniso list but not in the list of atoms." );
-        }
         else
         {
             Atom new_atom = crystal_structure.atom( i );
-            // Check if the atom already has ADPs?
+            if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+                std::cout << "read_cif(): warning: atom " + words[label_index_] + " is in aniso list but already has ADPs." << std::endl;
             new_atom.set_anisotropic_displacement_parameters( adps );
             crystal_structure.set_atom( i, new_atom );
         }
@@ -261,7 +252,7 @@ void deal_with_atom_loop( TextFileReader & text_file_reader, const std::vector< 
 
     AtomLineInterpreter atom_line_interpreter( loop_items );
     std::vector< std::string > words;
-    do // Read the atoms
+    do // Read the atoms.
     {
         if ( ! text_file_reader.get_next_line( words ) )
             return;
@@ -270,7 +261,7 @@ void deal_with_atom_loop( TextFileReader & text_file_reader, const std::vector< 
             text_file_reader.push_back_last_line();
             return;
         }
-        // When we are here, we have an atom line
+        // When we are here, we have an atom line.
         atom_line_interpreter.interpret( words, crystal_structure );
     } while ( true );
 }
@@ -298,7 +289,7 @@ void deal_with_symmetry_loop( TextFileReader & text_file_reader, const std::vect
     std::vector< SymmetryOperator > symmetry_operators;
     std::vector< std::string > words;
     bool finished( false );
-    do // Read the symmetry operators
+    do // Read the symmetry operators.
     {
         if ( ! text_file_reader.get_next_line( words ) )
             finished = true;
@@ -307,7 +298,7 @@ void deal_with_symmetry_loop( TextFileReader & text_file_reader, const std::vect
             text_file_reader.push_back_last_line();
             finished = true;
         }
-        else // When we are here, we have a symmetry line
+        else // When we are here, we have a symmetry line.
         {
             if ( words.size() != loop_items.size() )
                 throw std::runtime_error( "read_cif(): symmetry line must have same number of items as specified in loop." );
@@ -336,7 +327,7 @@ void deal_with_aniso_loop( TextFileReader & text_file_reader, const std::vector<
 
     AnisoLineInterpreter aniso_line_interpreter( loop_items );
     std::vector< std::string > words;
-    do // Read the ADPs
+    do // Read the ADPs.
     {
         if ( ! text_file_reader.get_next_line( words ) )
             return;
@@ -345,7 +336,7 @@ void deal_with_aniso_loop( TextFileReader & text_file_reader, const std::vector<
             text_file_reader.push_back_last_line();
             return;
         }
-        // When we are here, we have an aniso line
+        // When we are here, we have an aniso line.
         aniso_line_interpreter.interpret( words, crystal_structure );
     } while ( true );
 }
@@ -356,7 +347,7 @@ void get_loop_items( TextFileReader & text_file_reader, std::vector< std::string
 {
     std::vector< std::string > words;
     bool OK( true );
-    do // Read the loop item keywords
+    do // Read the loop item keywords.
     {
         if ( ! text_file_reader.get_next_line( words ) )
             throw std::runtime_error( "read_cif(): loop empty." );
@@ -404,7 +395,7 @@ void deal_with_loop( TextFileReader & text_file_reader, CrystalStructure & cryst
         symmetry_matrices_found = true;
         return;
     }
-    // For the moment we ignore everything else
+    // For the moment we ignore everything else.
 }
 
 // ********************************************************************************
@@ -450,7 +441,7 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
 {
     crystal_structure = CrystalStructure();
     TextFileReader text_file_reader( file_name );
-    text_file_reader.set_skip_empty_lines( true ); // This is crucial
+    text_file_reader.set_skip_empty_lines( true ); // This is crucial.
     std::vector< std::string > comment_identifiers;
     comment_identifiers.push_back( "#" );
     text_file_reader.set_comment_identifiers( comment_identifiers );
@@ -462,9 +453,9 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
     bool found_alpha( false );
     bool found_beta( false );
     bool found_gamma( false );
-    double a( 0.0 ); // Stupid initialisation to silence compiler warnings
-    double b( 0.0 ); // Stupid initialisation to silence compiler warnings
-    double c( 0.0 ); // Stupid initialisation to silence compiler warnings
+    double a( 0.0 ); // Stupid initialisation to silence compiler warnings.
+    double b( 0.0 ); // Stupid initialisation to silence compiler warnings.
+    double c( 0.0 ); // Stupid initialisation to silence compiler warnings.
     Angle alpha;
     Angle beta;
     Angle gamma;
@@ -561,7 +552,7 @@ void read_cif( const FileName & file_name, CrystalStructure & crystal_structure 
 
 // ********************************************************************************
 
-// Entirely text based: removes all lines with five fields or more of which the first field starts with H, the second field is "H" and the third fourth and fifth field are floating point numbers
+// Entirely text based: removes all lines with five fields or more of which the first field starts with H, the second field is "H" and the third fourth and fifth field are floating point numbers.
 void remove_hydrogen_atoms( const FileName & input_file_name, const FileName & output_file_name )
 {
     TextFileReader text_file_reader( input_file_name );
@@ -598,7 +589,7 @@ void remove_hydrogen_atoms( const FileName & input_file_name, const FileName & o
 
 // ********************************************************************************
 
-// As above. The output file_name is the input file name with ".cif" replaced by "_noH.cif"
+// As above. The output file_name is the input file name with ".cif" replaced by "_noH.cif".
 void remove_hydrogen_atoms( const FileName & input_file_name )
 {
     remove_hydrogen_atoms( input_file_name, append_to_file_name( input_file_name, "_noH" ) );
