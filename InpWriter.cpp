@@ -184,7 +184,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "  x_calculation_step " + double2string( powder_pattern.average_two_theta_step().value_in_degrees() ) );
     text_file_writer.write_line( "'  Specimen_Displacement(@ , 0.0 )" );
     text_file_writer.write_line( "'  Absorption(@ , 0,0 )" );
-    text_file_writer.write_line( "  Zero_Error(@ , 0.0 )" );
+    text_file_writer.write_line( "  Zero_Error(@ , 0.02 )" );
     text_file_writer.write_line( "'Synchrotron use: LP_Factor( 90.0 )" );
     text_file_writer.write_line( "'Neutrons use: LP_Factor( 90.0 )" );
     text_file_writer.write_line( "'No monochromator use: LP_Factor( 0.0 )" );
@@ -203,8 +203,8 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    la 1 lo  1.540560" );
     text_file_writer.write_line( "  str" );
     text_file_writer.write_line( "    r_bragg  0.0" );
-    text_file_writer.write_line( "    CS_L(@ , 9999.99881`)" );
     text_file_writer.write_line( "    CS_G(@ , 107.03272`)" );
+    text_file_writer.write_line( "    CS_L(@ , 9999.99881`)" );
     text_file_writer.write_line( "    Strain_G(@ , 0.49554`)" );
     text_file_writer.write_line( "    Strain_L(@ , 0.03347`)" );
     text_file_writer.write_line( "    prm  sh_scale_l" + aal + " " + double2string( powder_pattern.cumulative_intensity() * 4.2E-10 ) );
@@ -303,6 +303,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    space_group \"" + remove( remove( crystal_structure.space_group().name(), '_' ), ' ') + "\"");
     text_file_writer.write_line( "    scale @  0.0001" );
     text_file_writer.write_line( "'    PO(@ , 1.0, , 1 0 0 )" );
+    text_file_writer.write_line( "'    PO_Spherical_Harmonics( sh, 6 )" );
     text_file_writer.write_line( "    macro ref_flag" + aal + " { @ }" );
     text_file_writer.write_line( "    prm    bnonh" + aal + " 3.0" );
     text_file_writer.write_line( "    prm bh" + aal + " = 1.2 * bnonh" + aal + ";" );
@@ -342,19 +343,21 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    prm !flatten_weight    100000" );
     text_file_writer.write_line( "    'Flatten( C19 N11 N35 C47 H54 C50 H58 C45 H49 C34 C46, , 0.0, flatten_width, flatten_weight )" );
     text_file_writer.write_line( "    Out_CIF_STR( " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name() + "_RR", "cif" ).full_name() + " )" );
-    text_file_writer.write_line( "    xdd_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name() + "_profile", "txt" ).full_name() + " load out_record out_fmt out_eqn" );
-    text_file_writer.write_line( "    {" );
-    text_file_writer.write_line( "        \" %11.5f \" = X;" );
-    text_file_writer.write_line( "        \" %11.5f \" = Yobs;" );
-    text_file_writer.write_line( "        \" %11.5f \" = Ycalc;" );
-    text_file_writer.write_line( "        \" %11.5f\\n\" = SigmaYobs;" );
-    text_file_writer.write_line( "    }" );
-    text_file_writer.write_line( "    phase_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name() + "_tickmarks", "txt" ).full_name() + " load out_record out_fmt out_eqn" );
-    text_file_writer.write_line( "    {" );
-    text_file_writer.write_line( "        \" %11.5f -200\\n\" = 2.0 * Rad * Th;" );
-    text_file_writer.write_line( "    }" );
+    text_file_writer.write_line( "  xdd_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name() + "_profile", "txt" ).full_name() + " load out_record out_fmt out_eqn" );
+    text_file_writer.write_line( "  {" );
+    text_file_writer.write_line( "      \" %11.5f \" = X;" );
+    text_file_writer.write_line( "      \" %11.5f \" = Yobs;" );
+    text_file_writer.write_line( "      \" %11.5f \" = Ycalc;" );
+    text_file_writer.write_line( "      \" %11.5f\\n\" = SigmaYobs;" );
+    text_file_writer.write_line( "  }" );
+    text_file_writer.write_line( "  phase_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name() + "_tickmarks", "txt" ).full_name() + " load out_record out_fmt out_eqn" );
+    text_file_writer.write_line( "  {" );
+    text_file_writer.write_line( "      \" %11.5f -200\\n\" = 2.0 * Rad * Th;" );
+    text_file_writer.write_line( "  }" );
+    text_file_writer.write_line( "  Out_FCF( " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name(), "fcf" ).full_name() + " )" );
     copy_text_file( replace_extension( input_cif_file_name, "inp" ), replace_extension( input_cif_file_name, "org" ) );
     std::cout << "DO NOT FORGET TO RESET THE SPACE GROUP." << std::endl;
 }
 
 // ********************************************************************************
+

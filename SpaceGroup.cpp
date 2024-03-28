@@ -410,8 +410,7 @@ PointGroup SpaceGroup::point_group() const
         if ( has_inversion_ )
             rotations.push_back( -1.0 * representative_symmetry_operators_[i].rotation() );
     }
-    PointGroup result( rotations );
-    return result;
+    return PointGroup( rotations );
 }
 
 // ********************************************************************************
@@ -607,7 +606,7 @@ void SpaceGroup::decompose()
             if ( nearly_equal( representative_symmetry_operators_[i].rotation().determinant(), -1.0 ) )
             {
                 if ( has_inversion_at_origin_ )
-                    symmetry_operators_[i].rotation() =  -1.0 * representative_symmetry_operators_[i].rotation();
+                    representative_symmetry_operators_[i] = SymmetryOperator( -1.0 * representative_symmetry_operators_[i].rotation(), representative_symmetry_operators_[i].translation() );
                 else
                     representative_symmetry_operators_[i] = representative_symmetry_operators_[i] * SymmetryOperator( inversion, translation_of_inversion_ );
             }

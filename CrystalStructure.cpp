@@ -621,7 +621,7 @@ void CrystalStructure::move_com_close_to_origin( const bool allow_inversion )
     std::vector< bool > is_floating_axis( 3, false );
     for ( size_t i( 0 ); i != 3; ++i )
         is_floating_axis[i] = space_group_.is_floating_axis( i );
-    Vector3D com = centre_of_mass();
+    Vector3D com = centre_of_mass( false );
     std::cout << "Centre of mass = " << std::endl;
     com.show();
     size_t best_iSymmOp = 0;
@@ -671,7 +671,7 @@ void CrystalStructure::move_com_close_to_origin( const bool allow_inversion )
             new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), space_group.symmetry_operator( best_iSymmOp ).rotation(), crystal_lattice_ ) );
         this->set_atom( i, new_atom );
     }
-    com = centre_of_mass();
+    com = centre_of_mass( false );
     std::cout << "Centre of mass = " << std::endl;
     com.show();
 }
@@ -749,11 +749,11 @@ void CrystalStructure::pack_crystal( const double probe_radius )
 
 // ********************************************************************************
 
-Vector3D CrystalStructure::centre_of_mass() const
+Vector3D CrystalStructure::centre_of_mass( const bool include_hydrogen_atoms ) const
 {
     if ( atoms_.empty() )
         throw std::runtime_error( "CrystalStructure::centre_of_mass(): there are no atoms, centre of mass is undefined." );
-    bool ignore_hydrogens( false ); // Ignore deuteriums as well?
+    bool ignore_hydrogens = ( ! include_hydrogen_atoms ); // Ignore deuteriums as well?
     bool weigh_by_atomic_weight( false );
     Vector3D result;
     double sum_of_weights( 0.0 );
@@ -1548,8 +1548,8 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
         Matrix3D sum( 0.0 );
         for ( size_t k( 0 ); k != space_group.nsymmetry_operators(); ++k )
             sum += space_group.symmetry_operator( k ).rotation();
-        Vector3D com_lhs = lhs.centre_of_mass(); // Fractional coordinates
-        Vector3D com_rhs = rhs.centre_of_mass();
+        Vector3D com_lhs = lhs.centre_of_mass( false ); // Fractional coordinates
+        Vector3D com_rhs = rhs.centre_of_mass( false );
         for ( size_t i( 0 ); i != 3; ++i )
         {
             if ( ! nearly_zero( sum.value( i, i ) ) )
@@ -1676,7 +1676,7 @@ SymmetryOperator find_match( const CrystalStructure & lhs, const CrystalStructur
     shifts[ most_common_shift_index ].show();
     SymmetryOperator result( space_group.symmetry_operator( most_common_space_group_index ).rotation(), space_group.symmetry_operator( most_common_space_group_index ).rotation() * shifts[ most_common_shift_index ] + space_group.symmetry_operator( most_common_space_group_index ).translation() );
     // Apply found transformation to rhs
-    Vector3D integer_shifts_2 = lhs.centre_of_mass() - ( result * rhs.centre_of_mass() ); // Fractional coordinates. lhs is the target.
+    Vector3D integer_shifts_2 = lhs.centre_of_mass( false ) - ( result * rhs.centre_of_mass( false ) ); // Fractional coordinates. lhs is the target.
     integer_shifts.clear();
     integer_shifts.push_back( round_to_int( integer_shifts_2.x() ) );
     integer_shifts.push_back( round_to_int( integer_shifts_2.y() ) );
@@ -1718,8 +1718,8 @@ void CrystalStructure::match( const CrystalStructure & rhs, const size_t shift_s
         Matrix3D sum( 0.0 );
         for ( size_t k( 0 ); k != space_group.nsymmetry_operators(); ++k )
             sum += space_group.symmetry_operator( k ).rotation();
-        Vector3D com_lhs = centre_of_mass(); // Fractional coordinates
-        Vector3D com_rhs = rhs.centre_of_mass();
+        Vector3D com_lhs = centre_of_mass( false ); // Fractional coordinates
+        Vector3D com_rhs = rhs.centre_of_mass( false );
         for ( size_t i( 0 ); i != 3; ++i )
         {
             if ( ! nearly_zero( sum.value( i, i ) ) )
@@ -1843,8 +1843,8 @@ void CrystalStructure::match( const CrystalStructure & rhs, const size_t shift_s
     std::cout << "The most common shift, with " << most_common_shift_frequency << " occurrences, is:" << std::endl;
     shifts[ most_common_shift_index ].show();
     // Now apply the transformation to *this.
-    rhs.centre_of_mass().show();
-    centre_of_mass().show();
+    rhs.centre_of_mass( false ).show();
+    centre_of_mass( false ).show();
   //  com_diff.show();
     for ( size_t i( 0 ); i != natoms; ++i )
     {
@@ -1855,9 +1855,9 @@ void CrystalStructure::match( const CrystalStructure & rhs, const size_t shift_s
         set_atom( i, new_atom );
     }
     // We now only have the integer translations left.
-    Vector3D com_diff = rhs.centre_of_mass() - centre_of_mass();
-    rhs.centre_of_mass().show();
-    centre_of_mass().show();
+    Vector3D com_diff = rhs.centre_of_mass( false ) - centre_of_mass( false );
+    rhs.centre_of_mass( false ).show();
+    centre_of_mass( false ).show();
     com_diff.show();
     com_diff.set_x( round_to_int( com_diff.x() ) );
     com_diff.set_y( round_to_int( com_diff.y() ) );
@@ -1901,8 +1901,8 @@ void map( const CrystalStructure & to_be_changed, const CrystalStructure & targe
     Vector3D floating_axes_correction;
     if ( correct_floating_axes )
     {
-        Vector3D com_lhs = to_be_changed.centre_of_mass(); // Fractional coordinates
-        Vector3D com_rhs = target.centre_of_mass();
+        Vector3D com_lhs = to_be_changed.centre_of_mass( false ); // Fractional coordinates
+        Vector3D com_rhs = target.centre_of_mass( false );
         for ( size_t i( 0 ); i != 3; ++i )
         {
             if ( space_group.is_floating_axis( i ) )

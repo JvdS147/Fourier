@@ -218,7 +218,7 @@ public:
     void pack_crystal( const double probe_radius );
 
     // Fractional coordinates.
-    Vector3D centre_of_mass() const;
+    Vector3D centre_of_mass( const bool include_hydrogen_atoms ) const;
 
     // Unit: eA
     // @@ Undefined for a crystal structure, gives the wrong answer.

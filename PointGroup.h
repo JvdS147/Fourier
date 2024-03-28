@@ -47,12 +47,12 @@ class PointGroup
 {
 public:
 
-    // Default constructor: C1
+    // Default constructor: C1.
     PointGroup();
 
     PointGroup( const std::vector< Matrix3D > & symmetry_operators, const std::string & name = "" );
     
-    // Allows quick building of point groups
+    // Allows quick building of point groups.
     void add_inversion();
     
     // Alternatively, we can add a general member function add_symmetry_element() that checks for the presence of the element and that adds it such that the group remains closed.
@@ -62,13 +62,14 @@ public:
 
     size_t nsymmetry_operators() const { return symmetry_operators_.size(); }
 
+    // @@ Boundary should be checked
     Matrix3D symmetry_operator( const size_t i ) const { return symmetry_operators_[ i ]; }
 
     std::string name() const { return name_; }
 
     bool has_inversion() const { return has_inversion_; }
     
-    // Average of the matrices
+    // Average of the matrices.
     Matrix3D special_position_operator() const;
 
 private:
@@ -85,9 +86,10 @@ bool same_symmetry_operators( const PointGroup & lhs, const PointGroup & rhs );
 
 // Multiplies all combinations (both ways) and checks that the result is in the symmetry operators
 // Currently throws if not successful, should probably return bool.
-// Should not only check if the result if a symmetry operator that is in the set, but should
+// Should not only check if the result is a symmetry operator that is in the set, but should
 // calculate the entire multiplication table which has as an additional condition that each
 // element must occur exactly once in each row and in each column.
 void check_if_closed( const std::vector< Matrix3D > & symmetry_operators );
 
 #endif // POINTGROUP_H
+

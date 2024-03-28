@@ -155,7 +155,7 @@ void TLSWriter( const FileName & input_file_name )
     if ( ! is_on_inversion_at_origin )
     {
         text_file_writer.write_line( "    ' Origin of the molecule (fractional coordinates)." );
-        Vector3D c_o_m = crystal_structure.centre_of_mass();
+        Vector3D c_o_m = crystal_structure.centre_of_mass( false );
         text_file_writer.write_line( "    prm centx " + double2string( c_o_m.x() ) );
         text_file_writer.write_line( "    prm centy " + double2string( c_o_m.y() ) );
         text_file_writer.write_line( "    prm centz " + double2string( c_o_m.z() ) );
@@ -775,7 +775,7 @@ void TLSWriter_2( const FileName & input_file_name )
             found = false;
     }
     text_file_writer.write_line( "    ' Origin of the molecule (fractional coordinates)." );
-    Vector3D c_o_m = crystal_structure.centre_of_mass();
+    Vector3D c_o_m = crystal_structure.centre_of_mass( false );
     text_file_writer.write_line( "    prm centx " + double2string( c_o_m.x() ) );
     text_file_writer.write_line( "    prm centy " + double2string( c_o_m.y() ) );
     text_file_writer.write_line( "    prm centz " + double2string( c_o_m.z() ) );
