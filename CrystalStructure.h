@@ -277,13 +277,11 @@ public:
     // Setting the space group screws up the structure! This method should essentially be const.
     // positions contains fractional coordinates with respect to one unit cell (so after collapsing the supercell).
     // You'll get horrible results when applying the space-group symmetry if you repositioned the molecules so that all molecules were comfortably within the unit cell.
-    // transformation does not work
     void collapse_supercell( const size_t u,
                              const size_t v,
                              const size_t w,
                              const int drift_correction,
                              const Vector3D & target_centre,
-                             Matrix3D & transformation,
                              Vector3D & actual_centre,
                              std::vector< std::vector< Vector3D > > & positions );
 

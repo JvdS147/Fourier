@@ -41,14 +41,12 @@ AnalyseTrajectory::AnalyseTrajectory( const FileList file_list,
                                       const size_t u,
                                       const size_t v,
                                       const size_t w,
-                                      const SpaceGroup & space_group,
-                                      const Matrix3D & transformation ) :
+                                      const SpaceGroup & space_group ) :
 file_list_(file_list),
 u_(u),
 v_(v),
 w_(w),
 space_group_(space_group),
-transformation_(transformation),
 write_lean_(false),
 write_average_(true),
 write_average_noH_(false),
@@ -68,10 +66,9 @@ void AnalyseTrajectory::analyse()
     std::string file_name;
     std::string extension;
     std::vector< Element > elements;
-    std::vector< RunningAverageAndESD< Vector3D > > average_positions; // Fractional coordinates
-    size_t natoms;
+    std::vector< RunningAverageAndESD< Vector3D > > average_positions; // Fractional coordinates.
     std::vector< std::vector< Vector3D > > fractional_positions_trajectory;
-    // Read the first cif file and initialise everything
+    // Read the first cif file and initialise everything.
     {
     CrystalStructure crystal_structure;
     std::cout << "Now reading cif... " + file_list_.value( 0 ).full_name() << std::endl;
@@ -89,21 +86,20 @@ void AnalyseTrajectory::analyse()
     average_volume_.add_value( crystal_lattice.volume() / ( u_ * v_ * w_ ) );
     std::vector< std::vector< Vector3D > > fractional_positions_frame;
     Vector3D actual_centre;
-    // Returns a std::vector of atomic coordinates for each atom in the asymmetric unit
+    // Returns a std::vector of atomic coordinates for each atom in the asymmetric unit.
     if ( ( drift_correction_ == NONE ) ||
          ( drift_correction_ == USE_FIRST_FRAME ) )
     {
-        crystal_structure.collapse_supercell( u_, v_, w_, 0, drift_correction_vector_, transformation_, actual_centre, fractional_positions_frame );
+        crystal_structure.collapse_supercell( u_, v_, w_, 0, drift_correction_vector_, actual_centre, fractional_positions_frame );
         drift_correction_vector_ = actual_centre;
     }
     else
-        crystal_structure.collapse_supercell( u_, v_, w_, drift_correction_, drift_correction_vector_, transformation_, actual_centre, fractional_positions_frame );
+        crystal_structure.collapse_supercell( u_, v_, w_, drift_correction_, drift_correction_vector_, actual_centre, fractional_positions_frame );
     centres_of_mass_.push_back( actual_centre );
-    crystal_structure.transform( transformation_ );
-    natoms = fractional_positions_frame.size();
-    elements.reserve( natoms );
-    average_positions.reserve( natoms );
-    for ( size_t i( 0 ); i != natoms; ++i )
+    natoms_ = fractional_positions_frame.size();
+    elements.reserve( natoms_ );
+    average_positions.reserve( natoms_ );
+    for ( size_t i( 0 ); i != natoms_; ++i )
     {
         elements.push_back( crystal_structure.atom( i ).element() );
         RunningAverageAndESD< Vector3D > average_position;
@@ -117,7 +113,7 @@ void AnalyseTrajectory::analyse()
         fractional_positions_trajectory.push_back( temp_fractional_positions );
     }
     }
-    // Read the remaining cif files
+    // Read the remaining cif files.
     for ( size_t i( 1 ); i != file_list_.size(); ++i )
     {
         std::cout << "Now reading cif... " + file_list_.value( i ).full_name() << std::endl;
@@ -137,12 +133,11 @@ void AnalyseTrajectory::analyse()
         std::vector< std::vector< Vector3D > > fractional_positions_frame;
         // Returns a std::vector of atomic coordinates for each atom in the asymmetric unit
         Vector3D actual_centre;
-        crystal_structure.collapse_supercell( u_, v_, w_, drift_correction_, drift_correction_vector_, transformation_, actual_centre, fractional_positions_frame );
+        crystal_structure.collapse_supercell( u_, v_, w_, drift_correction_, drift_correction_vector_, actual_centre, fractional_positions_frame );
         centres_of_mass_.push_back( actual_centre );
-        crystal_structure.transform( transformation_ );
-        if ( fractional_positions_frame.size() != natoms )
+        if ( fractional_positions_frame.size() != natoms_ )
             throw std::runtime_error( "AnalyseTrajectory::analyse(): The number of atoms in the cif files is not the same, the average cif could not be generated." );
-        for ( size_t i( 0 ); i != natoms; ++i )
+        for ( size_t i( 0 ); i != natoms_; ++i )
         {
             for ( size_t j( 0 ); j != fractional_positions_frame[i].size(); ++j )
             {
@@ -151,153 +146,26 @@ void AnalyseTrajectory::analyse()
             }
         }
     }
-    CrystalLattice crystal_lattice_average( average_a_.average(),
-                                            average_b_.average(),
-                                            average_c_.average(),
-                                            average_alpha_.average(),
-                                            average_beta_.average(),
-                                            average_gamma_.average() );
+    crystal_lattice_average_ = CrystalLattice( average_a_.average(),
+                                               average_b_.average(),
+                                               average_c_.average(),
+                                               average_alpha_.average(),
+                                               average_beta_.average(),
+                                               average_gamma_.average() );
+    std::vector< AnisotropicDisplacementParameters > all_ADPs;
+    // We precalculate all ADPs, even if not necessary.
+    for ( size_t i( 0 ); i != natoms_; ++i )
+    {
+        std::vector< Vector3D > cartesian_positions;
+        for ( size_t j( 0 ); j != fractional_positions_trajectory[i].size(); ++j )
+            cartesian_positions.push_back( crystal_lattice_average_.fractional_to_orthogonal_matrix() * fractional_positions_trajectory[i][j] );
+        AnisotropicDisplacementParameters adps( cartesian_positions );
+        all_ADPs.push_back( adps );
+    }
     if ( write_average_ )
-    {
-        TextFileWriter text_file_writer( FileName( file_list_.base_directory(), "average_adps", "cif" ) );
-        text_file_writer.write_line( "data_average" );
-        text_file_writer.write_line( "_symmetry_space_group_name_H-M  '" + space_group_.name() + "'" );
-    //    text_file_writer.write_line( "_symmetry_Int_Tables_number     1" );
-    //    text_file_writer.write_line( "_symmetry_cell_setting          triclinic" );
-        text_file_writer.write_line( "_cell_length_a    " + double2string( average_a_.average(), 6 ) );
-        text_file_writer.write_line( "_cell_length_b    " + double2string( average_b_.average(), 6 ) );
-        text_file_writer.write_line( "_cell_length_c    " + double2string( average_c_.average(), 6 ) );
-        text_file_writer.write_line( "_cell_angle_alpha " + double2string( average_alpha_.average().value_in_degrees(), 6 ) );
-        text_file_writer.write_line( "_cell_angle_beta  " + double2string( average_beta_.average().value_in_degrees() , 6 ) );
-        text_file_writer.write_line( "_cell_angle_gamma " + double2string( average_gamma_.average().value_in_degrees(), 6 ) );
-        text_file_writer.write_line( "_cell_volume      " + double2string( average_volume_.average(), 6 ) );
-        text_file_writer.write_line( "loop_" );
-        text_file_writer.write_line( "_symmetry_equiv_pos_site_id" );
-        text_file_writer.write_line( "_symmetry_equiv_pos_as_xyz" );
-        for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
-            text_file_writer.write_line( size_t2string( i+1 ) + " " + space_group_.symmetry_operator( i ).to_string() );
-        text_file_writer.write_line( "loop_" );
-        text_file_writer.write_line( "_atom_site_label" ); // Needed for Materials Studio
-        text_file_writer.write_line( "_atom_site_type_symbol" );
-        text_file_writer.write_line( "_atom_site_fract_x" );
-        text_file_writer.write_line( "_atom_site_fract_y" );
-        text_file_writer.write_line( "_atom_site_fract_z" );
-        size_t len( 2 );
-        size_t current_size = 99;
-        while ( natoms >= current_size )
-        {
-            ++len;
-            current_size = 10 * current_size + 9;
-        }
-        for ( size_t i( 0 ); i != natoms; ++i )
-        {
-            // This is just too weird, need std::vector< DoubleWithESD > for this.
-            text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
-                                         elements[i].symbol() + " " +
-                                         double2string( adjust_for_translations( average_positions[ i ].average().x() ), 6 ) + " " +
-                                         double2string( adjust_for_translations( average_positions[ i ].average().y() ), 6 ) + " " +
-                                         double2string( adjust_for_translations( average_positions[ i ].average().z() ), 6 ) );
-        }
-        text_file_writer.write_line( "loop_" );
-        text_file_writer.write_line( "_atom_site_aniso_label" );
-        text_file_writer.write_line( "_atom_site_aniso_U_11" );
-        text_file_writer.write_line( "_atom_site_aniso_U_22" );
-        text_file_writer.write_line( "_atom_site_aniso_U_33" );
-        text_file_writer.write_line( "_atom_site_aniso_U_12" );
-        text_file_writer.write_line( "_atom_site_aniso_U_13" );
-        text_file_writer.write_line( "_atom_site_aniso_U_23" );
-        for ( size_t i( 0 ); i != natoms; ++i )
-        {
-            std::vector< Vector3D > cartesian_positions;
-            for ( size_t j( 0 ); j != fractional_positions_trajectory[i].size(); ++j )
-                cartesian_positions.push_back( crystal_lattice_average.fractional_to_orthogonal_matrix() * fractional_positions_trajectory[i][j] );
-            AnisotropicDisplacementParameters adps( cartesian_positions );
-            SymmetricMatrix3D Ucif = adps.U_cif( crystal_lattice_average );
-            // This can go wrong if the ADP is very small, it may be printed like "1E-14" which will not be recognised in the cif.
-            text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
-                                         double2string( Ucif.value( 0, 0 ), 6 ) + " " +
-                                         double2string( Ucif.value( 1, 1 ), 6 ) + " " +
-                                         double2string( Ucif.value( 2, 2 ), 6 ) + " " +
-                                         double2string( Ucif.value( 0, 1 ), 6 ) + " " +
-                                         double2string( Ucif.value( 0, 2 ), 6 ) + " " +
-                                         double2string( Ucif.value( 1, 2 ), 6 ) );
-        }
-        text_file_writer.write_line();
-        text_file_writer.write_line( "#END" );
-    }
+        write_average( elements, average_positions, all_ADPs, true );
     if ( write_average_noH_ )
-    {
-        TextFileWriter text_file_writer( FileName( file_list_.base_directory(), "average_noH", "cif" ) );
-        text_file_writer.write_line( "data_average" );
-        text_file_writer.write_line( "_symmetry_space_group_name_H-M  '" + space_group_.name() + "'" );
-    //    text_file_writer.write_line( "_symmetry_Int_Tables_number     1" );
-    //    text_file_writer.write_line( "_symmetry_cell_setting          triclinic" );
-        text_file_writer.write_line( "_cell_length_a    " + double2string( average_a_.average(), 6 ) );
-        text_file_writer.write_line( "_cell_length_b    " + double2string( average_b_.average(), 6 ) );
-        text_file_writer.write_line( "_cell_length_c    " + double2string( average_c_.average(), 6 ) );
-        text_file_writer.write_line( "_cell_angle_alpha " + double2string( average_alpha_.average().value_in_degrees(), 6 ) );
-        text_file_writer.write_line( "_cell_angle_beta  " + double2string( average_beta_.average().value_in_degrees(), 6 ) );
-        text_file_writer.write_line( "_cell_angle_gamma " + double2string( average_gamma_.average().value_in_degrees(), 6 ) );
-        text_file_writer.write_line( "_cell_volume      " + double2string( average_volume_.average(), 6 ) );
-        text_file_writer.write_line( "loop_" );
-        text_file_writer.write_line( "_symmetry_equiv_pos_site_id" );
-        text_file_writer.write_line( "_symmetry_equiv_pos_as_xyz" );
-        for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
-            text_file_writer.write_line( size_t2string( i+1 ) + " " + space_group_.symmetry_operator( i ).to_string() );
-        text_file_writer.write_line( "loop_" );
-        text_file_writer.write_line( "_atom_site_label" ); // Needed for Materials Studio
-        text_file_writer.write_line( "_atom_site_type_symbol" );
-        text_file_writer.write_line( "_atom_site_fract_x" );
-        text_file_writer.write_line( "_atom_site_fract_y" );
-        text_file_writer.write_line( "_atom_site_fract_z" );
-        size_t len( 2 );
-        size_t current_size = 99;
-        while ( natoms >= current_size )
-        {
-            ++len;
-            current_size = 10 * current_size + 9;
-        }
-        Element hydrogen( "H" );
-        for ( size_t i( 0 ); i != natoms; ++i )
-        {
-            if ( elements[i] == hydrogen )
-                continue;
-            // This is just too weird, need std::vector< DoubleWithESD > for this.
-            text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
-                                         elements[i].symbol() + " " +
-                                         double2string( adjust_for_translations( average_positions[ i ].average().x() ), 6 ) + " " +
-                                         double2string( adjust_for_translations( average_positions[ i ].average().y() ), 6 ) + " " +
-                                         double2string( adjust_for_translations( average_positions[ i ].average().z() ), 6 ) );
-        }
-        text_file_writer.write_line( "loop_" );
-        text_file_writer.write_line( "_atom_site_aniso_label" );
-        text_file_writer.write_line( "_atom_site_aniso_U_11" );
-        text_file_writer.write_line( "_atom_site_aniso_U_22" );
-        text_file_writer.write_line( "_atom_site_aniso_U_33" );
-        text_file_writer.write_line( "_atom_site_aniso_U_12" );
-        text_file_writer.write_line( "_atom_site_aniso_U_13" );
-        text_file_writer.write_line( "_atom_site_aniso_U_23" );
-        for ( size_t i( 0 ); i != natoms; ++i )
-        {
-            if ( elements[i] == hydrogen )
-                continue;
-            std::vector< Vector3D > cartesian_positions;
-            for ( size_t j( 0 ); j != fractional_positions_trajectory[i].size(); ++j )
-                cartesian_positions.push_back( crystal_lattice_average.fractional_to_orthogonal_matrix() * fractional_positions_trajectory[i][j] );
-            AnisotropicDisplacementParameters adps( cartesian_positions );
-            SymmetricMatrix3D Ucif = adps.U_cif( crystal_lattice_average );
-            // This can go wrong if the ADP is very small, it may be printed like "1E-14" which will not be recognised in the cif.
-            text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
-                                         double2string( Ucif.value( 0, 0 ), 6 ) + " " +
-                                         double2string( Ucif.value( 1, 1 ), 6 ) + " " +
-                                         double2string( Ucif.value( 2, 2 ), 6 ) + " " +
-                                         double2string( Ucif.value( 0, 1 ), 6 ) + " " +
-                                         double2string( Ucif.value( 0, 2 ), 6 ) + " " +
-                                         double2string( Ucif.value( 1, 2 ), 6 ) );
-        }
-        text_file_writer.write_line();
-        text_file_writer.write_line( "#END" );
-    }
+        write_average( elements, average_positions, all_ADPs, false );
     if ( write_average_ESDs_ )
     {
         TextFileWriter text_file_writer( FileName( file_list_.base_directory(), "average_ESDs_adps", "cif" ) );
@@ -318,19 +186,19 @@ void AnalyseTrajectory::analyse()
         for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
             text_file_writer.write_line( size_t2string( i+1 ) + " " + space_group_.symmetry_operator( i ).to_string() );
         text_file_writer.write_line( "loop_" );
-        text_file_writer.write_line( "_atom_site_label" ); // Needed for Materials Studio
+        text_file_writer.write_line( "_atom_site_label" ); // Needed for Materials Studio.
         text_file_writer.write_line( "_atom_site_type_symbol" );
         text_file_writer.write_line( "_atom_site_fract_x" );
         text_file_writer.write_line( "_atom_site_fract_y" );
         text_file_writer.write_line( "_atom_site_fract_z" );
         size_t len( 2 );
         size_t current_size = 99;
-        while ( natoms >= current_size )
+        while ( natoms_ >= current_size )
         {
             ++len;
             current_size = 10 * current_size + 9;
         }
-        for ( size_t i( 0 ); i != natoms; ++i )
+        for ( size_t i( 0 ); i != natoms_; ++i )
         {
             // This is just too weird, need std::vector< DoubleWithESD > for this.
             text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
@@ -347,13 +215,9 @@ void AnalyseTrajectory::analyse()
         text_file_writer.write_line( "_atom_site_aniso_U_12" );
         text_file_writer.write_line( "_atom_site_aniso_U_13" );
         text_file_writer.write_line( "_atom_site_aniso_U_23" );
-        for ( size_t i( 0 ); i != natoms; ++i )
+        for ( size_t i( 0 ); i != natoms_; ++i )
         {
-            std::vector< Vector3D > cartesian_positions;
-            for ( size_t j( 0 ); j != fractional_positions_trajectory[i].size(); ++j )
-                cartesian_positions.push_back( crystal_lattice_average.fractional_to_orthogonal_matrix() * fractional_positions_trajectory[i][j] );
-            AnisotropicDisplacementParameters adps( cartesian_positions );
-            SymmetricMatrix3D Ucif = adps.U_cif( crystal_lattice_average );
+            SymmetricMatrix3D Ucif = all_ADPs[i].U_cif( crystal_lattice_average_ );
             // This can go wrong if the ADP is very small, it may be printed like "1E-14" which will not be recognised in the cif.
             text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
                                          double2string( Ucif.value( 0, 0 ), 6 ) + " " +
@@ -366,7 +230,6 @@ void AnalyseTrajectory::analyse()
         text_file_writer.write_line();
         text_file_writer.write_line( "#END" );
     }
-
     if ( write_sum_ )
     {
         TextFileWriter text_file_writer( FileName( file_list_.base_directory(), "average_sum", "cif" ) );
@@ -394,23 +257,96 @@ void AnalyseTrajectory::analyse()
         text_file_writer.write_line( "_atom_site_fract_z" );
         size_t len( 2 );
         size_t current_size = 99;
-        while ( natoms >= current_size )
+        while ( natoms_ >= current_size )
         {
             ++len;
             current_size = 10 * current_size + 9;
         }
-        for ( size_t i( 0 ); i != natoms; ++i )
+        for ( size_t i( 0 ); i != natoms_; ++i )
         {
             for ( size_t j( 0 ); j != fractional_positions_trajectory[i].size(); ++j )
-            text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
-                                         elements[i].symbol() + " " +
-                                         double2string_pad_plus( fractional_positions_trajectory[i][j].x(), 5, ' ' ) + " " +
-                                         double2string_pad_plus( fractional_positions_trajectory[i][j].y(), 5, ' ' ) + " " +
-                                         double2string_pad_plus( fractional_positions_trajectory[i][j].z(), 5, ' ' ) );
+                text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
+                                             elements[i].symbol() + " " +
+                                             double2string_pad_plus( fractional_positions_trajectory[i][j].x(), 5, ' ' ) + " " +
+                                             double2string_pad_plus( fractional_positions_trajectory[i][j].y(), 5, ' ' ) + " " +
+                                             double2string_pad_plus( fractional_positions_trajectory[i][j].z(), 5, ' ' ) );
         }
         text_file_writer.write_line();
         text_file_writer.write_line( "#END" );
     }
+}
+
+// ********************************************************************************
+
+void AnalyseTrajectory::write_average( const std::vector< Element > & elements,
+                                       const std::vector< RunningAverageAndESD< Vector3D > > & average_positions,
+                                       const std::vector< AnisotropicDisplacementParameters > & all_ADPs,
+                                       const bool include_hydrogen )
+{
+    TextFileWriter text_file_writer( FileName( file_list_.base_directory(), "average_adps", "cif" ) );
+    text_file_writer.write_line( "data_average" );
+    text_file_writer.write_line( "_symmetry_space_group_name_H-M  '" + space_group_.name() + "'" );
+    text_file_writer.write_line( "_cell_length_a    " + double2string( average_a_.average(), 6 ) );
+    text_file_writer.write_line( "_cell_length_b    " + double2string( average_b_.average(), 6 ) );
+    text_file_writer.write_line( "_cell_length_c    " + double2string( average_c_.average(), 6 ) );
+    text_file_writer.write_line( "_cell_angle_alpha " + double2string( average_alpha_.average().value_in_degrees(), 6 ) );
+    text_file_writer.write_line( "_cell_angle_beta  " + double2string( average_beta_.average().value_in_degrees() , 6 ) );
+    text_file_writer.write_line( "_cell_angle_gamma " + double2string( average_gamma_.average().value_in_degrees(), 6 ) );
+    text_file_writer.write_line( "_cell_volume      " + double2string( average_volume_.average(), 6 ) );
+    text_file_writer.write_line( "loop_" );
+    text_file_writer.write_line( "_symmetry_equiv_pos_site_id" );
+    text_file_writer.write_line( "_symmetry_equiv_pos_as_xyz" );
+    for ( size_t i( 0 ); i != space_group_.nsymmetry_operators(); ++i )
+        text_file_writer.write_line( size_t2string( i+1 ) + " " + space_group_.symmetry_operator( i ).to_string() );
+    text_file_writer.write_line( "loop_" );
+    text_file_writer.write_line( "_atom_site_label" ); // Needed for Materials Studio.
+    text_file_writer.write_line( "_atom_site_type_symbol" );
+    text_file_writer.write_line( "_atom_site_fract_x" );
+    text_file_writer.write_line( "_atom_site_fract_y" );
+    text_file_writer.write_line( "_atom_site_fract_z" );
+    size_t len( 2 );
+    size_t current_size = 99;
+    while ( natoms_ >= current_size )
+    {
+        ++len;
+        current_size = 10 * current_size + 9;
+    }
+    Element hydrogen( "H" );
+    for ( size_t i( 0 ); i != natoms_; ++i )
+    {
+        if ( ( ! include_hydrogen ) && ( elements[i] == hydrogen ) )
+            continue;
+        // This is just too weird, need std::vector< DoubleWithESD > for this.
+        text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
+                                     elements[i].symbol() + " " +
+                                     double2string( adjust_for_translations( average_positions[ i ].average().x() ), 6 ) + " " +
+                                     double2string( adjust_for_translations( average_positions[ i ].average().y() ), 6 ) + " " +
+                                     double2string( adjust_for_translations( average_positions[ i ].average().z() ), 6 ) );
+    }
+    text_file_writer.write_line( "loop_" );
+    text_file_writer.write_line( "_atom_site_aniso_label" );
+    text_file_writer.write_line( "_atom_site_aniso_U_11" );
+    text_file_writer.write_line( "_atom_site_aniso_U_22" );
+    text_file_writer.write_line( "_atom_site_aniso_U_33" );
+    text_file_writer.write_line( "_atom_site_aniso_U_12" );
+    text_file_writer.write_line( "_atom_site_aniso_U_13" );
+    text_file_writer.write_line( "_atom_site_aniso_U_23" );
+    for ( size_t i( 0 ); i != natoms_; ++i )
+    {
+        if ( ( ! include_hydrogen ) && ( elements[i] == hydrogen ) )
+            continue;
+        SymmetricMatrix3D Ucif = all_ADPs[i].U_cif( crystal_lattice_average_ );
+        // This can go wrong if the ADP is very small, it may be printed like "1E-14" which will not be recognised in the cif.
+        text_file_writer.write_line( elements[i].symbol() + size_t2string( i + 1, len, '0' ) + " " +
+                                     double2string( Ucif.value( 0, 0 ), 6 ) + " " +
+                                     double2string( Ucif.value( 1, 1 ), 6 ) + " " +
+                                     double2string( Ucif.value( 2, 2 ), 6 ) + " " +
+                                     double2string( Ucif.value( 0, 1 ), 6 ) + " " +
+                                     double2string( Ucif.value( 0, 2 ), 6 ) + " " +
+                                     double2string( Ucif.value( 1, 2 ), 6 ) );
+    }
+    text_file_writer.write_line();
+    text_file_writer.write_line( "#END" );    
 }
 
 // ********************************************************************************
@@ -423,19 +359,6 @@ CrystalLattice AnalyseTrajectory::average_crystal_lattice() const
                            average_alpha_.average(),
                            average_beta_.average(),
                            average_gamma_.average() );
-}
-
-// ********************************************************************************
-
-void AnalyseTrajectory::save_centres_of_mass() const
-{
-    TextFileWriter text_file_writer( FileName( file_list_.base_directory(), "centres_of_mass", "txt" ) );
-    CrystalLattice average_crystal_lattice( this->average_crystal_lattice() );
-    for ( size_t i( 0 ); i != centres_of_mass_.size(); ++i )
-        text_file_writer.write_line( double2string( centres_of_mass_[i].x() ) + " " +
-                                     double2string( centres_of_mass_[i].y() ) + " " +
-                                     double2string( centres_of_mass_[i].z() ) + " " +
-                                     double2string( (average_crystal_lattice.fractional_to_orthogonal( centres_of_mass_[i] ) - average_crystal_lattice.fractional_to_orthogonal( centres_of_mass_[0] )).length() ) );
 }
 
 // ********************************************************************************

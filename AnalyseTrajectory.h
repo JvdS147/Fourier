@@ -28,6 +28,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class AnisotropicDisplacementParameters;
+class Element;
+
 #include "CrystalLattice.h"
 #include "FileList.h"
 #include "RunningAverageAndESD.h"
@@ -59,13 +62,11 @@ public:
     //AnalyseTrajectory();
 
     // Make sure the space group name is set properly: it is written to the cif file.
-    // transformation does not work
     explicit AnalyseTrajectory( const FileList file_list,
                                 const size_t u = 1,
                                 const size_t v = 1,
                                 const size_t w = 1,
-                                const SpaceGroup & space_group = SpaceGroup(),
-                                const Matrix3D & transformation = Matrix3D() );
+                                const SpaceGroup & space_group = SpaceGroup() );
 
     enum DriftCorrection { NONE, USE_FIRST_FRAME, USE_VECTOR };
 
@@ -86,10 +87,7 @@ public:
     CrystalLattice average_crystal_lattice() const;
 
     std::vector< Vector3D > centres_of_mass() const { return centres_of_mass_; }
-    
-    // Convenience function for lazy people. Writes centres of mass to file in same directory as FileList.
-    void save_centres_of_mass() const;
-    
+
 //  ADPs / ESDs / averages
 
 private:
@@ -97,9 +95,9 @@ private:
     size_t u_;
     size_t v_;
     size_t w_;
+    size_t natoms_;
     SpaceGroup space_group_;
-    Matrix3D transformation_;
-    Vector3D translation_;
+    CrystalLattice crystal_lattice_average_;
     bool write_lean_;
     bool write_average_;
     bool write_average_noH_;
@@ -117,6 +115,10 @@ private:
     std::vector< Vector3D > centres_of_mass_; // Monitors the drift.
 
     void analyse();
+    void write_average( const std::vector< Element > & elements,
+                        const std::vector< RunningAverageAndESD< Vector3D > > & average_positions,
+                        const std::vector< AnisotropicDisplacementParameters > & all_ADPs,
+                        const bool include_hydrogen );
 };
 
 #endif // ANALYSETRAJECTORY_H
