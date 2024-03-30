@@ -91,6 +91,9 @@ public:
     // Uses average_two_theta_step() to add new points. Intensities and ESDs are initialised to 0.0.
     void set_two_theta_end( const Angle two_theta_end );
 
+    // Range cannot be extended.
+    void reduce_range_to( const Angle two_theta_start, const Angle two_theta_end );
+
     // Area under the pattern.
     double cumulative_intensity() const;
 
@@ -122,7 +125,9 @@ public:
 
     // Simply subtracts the value from each 2theta value, i.e. shifts to the left.
     // Sample displacement shifts the powder pattern to the right.
-    // @@ Currently the complete opposite of the way it is defined in DASH. What about TOPAS?
+    // If the error is e.g. 0.04, which shifts the pattern to the *right*, then this function, which *corrects* the error,
+    // shifts the pattern to the *left*.
+    // I think that the +/- convention is the same as in DASH and TOPAS.
     void correct_zero_point_error( const Angle two_theta_value );
 
     // ESD is initialised to std::max( sqrt( intensity ), intensity / 100.0 ), or to 4.4 if intensity < 20.

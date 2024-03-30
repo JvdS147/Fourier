@@ -39,6 +39,9 @@ class CrystalStructure;
 
 #include <set>
 
+// The mixing parameter for the pseudo-Voigt (eta) cannot be set because originally the peak shape was intended to be flexible.
+// But pseudo-Voigt works so well and it is required for Finger-Cox-Jephcoat to work, so we
+// might just as well consider it as hard-coded.
 class PowderPatternCalculator
 {
 public:
@@ -57,6 +60,17 @@ public:
     void set_FWHM( const double FWHM ) { FWHM_ = FWHM; }
 
     ReflectionList reflection_list() const { return reflection_list_; }
+
+    // Note that the zero-point error is the error itself, not the correction for it.
+    // Sample displacement gives rise to a positive error of the order of, say 0.04,
+    // which moves the pattern to the right.
+    // I think that the +/- convention is the same as in DASH and TOPAS.
+    void set_zero_point_error( const Angle zero_point_error );
+
+    void unset_zero_point_error() { include_zero_point_error_ = false; }
+
+    bool include_zero_point_error() const { return include_zero_point_error_; }
+    Angle zero_point_error() const { return zero_point_error_; }
 
     // A March-Dollase model is used.
     void set_preferred_orientation( const MillerIndices & miller_indices, const double r );
@@ -104,6 +118,8 @@ private:
     Angle two_theta_step_;
     double FWHM_;
     ReflectionList reflection_list_;
+    bool include_zero_point_error_;
+    Angle zero_point_error_;
     bool include_preferred_orientation_;
     MillerIndices preferred_orientation_direction_;
     double r_;

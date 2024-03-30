@@ -291,6 +291,26 @@ void PowderPattern::set_two_theta_end( const Angle two_theta_end )
 
 // ********************************************************************************
 
+void PowderPattern::reduce_range_to( const Angle two_theta_start, const Angle two_theta_end )
+{
+    size_t iStart = find_two_theta( two_theta_start );
+    size_t iEnd = find_two_theta( two_theta_end );
+    if ( iStart != 0 )
+    {
+        for ( size_t i( 0 ); i != iEnd + 1 - iStart; ++i )
+        {
+            two_theta_values_[ i ] = two_theta_values_[ i + iStart ];
+            intensities_[ i ] = intensities_[ i + iStart ];
+            estimated_standard_deviations_[ i ] = estimated_standard_deviations_[ i + iStart ];
+        }
+    }
+    two_theta_values_.resize( iEnd - iStart );
+    intensities_.resize( iEnd - iStart );
+    estimated_standard_deviations_.resize( iEnd - iStart );
+}
+
+// ********************************************************************************
+
 double PowderPattern::cumulative_intensity() const
 {
     return add_doubles( intensities_ );

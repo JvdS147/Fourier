@@ -90,6 +90,7 @@ two_theta_start_(5.0,Angle::DEGREES),
 two_theta_end_(30.0,Angle::DEGREES),
 two_theta_step_(0.01,Angle::DEGREES),
 FWHM_(0.1),
+include_zero_point_error_(false),
 include_preferred_orientation_(false),
 preferred_orientation_direction_( 0, 0, 0 ),
 r_(1.0),
@@ -114,6 +115,16 @@ void PowderPatternCalculator::set_two_theta_step( const Angle two_theta_step )
     // There is an approximation in the calculation of the powder pattern that expects the 2theta step to be small.
     if ( two_theta_step_ > Angle::from_degrees( 0.05 ) )
         std::cout << "PowderPatternCalculator::set_two_theta_step(): Warning: because of an internal approximation, 2theta step is expected to be small." << std::endl;
+}
+
+// ********************************************************************************
+
+void PowderPatternCalculator::set_zero_point_error( const Angle zero_point_error )
+{
+    include_zero_point_error_ = true;
+    zero_point_error_ = zero_point_error;
+    if ( zero_point_error_.nearly_zero() )
+        std::cout << "PowderPatternCalculator::set_zero_point_error(): Warning: zero-point error has been set to 0.0 ." << std::endl;
 }
 
 // ********************************************************************************
@@ -279,6 +290,7 @@ void PowderPatternCalculator::calculate_structure_factors()
             double T( 1.0 );
             if ( crystal_structure_.atom(j).ADPs_type() == Atom::ANISOTROPIC )
             {
+//                std::cout << "Anisotropic ADPs used for atom " << j << std::endl;
                 AnisotropicDisplacementParameters ADPs = crystal_structure_.atom(j).anisotropic_displacement_parameters();
                 T = exp( -2.0 * square( CONSTANT_PI ) * ( miller_indices * ADPs.U_star( crystal_structure_.crystal_lattice() ) * miller_indices ) );
             }
@@ -304,7 +316,6 @@ void PowderPatternCalculator::calculate_structure_factors()
                 sine   = argument.sine();
                 cosine = argument.cosine();
             }
-      //      T = 1.0;
             sine_term += T * f0 * sine;
             cosine_term += T * f0 * cosine;
         }
@@ -327,10 +338,6 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
     // For each reflection, convolute it with a peak shape.
     for ( size_t i( 0 ); i != reflection_list.size(); ++i )
     {
-        double d = reflection_list.d_spacing( i );
-        Angle theta = arcsine( wavelength_.wavelength_1() / ( 2.0 * d ) );
-        Angle two_theta = 2.0 * theta;
-
         double multiplicity( 0.0 );
         if ( include_preferred_orientation_ )
         {
@@ -340,16 +347,23 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
             {
                 Vector3D H = reciprocal_lattice_point( *it, crystal_structure_.crystal_lattice() );
                 Angle alpha = angle( PO_vector, H );
-                multiplicity += std::pow( square(r_) * square(alpha.cosine()) + square(alpha.sine())/r_, -3.0/2.0 );
+                multiplicity += std::pow( square(r_) * square( alpha.cosine() ) + square( alpha.sine() ) / r_, -3.0/2.0 );
             }
         }
         else
             multiplicity = reflection_list.multiplicity( i );
         double peak_intensity = reflection_list.F_squared( i ) * multiplicity;
+        Angle theta = arcsine( wavelength_.wavelength_1() / ( 2.0 * reflection_list.d_spacing( i ) ) );
+        Angle two_theta = 2.0 * theta;
+        if ( include_zero_point_error_ )
+        {
+            two_theta += zero_point_error_;
+            theta = two_theta / 2.0;
+        }
         // Multiply by the LP factor.
         double LP_factor = ( 1.0 + square( two_theta.cosine() ) ) / ( 2.0 * two_theta.sine() * theta.sine() );
         peak_intensity *= LP_factor;
-        if ( include_finger_cox_jephcoat_ && ( two_theta < Angle::angle_30_degrees() ) )
+        if ( include_finger_cox_jephcoat_ && ( two_theta < Angle::angle_45_degrees() ) )
         {
             // Peak asymmetry just goes on and on, we essentially have to start at 2theta = 0.0.
             Angle current_2theta = two_theta_start_;
@@ -374,16 +388,16 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
         }
         else
         {
-            int peak_centre = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
-            int index_offset = peak_centre - ((static_cast<int>(peak_points.size())-1)/2);
+            int peak_centre_index = round_to_int( ( two_theta - two_theta_start_ ) / two_theta_step_ );
+            int peak_start_index = peak_centre_index - ( ( static_cast<int>( peak_points.size() ) - 1 ) / 2 );
             for ( size_t j ( 0 ); j != peak_points.size(); ++j )
             {
                 // Calculate new index.
-                int index = index_offset + j;
+                int index = peak_start_index + j;
                 if ( ( index < 0 ) || ( index >= powder_pattern.size() ) )
                     continue;
                 double intensity = powder_pattern.intensity( index );
-                intensity += peak_intensity * peak_points[j];
+                intensity += peak_intensity * pseudo_Voigt( ( powder_pattern.two_theta( index ) - two_theta ).value_in_degrees(), FWHM_ );
                 powder_pattern.set_intensity( index, intensity );
             }
         }
