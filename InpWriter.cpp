@@ -354,6 +354,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "  {" );
     text_file_writer.write_line( "      \" %11.5f -200\\n\" = 2.0 * Rad * Th;" );
     text_file_writer.write_line( "  }" );
+    text_file_writer.write_line( "  ' Structure factors should be in *.fcf, intensities should be in *.hkl." );
     text_file_writer.write_line( "  out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name(), "fcf" ).full_name() );
     text_file_writer.write_line( "  Out_String(\"\\ndata_\")" );
     text_file_writer.write_line( "  Out(Get(a), \"\\n_cell_length_a %V\")" );
@@ -379,9 +380,9 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "      \"\\n%4.0f\" = H;" );
     text_file_writer.write_line( "      \" %4.0f\" = K;" );
     text_file_writer.write_line( "      \" %4.0f\" = L;" );
-    text_file_writer.write_line( "      \" %12.5f\" = 100000 * I_no_scale_pks;" );
-    text_file_writer.write_line( "      \" %12.5f\" = 100000 * Iobs_no_scale_pks;" );
-    text_file_writer.write_line( "      \" %10.5f o\" = 100000 * Iobs_no_scale_pks_err;" );
+    text_file_writer.write_line( "      \" %12.2f\" = I_no_scale_pks / ( Get( scale ) * M ); ' This is the calculated F^2, same as F2_Merged" );
+    text_file_writer.write_line( "      \" %12.2f\" = Iobs_no_scale_pks / ( Get( scale ) * M ); ' M is the multiplicity" );
+    text_file_writer.write_line( "      \" %9.3f o\" = Iobs_no_scale_pks_err / ( Get( scale ) * M );" );
     text_file_writer.write_line( "    }" );
     copy_text_file( replace_extension( input_cif_file_name, "inp" ), replace_extension( input_cif_file_name, "org" ) );
     std::cout << "DO NOT FORGET TO RESET THE SPACE GROUP." << std::endl;
