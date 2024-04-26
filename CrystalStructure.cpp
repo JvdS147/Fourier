@@ -827,7 +827,7 @@ double CrystalStructure::density() const
 
 // ********************************************************************************
 
-void CrystalStructure::shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & shortest_distance, Vector3D & shortest_difference_vector )
+void CrystalStructure::shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & shortest_distance, Vector3D & shortest_difference_vector ) const
 {
     crystal_lattice_.shortest_distance( lhs, rhs, shortest_distance, shortest_difference_vector );
     // Loop over symmetry operators.
@@ -849,7 +849,7 @@ void CrystalStructure::shortest_distance( const Vector3D & lhs, const Vector3D &
 
 // ********************************************************************************
 
-void CrystalStructure::second_shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & second_shortest_distance, Vector3D & second_shortest_difference_vector )
+void CrystalStructure::second_shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & second_shortest_distance, Vector3D & second_shortest_difference_vector ) const
 {
     double shortest_distance;
     crystal_lattice_.shortest_distance( lhs, rhs, shortest_distance, second_shortest_difference_vector );
@@ -886,9 +886,33 @@ void CrystalStructure::second_shortest_distance( const Vector3D & lhs, const Vec
 
 // ********************************************************************************
 
+// Can be used to find the parent atom of a hydrogen atom.
+size_t CrystalStructure::nearest_atom( const size_t iAtom ) const
+{
+    if ( iAtom >= atoms_.size() )
+        throw std::runtime_error( "CrystalStructure::nearest_atom(): iAtom > natoms." );
+    double overall_shortest_distance2( 9999.0 * 9999.0 );
+    size_t best_match;
+    Vector3D lhs = atoms_[iAtom].position();
+    for ( size_t i( 0 ); i != atoms_.size(); ++i )
+    {
+        if ( i == iAtom )
+            continue;
+        double distance2 = shortest_distance2( lhs, atoms_[i].position() );
+        if ( distance2 < overall_shortest_distance2 )
+        {
+            best_match = i;
+            overall_shortest_distance2 = distance2;
+        }
+    }
+    return best_match;
+}
+
+// ********************************************************************************
+
 // Finds shortest distance squared, in Angstrom squared, between two positions given in fractional coordinates.
 // All space-group symmetry operators are taken into account; if this is undesired, use CrystalLattice::shortest_distance2().
-double CrystalStructure::shortest_distance2( const Vector3D & lhs, const Vector3D & rhs )
+double CrystalStructure::shortest_distance2( const Vector3D & lhs, const Vector3D & rhs ) const
 {
     double shortest_distance2 = crystal_lattice_.shortest_distance2( lhs, rhs );
     // Loop over symmetry operators.

@@ -228,16 +228,19 @@ public:
     // Must call CrystalStructure::apply_space_group_symmetry() first.
     double density() const;
 
+    // Can be used to find the parent atom of a hydrogen atom.
+    size_t nearest_atom( const size_t iAtom ) const;
+
     // Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
     // All space-group symmetry operators are taken into account; if this is undesired, use CrystalLattice::shortest_distance().
     // Returns the shortest distance (in Angstrom) and the shortest difference vector (defined as rhs - lhs, in fractional coordinates).
-    void shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & distance, Vector3D & difference_vector );
+    void shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & distance, Vector3D & difference_vector ) const;
 
-    void second_shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & second_shortest_distance, Vector3D & second_shortest_difference_vector );
+    void second_shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & second_shortest_distance, Vector3D & second_shortest_difference_vector ) const;
 
     // Finds shortest distance squared, in Angstrom squared, between two positions given in fractional coordinates.
     // All space-group symmetry operators are taken into account; if this is undesired, use CrystalLattice::shortest_distance2().
-    double shortest_distance2( const Vector3D & lhs, const Vector3D & rhs );
+    double shortest_distance2( const Vector3D & lhs, const Vector3D & rhs ) const;
 
     // The current space group should be P1. u, v, w are the dimensions of the supercell with respect to
     // the original unit cell, space_group is the space group of the original unit cell.
