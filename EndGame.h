@@ -2,7 +2,7 @@
 #define ENDGAME_H
 
 /* *********************************************
-Copyright (c) 2013-2021, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2024, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,16 +28,6 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#define MACRO_END_GAME \
-    std::cout << "Done" << std::endl; \
-    } \
-    catch ( std::exception & e ) \
-    { \
-        std::cout << "An exception was thrown" << std::endl; \
-        std::cout << e.what() << std::endl; \
-    } \
-    return 0;
-    
 //#define MACRO_END_GAME \
 //    std::cout << "Done" << std::endl; \
 //    } \
@@ -46,11 +36,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //        std::cout << "An exception was thrown" << std::endl; \
 //        std::cout << e.what() << std::endl; \
 //    } \
-//    { \
-//    char end_game_character_capture; \
-//    std::cin >> end_game_character_capture; \
-//    } \
 //    return 0;
+
+#define MACRO_END_GAME \
+    std::cout << "Done" << std::endl; \
+    } \
+    catch ( std::exception & e ) \
+    { \
+        std::cout << "An exception was thrown" << std::endl; \
+        std::cout << e.what() << std::endl; \
+    } \
+    { \
+    char end_game_character_capture; \
+    std::cin >> end_game_character_capture; \
+    } \
+    return 0;
 
 #endif // ENDGAME_H
 

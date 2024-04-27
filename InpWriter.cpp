@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2023, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2024, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -365,7 +365,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "  Out(Get(ga), \"\\n_cell_angle_gamma %V\")" );
     text_file_writer.write_line( "  Out_String(\"\\n_shelx_F_squared_multiplier 1\")" );
     text_file_writer.write_line( "  Out_String(\"\\nloop_\\n_symmetry_equiv_pos_as_xyz\")" );
-    text_file_writer.write_line( "  Out(Get(sp_xyzs_txt),  \"%s\")" );
+    text_file_writer.write_line( "  Out(Get(sp_xyzs_txt), \"%s\")" );
     text_file_writer.write_line( "  Out_String(\"\\nloop_\")" );
     text_file_writer.write_line( "  Out_String(\"\\n_refln_index_h\")" );
     text_file_writer.write_line( "  Out_String(\"\\n_refln_index_k\")" );
