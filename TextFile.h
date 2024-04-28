@@ -2,7 +2,7 @@
 #define TEXTFILE_H
 
 /* *********************************************
-Copyright (c) 2013-2023, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2024, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -49,6 +49,9 @@ class FileName;
 // @@ It would really be nice if this class interface and the interface of TextFileReader were essentially the same.
 // @@ Would be nice to include some kind of filter, like an on-the-fly purge?
 
+// I guess it is debatable if this class should store its file name so that we can just call save() and write() without argument.
+// This class could in principle just connect a TextFileReader_2 with a TextFileWriter.
+
 class TextFile
 {
 public:
@@ -61,11 +64,14 @@ public:
     explicit TextFile( const std::vector< std::string > & lines );
 
     void read( const FileName & file_name );
+    void write( const FileName & file_name ) const;
+    void save( const FileName & file_name ) const;
 
     size_t size() const { return lines_.size(); }
 
     // In keeping with C++ convention: zero-based.
     std::string line( const size_t i ) const;
+    void set_line( const size_t i, const std::string & new_line );
 
     // Deletes entire lines.
     // comment_identifier must start at the start of the line.
