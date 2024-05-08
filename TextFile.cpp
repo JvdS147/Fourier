@@ -1,5 +1,5 @@
 /* *********************************************
-Copyright (c) 2013-2023, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2024, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -52,7 +52,7 @@ void TextFile::read( const FileName & file_name )
 {
     std::ifstream input_file( file_name.full_name().c_str() );
     if ( ! input_file )
-       throw std::runtime_error( std::string( "TextFileReader_2::read_file(): Could not open file " ) + file_name.full_name() );
+       throw std::runtime_error( std::string( "TextFile::read_file(): Could not open file " ) + file_name.full_name() );
     lines_.clear();
     std::string line;
     do
@@ -71,11 +71,40 @@ void TextFile::read( const FileName & file_name )
 
 // ********************************************************************************
 
+void TextFile::write( const FileName & file_name ) const
+{
+    save( file_name );
+}
+
+// ********************************************************************************
+
+void TextFile::save( const FileName & file_name ) const
+{
+    std::ofstream output_file;
+    output_file.open( file_name.full_name().c_str() );
+    if ( ! output_file )
+       throw std::runtime_error( std::string( "Error: TextFile::save(): Could not open file " ) + file_name.full_name() );
+    for ( size_t i( 0 ) ; i != size(); ++i )
+        output_file << lines_[i] << std::endl;
+}
+
+// ********************************************************************************
+
 std::string TextFile::line( const size_t i ) const
 {
     if ( i < lines_.size() )
         return lines_[i];
-    throw std::runtime_error( "TextFileReader_2::line( size_t ): out of bounds." );
+    throw std::runtime_error( "TextFile::line( size_t ): out of bounds." );
+}
+
+// ********************************************************************************
+
+void TextFile::set_line( const size_t i, const std::string & new_line )
+{
+    if ( i < lines_.size() )
+        lines_[i] = new_line;
+    else
+        throw std::runtime_error( "TextFile::set_line( size_t, std::string ): out of bounds." );
 }
 
 // ********************************************************************************
