@@ -36,7 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 TextFile::TextFile( const FileName & file_name )
 {
-    read_file( file_name );
+    read( file_name );
 }
 
 // ********************************************************************************
