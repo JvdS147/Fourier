@@ -65,6 +65,37 @@ double ExponentialFunction::operator()( const double x ) const
 
 // ********************************************************************************
 
+GeneralLogisticFunction::GeneralLogisticFunction( const double height, const double inflection_point, const double slope ):
+height_(height),
+inflection_point_(inflection_point),
+slope_(slope)
+{
+}
+
+// ********************************************************************************
+
+double GeneralLogisticFunction::operator()( const double x ) const
+{
+    return height_ / ( 1.0 + exp( -slope_ * ( x - inflection_point_ ) ) );
+}
+
+// ********************************************************************************
+
+NormalisedLogisticFunction::NormalisedLogisticFunction( const double inflection_point, const double slope ):
+inflection_point_(inflection_point),
+slope_(slope)
+{
+}
+
+// ********************************************************************************
+
+double NormalisedLogisticFunction::operator()( const double x ) const
+{
+    return 1.0 / ( 1.0 + exp( -slope_ * ( x - inflection_point_ ) ) );
+}
+
+// ********************************************************************************
+
 // Returns the x-values and weights necessary for Gauss-Legendre quadrature.
 // x1 is the lower limit for integration, x2 the upper limit. npoints is the number of points.
 // x contains the x values, w contains the weights.

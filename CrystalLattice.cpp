@@ -359,16 +359,64 @@ Matrix3D CrystalLattice::choose_angles_close_to_90() const
         return result;
     }
     // TRICLINIC, MONOCLINIC, RHOMBOHEDRAL
-    CrystalLattice new_lattice( *this );
- //   if ( lattice_system_ == MONOCLINIC )
-  //  {
-
-//        while ()
-//        {
-//        }
- //   }
+    if ( lattice_system_ == MONOCLINIC_A )
+    {
+        // Just use Gram-Schmidt and round to the nearest integer.
+        // Add the shortest vector to the longest.
+        if ( b_ < c_ )
+        {
+            double omega = ( c_vector_ * b_vector_ ) / ( b_ * b_ );
+            int nomegas = round_to_int( omega );
+            if ( nomegas != 0 )
+                result.set_value( 1, 2, -nomegas );
+        }
+        else
+        {
+            double omega = ( c_vector_ * b_vector_ ) / ( c_ * c_ );
+            int nomegas = round_to_int( omega );
+            if ( nomegas != 0 )
+                result.set_value( 2, 1, -nomegas );
+        }
+        return result;
+    }
+    if ( lattice_system_ == MONOCLINIC_B )
+    {
+        if ( a_ < c_ )
+        {
+            double omega = ( c_vector_ * a_vector_ ) / ( a_ * a_ );
+            int nomegas = round_to_int( omega );
+            if ( nomegas != 0 )
+                result.set_value( 0, 2, -nomegas );
+        }
+        else
+        {
+            double omega = ( c_vector_ * a_vector_ ) / ( c_ * c_ );
+            int nomegas = round_to_int( omega );
+            if ( nomegas != 0 )
+                result.set_value( 2, 0, -nomegas );
+        }
+        return result;
+    }
+    if ( lattice_system_ == MONOCLINIC_C )
+    {
+        if ( a_ < b_ )
+        {
+            double omega = ( b_vector_ * a_vector_ ) / ( a_ * a_ );
+            int nomegas = round_to_int( omega );
+            if ( nomegas != 0 )
+                result.set_value( 0, 1, -nomegas );
+        }
+        else
+        {
+            double omega = ( b_vector_ * a_vector_ ) / ( b_ * b_ );
+            int nomegas = round_to_int( omega );
+            if ( nomegas != 0 )
+                result.set_value( 1, 0, -nomegas );
+        }
+        return result;
+    }
     // TRICLINIC, RHOMBOHEDRAL
-
+    CrystalLattice new_lattice( *this );
   //  {
         double best_orthogonality_defect = orthogonality_defect();
         std::cout << "orthogonality defect before = " << best_orthogonality_defect << std::endl;
@@ -413,23 +461,20 @@ Matrix3D CrystalLattice::choose_angles_close_to_90() const
         }
         }
 
-//        std::vector< double > unit_cell_lengths;
-//        unit_cell_lengths.push_back( new_lattice.a() );
-//        unit_cell_lengths.push_back( new_lattice.b() );
-//        unit_cell_lengths.push_back( new_lattice.c() );
-//        Mapping sorted_map = sort( unit_cell_lengths );
-//        Vector3D r_s = new_lattice.lattice_vector( sorted_map[0] ); // s = short
-//        Vector3D r_l = new_lattice.lattice_vector( sorted_map[2] ); // l = long
-//        double omega = ( r_l * r_s ) / ( r_s * r_s ); // r_s*r_s is just a^2, b^2 or c^2.
-//        int nomegas = round_to_int( omega );
-//        if ( nomegas != 0 )
-//        {
-//            Matrix3D transformation_matrix; // Identity.
-//            transformation_matrix.set_value( sorted_map[2], sorted_map[0], -nomegas );
-//            result = transformation_matrix * result;
-//            new_lattice.transform( transformation_matrix );
-//        }
-//    }
+if ( false )
+{
+        std::vector< double > unit_cell_lengths;
+        unit_cell_lengths.push_back( a_ );
+        unit_cell_lengths.push_back( b_ );
+        unit_cell_lengths.push_back( c_ );
+        Mapping sorted_map = sort( unit_cell_lengths );
+        Vector3D r_s = new_lattice.lattice_vector( sorted_map[0] ); // s = short
+        Vector3D r_l = new_lattice.lattice_vector( sorted_map[2] ); // l = long
+        double omega = ( r_l * r_s ) / ( r_s * r_s ); // r_s*r_s is just a^2, b^2 or c^2.
+        int nomegas = round_to_int( omega );
+        if ( nomegas != 0 )
+            result.set_value( sorted_map[2], sorted_map[0], -nomegas );
+}
     std::cout << "orthogonality defect after = " << best_orthogonality_defect << std::endl;
     return result;
 }

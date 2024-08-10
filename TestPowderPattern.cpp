@@ -39,14 +39,15 @@ void test_PowderPattern( TestSuite & test_suite )
     PowderPattern powder_pattern;
     powder_pattern.push_back( Angle::from_degrees( 1.0 ), 9000 );
     powder_pattern.push_back( Angle::from_degrees( 2.0 ), 1 );
-    std::vector< PowderPattern > powder_patterns;
-    split( powder_pattern, 2, powder_patterns );
+    powder_pattern.push_back( Angle::from_degrees( 3.0 ), 0 );
+    std::vector< PowderPattern > powder_patterns = split( powder_pattern, 2 );
     test_suite.test_equality( powder_patterns[0].two_theta( 0 ), Angle::from_degrees( 1.0 ), "split( PowderPattern ) 01" );
     test_suite.test_equality( powder_patterns[1].two_theta( 0 ), Angle::from_degrees( 1.0 ), "split( PowderPattern ) 02" );
     test_suite.test_equality( powder_patterns[0].two_theta( 1 ), Angle::from_degrees( 2.0 ), "split( PowderPattern ) 03" );
     test_suite.test_equality( powder_patterns[1].two_theta( 1 ), Angle::from_degrees( 2.0 ), "split( PowderPattern ) 04" );
     test_suite.test_equality( powder_patterns[0].intensity( 0 ) + powder_patterns[1].intensity( 0 ), 9000, "split( PowderPattern ) 05" );
     test_suite.test_equality( powder_patterns[0].intensity( 1 ) + powder_patterns[1].intensity( 1 ), 1, "split( PowderPattern ) 06" );
+    test_suite.test_equality( powder_patterns[0].intensity( 2 ) + powder_patterns[1].intensity( 2 ), 0, "split( PowderPattern ) 07" );
     }
 }
 

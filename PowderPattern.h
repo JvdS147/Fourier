@@ -202,7 +202,14 @@ PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_p
 
 // Splits a powder pattern over n powder patterns, taking into account Poisson statistics.
 // So splitting an intensity of 100 counts over two patterns may assign, say, 54 counts to one, 46 to the other.
-void split( const PowderPattern & powder_pattern, const size_t n, std::vector< PowderPattern > & powder_patterns );
+// There are two ways to calculate the ESDs: the old ESD divided by n or recalculate the ESD for each pattern.
+// In one case, the cumulative ESD is simply the original ESD, in the other case, the cumulative ESD is
+// sqrt(n) times the old ESD.
+// The proper algorithm depends on whether negative intensities can be present and whether all intensities are integers and the
+// intensities ae on a reasonable scale (e.g. NOT all between 0.0 and 1.0). This algorithm assume that all
+// intensities in the original pattern are non-negative integers (i.e. counts). All intensities in the output patterns
+// are non-negative integers.
+std::vector< PowderPattern > split( const PowderPattern & powder_pattern, const size_t n, const bool recalculate_ESDs = true );
 
 #endif // POWDERPATTERN_H
 

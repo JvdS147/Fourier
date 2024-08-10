@@ -99,6 +99,12 @@ void test_maths( TestSuite & test_suite )
         result = associated_Legendre_polynomial( 2, 2, theta.cosine() );
         test_suite.test_equality_double( result, 3.0 * square( theta.sine() ), "associated_Legendre_polynomial 03" );
     }
+    {
+        NormalisedLogisticFunction logistic_function( 10.0, 2.0 );
+        test_suite.test_equality_double( logistic_function(  1.0 ), 0.0, "NormalisedLogisticFunction 01" );
+        test_suite.test_equality_double( logistic_function( 10.0 ), 0.5, "NormalisedLogisticFunction 02" );
+        test_suite.test_equality_double( logistic_function( 19.0 ), 1.0, "NormalisedLogisticFunction 03" );
+    }
 
 }
 

@@ -1071,16 +1071,16 @@ PowderPattern calculate_Poisson_noise( const PowderPattern & powder_pattern )
 PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_patterns, const std::vector< double > & noscp2ts )
 {
     if ( powder_patterns.empty() )
-        throw std::runtime_error( "add_powder_patterns(): no powder patterns provided." );
+        throw std::runtime_error( "add_powder_patterns(): Error: no powder patterns provided." );
     if ( powder_patterns.size() != noscp2ts.size() )
-        throw std::runtime_error( "add_powder_patterns(): powder_patterns and noscp2ts not the same size." );
+        throw std::runtime_error( "add_powder_patterns(): Error: powder_patterns and noscp2ts not the same size." );
     // Check that they have the same wavelength and average_two_theta_step
     for ( size_t i( 1 ); i != powder_patterns.size(); ++i )
     {
         if ( ! nearly_equal( powder_patterns[0].wavelength(), powder_patterns[i].wavelength() ) )
-            throw std::runtime_error( "add_powder_patterns(): wavelengths not the same." );
+            throw std::runtime_error( "add_powder_patterns(): Error: wavelengths not the same." );
         if ( ! nearly_equal( powder_patterns[0].average_two_theta_step(), powder_patterns[i].average_two_theta_step() ) )
-            throw std::runtime_error( "add_powder_patterns(): average_two_theta_step not the same." );
+            throw std::runtime_error( "add_powder_patterns(): Error: average_two_theta_step not the same." );
     }
     // Find the smallest and largest 2theta values
     Angle two_theta_min = powder_patterns[0].two_theta_start();
@@ -1122,49 +1122,84 @@ PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_p
 
 // ********************************************************************************
 
-void split( const PowderPattern & powder_pattern, const size_t n, std::vector< PowderPattern > & powder_patterns )
+std::vector< PowderPattern > split( const PowderPattern & powder_pattern, const size_t n, const bool recalculate_ESDs )
 {
-    powder_patterns.clear();
+    std::vector< PowderPattern > result;
     for ( size_t j( 0 ); j != n; ++j )
     {
-        powder_patterns.push_back( PowderPattern() );
-        powder_patterns[j].set_wavelength( powder_pattern.wavelength() );
+        result.push_back( PowderPattern() );
+        result[j].set_wavelength( powder_pattern.wavelength() );
     }
     RandomNumberGenerator_integer rng;
     for ( size_t i( 0 ); i != powder_pattern.size(); ++i )
     {
-        size_t old_intensity = round_to_int( powder_pattern.intensity( i ) );
+        int old_intensity_int = round_to_int( powder_pattern.intensity( i ) );
+        if ( old_intensity_int < 0 )
+            throw std::runtime_error( "split(PowderPattern): Error: intensity is negative." );
+        size_t old_intensity = old_intensity_int;
+        double old_ESD = powder_pattern.estimated_standard_deviation( i ) / n;
         size_t target_average = round_to_int( powder_pattern.intensity( i ) / n );
-        size_t sum( 0 );
+        // If round_to_int( powder_pattern.intensity( i ) / n ) == 0 then Poisson_distribution( target_average ); returns 0.
         std::vector< size_t > intensities;
-        for ( size_t j( 0 ); j != n; ++j )
+        size_t sum( 0 );
+        if ( target_average == 0 )
         {
-            size_t new_intensity = Poisson_distribution( target_average );
-            sum += new_intensity;
-            intensities.push_back( new_intensity );
+            if ( old_intensity > ( n / 2 ) )
+            {
+                sum = n;
+                for ( size_t j( 0 ); j != n; ++j )
+                    intensities.push_back( 1 );
+            }
+            else
+            {
+                for ( size_t j( 0 ); j != n; ++j )
+                    intensities.push_back( 0 );
+            }
+        }
+        else
+        {
+            for ( size_t j( 0 ); j != n; ++j )
+            {
+                size_t new_intensity = Poisson_distribution( target_average );
+                sum += new_intensity;
+                intensities.push_back( new_intensity );
+            }
+            if ( sum != 0 )
+            {
+                // We scale all intensities.
+                double scale_factor = powder_pattern.intensity( i ) / sum;
+                sum = 0;
+                for ( size_t j( 0 ); j != n; ++j )
+                {
+                    intensities[j] = round_to_int( intensities[j] * scale_factor );
+                    sum += intensities[j];
+                }
+            }
         }
         if ( sum != old_intensity )
         {
-            size_t new_sum( 0 );
-            // We scale all intensities.
-            for ( size_t j( 0 ); j != n; ++j )
-            {
-                intensities[j] = round_to_int( intensities[j] * ( powder_pattern.intensity( i ) / sum ) );
-                new_sum += intensities[j];
-            }
             // We randomly add / remove counts until we have reached the target.
-            int step = ( new_sum > old_intensity ) ? -1 : 1;
-            while ( new_sum != old_intensity )
+            int step = ( sum > old_intensity ) ? -1 : 1;
+            while ( sum != old_intensity )
             {
                 // Randomly pick a pattern.
                 size_t j = rng.next_number( 0, n-1 );
-                intensities[j] += step;
-                new_sum += step;
+                if ( ! ( ( step == -1 ) && ( intensities[j] == 0 ) ) )
+                {
+                    intensities[j] += step;
+                    sum += step;
+                }
             }
         }
         for ( size_t j( 0 ); j != n; ++j )
-            powder_patterns[j].push_back( powder_pattern.two_theta( i ), intensities[j] );
+        {
+            if ( recalculate_ESDs )
+                result[j].push_back( powder_pattern.two_theta( i ), intensities[j] );
+            else
+                result[j].push_back( powder_pattern.two_theta( i ), intensities[j], old_ESD );
+        }
     }
+    return result;
 }
 
 // ********************************************************************************

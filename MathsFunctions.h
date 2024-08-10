@@ -74,6 +74,43 @@ private:
     double b_;
 };
 
+// The logistic function is the most common sigmoidal function.
+class GeneralLogisticFunction : public Function
+{
+public:
+
+    GeneralLogisticFunction( const double height, const double inflection_point, const double slope );
+
+    double operator()( const double x ) const;
+
+    double height() const { return height_; }
+    double inflection_point() const { return inflection_point_; }
+    double slope() const { return slope_; }
+
+private:
+    double height_;
+    double inflection_point_;
+    double slope_;
+};
+
+// The logistic function is the most common sigmoidal function.
+// This one goes from 0 to 1.
+class NormalisedLogisticFunction : public Function
+{
+public:
+
+    NormalisedLogisticFunction( const double inflection_point, const double slope );
+
+    double operator()( const double x ) const;
+
+    double inflection_point() const { return inflection_point_; }
+    double slope() const { return slope_; }
+
+private:
+    double inflection_point_;
+    double slope_;
+};
+
 // Returns the x-values and weights necessary for Gauss-Legendre quadrature.
 // x1 is the lower limit for integration, x2 the upper limit. npoints is the number of points.
 // x contains the x values, w contains the weights.
