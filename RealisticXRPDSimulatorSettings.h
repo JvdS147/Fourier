@@ -1,5 +1,5 @@
-#ifndef POWDERPATTERNCALCULATOR_H
-#define POWDERPATTERNCALCULATOR_H
+#ifndef REALISTICXRPDSIMULATORSETTINGS_H
+#define REALISTICXRPDSIMULATORSETTINGS_H
 
 /* *********************************************
 Copyright (c) 2013-2024, Cornelis Jan (Jacco) van de Streek
@@ -29,25 +29,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include "Angle.h"
-#include "FingerCoxJephcoat.h"
 #include "MillerIndices.h"
-#include "PointGroup.h"
-#include "ReflectionList.h"
 #include "Wavelength.h"
 
-class CrystalStructure;
-class PowderPattern;
+/*
 
-#include <set>
-
-// The mixing parameter for the pseudo-Voigt (eta) cannot be set because originally the peak shape was intended to be flexible.
-// But pseudo-Voigt works so well and it is required for Finger-Cox-Jephcoat to work, so we
-// might just as well consider it as hard-coded.
-class PowderPatternCalculator
+*/
+class RealisticXRPDSimulatorSettings
 {
 public:
 
-    explicit PowderPatternCalculator( const CrystalStructure & crystal_structure );
+    // Default constructor
+    RealisticXRPDSimulatorSettings();
 
     Wavelength wavelength() const { return wavelength_; }
     void set_wavelength( const Wavelength & wavelength ) { wavelength_ = wavelength; }
@@ -60,56 +53,41 @@ public:
     double FWHM() const { return FWHM_; }
     void set_FWHM( const double FWHM ) { FWHM_ = FWHM; }
 
-    ReflectionList reflection_list() const { return reflection_list_; }
-
     // Note that the zero-point error is the error itself, not the correction for it.
     // Sample displacement gives rise to a positive error of the order of, say 0.04,
     // which moves the pattern to the right.
     // I think that the +/- convention is the same as in DASH and TOPAS.
     void set_zero_point_error( const Angle zero_point_error );
-
     void unset_zero_point_error() { include_zero_point_error_ = false; }
-
     bool include_zero_point_error() const { return include_zero_point_error_; }
     Angle zero_point_error() const { return zero_point_error_; }
 
     // A March-Dollase model is used.
     void set_preferred_orientation( const MillerIndices & miller_indices, const double r );
-
     void unset_preferred_orientation() { include_preferred_orientation_ = false; }
-
     bool include_preferred_orientation() const { return include_preferred_orientation_; }
     MillerIndices preferred_orientation_direction() const { return preferred_orientation_direction_; }
     double r() const { return r_; }
 
-    void set_finger_cox_jephcoat( const FingerCoxJephcoat & finger_cox_jephcoat );
-
+    void set_finger_cox_jephcoat( const double A, const double B );
     void unset_finger_cox_jephcoat() { include_finger_cox_jephcoat_ = false; }
-
     bool include_finger_cox_jephcoat() const { return include_finger_cox_jephcoat_; }
-    FingerCoxJephcoat finger_cox_jephcoat() const { return finger_cox_jephcoat_; }
+    double A() const { return A_; }
+    double B() const { return B_; }
 
-// Same for eta and/or peak shape
+    bool include_background() const { return include_background_; }
+    void set_include_background( const bool include_background ) { include_background_ = include_background; }
 
-    void calculate( PowderPattern & powder_pattern );
+    bool include_noise() const { return include_noise_; }
+    void set_include_noise( const bool include_noise ) { include_noise_ = include_noise; }
 
-    // Calculates d, multiplicity and h,k,l.
-    // Only stores one representative reflection if multiplicity > 1 (which is always the case because of Friedel's law).
-    // The structure factors are NOT calculated.
-    // Usually some reflections before and after the exact 2theta limits are included to avoid strange cut-off effects.
-    // This can be switched off by setting exact to true.
-    void calculate_reflection_list( const bool exact = false );
+    double Bragg_total_signal_normalisation() const { return Bragg_total_signal_normalisation_; }
+    void set_Bragg_total_signal_normalisation( const double Bragg_total_signal_normalisation ) { Bragg_total_signal_normalisation_ = Bragg_total_signal_normalisation; }
+    double background_total_signal_normalisation() const { return background_total_signal_normalisation_; }
+    void set_background_total_signal_normalisation( const double background_total_signal_normalisation ) { background_total_signal_normalisation_ = background_total_signal_normalisation; }
 
-    void calculate_structure_factors();
-
-    // Sets all structure factors to 1, to get an artificial powder pattern to compare lattices.
-    // There is no need for this to be in the class, the same could be achieved through a combination
-    // of other member functions.
-// This is the default after calling calculate_reflection_list(), so there is no need for this member function.
-//    void set_structure_factors_to_1();
-
-//    void calculate_powder_pattern( PowderPattern & powder_pattern );
-    void calculate( const ReflectionList & reflection_list, PowderPattern & powder_pattern );
+    double highest_peak() const { return highest_peak_; }
+    void set_highest_peak( const double highest_peak ) { highest_peak_ = highest_peak; }
 
 private:
     Wavelength wavelength_;
@@ -117,21 +95,20 @@ private:
     Angle two_theta_end_;
     Angle two_theta_step_;
     double FWHM_;
-    ReflectionList reflection_list_;
     bool include_zero_point_error_;
     Angle zero_point_error_;
     bool include_preferred_orientation_;
     MillerIndices preferred_orientation_direction_;
     double r_;
     bool include_finger_cox_jephcoat_;
-    FingerCoxJephcoat finger_cox_jephcoat_;
-    const CrystalStructure & crystal_structure_; // Creating a copy would be too expensive given that we have tens of thousands of atoms.
-    // But what if the crystal structure goes out of scope and the destructor is called? We need a smart pointer here.
-    PointGroup Laue_class_;
-    
-    bool is_systematic_absence( const MillerIndices miller_indices ) const;
-    std::set< MillerIndices > calculate_equivalent_reflections( const MillerIndices miller_indices ) const;
+    double A_; // Finger-Cox-Jephcoat.
+    double B_; // Finger-Cox-Jephcoat.
+    bool include_background_;
+    bool include_noise_;
+    double Bragg_total_signal_normalisation_;
+    double background_total_signal_normalisation_;
+    double highest_peak_;
 };
 
-#endif // POWDERPATTERNCALCULATOR_H
+#endif // REALISTICXRPDSIMULATORSETTINGS_H
 

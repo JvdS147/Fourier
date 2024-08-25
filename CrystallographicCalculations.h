@@ -90,5 +90,11 @@ bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs );
 // comply with the site symmetry.
 AnisotropicDisplacementParameters adjust_to_site_symmetry( const AnisotropicDisplacementParameters & adps, const PointGroup & point_group, const CrystalLattice & crystal_lattice );
 
+// Throws if cubic.
+MillerIndices select_realistic_preferred_orientation_direction( const CrystalLattice & crystal_lattice );
+
+// Throws if cubic.
+MillerIndices select_realistic_preferred_orientation_direction( const CrystalLattice & crystal_lattice, const SpaceGroup & space_group );
+
 #endif // CRYSTALLOGRAPHICCALCULATIONS_H
 

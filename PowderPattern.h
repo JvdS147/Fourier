@@ -117,11 +117,11 @@ public:
 
     // Normalises the highest peak.
     // Returns the scale factor.
-    double normalise_highest_peak( const double highest_peak = 10000 );
+    double normalise_highest_peak( const double highest_peak = 10000.0 );
 
     // Normalises the total signal = area under the pattern = cumulative_intensity() .
     // Returns the scale factor.
-    double normalise_total_signal( const double total_signal = 10000 );
+    double normalise_total_signal( const double total_signal = 10000.0 );
 
     // Simply subtracts the value from each 2theta value, i.e. shifts to the left.
     // Sample displacement shifts the powder pattern to the right.

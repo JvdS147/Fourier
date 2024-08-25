@@ -27,27 +27,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "CrystallographicCalculations.h"
 #include "3DCalculations.h"
-//#include "Angle.h"
-//#include "BasicMathsFunctions.h"
 #include "Centring.h"
-//#include "CollectionOfPoints.h"
-//#include "CoordinateFrame.h"
-//#include "CrystalLattice.h"
 #include "CrystalStructure.h"
 #include "Matrix3D.h"
 #include "MillerIndices.h"
 #include "NormalisedVector3D.h"
 #include "PointGroup.h"
 #include "SpaceGroup.h"
-//#include "SymmetricMatrix3D.h"
 #include "SymmetryOperator.h"
 #include "Utilities.h"
 #include "Vector3D.h"
-//#include "Vector2D.h"
-//#include "Vector3DCalculations.h"
-//
-//#include <cmath>
-//#include <iostream>
+
 #include <stdexcept>
 
 // ********************************************************************************
@@ -210,7 +200,7 @@ bool nearly_equal( const CrystalStructure & lhs, const CrystalStructure & rhs )
 
 AnisotropicDisplacementParameters adjust_to_site_symmetry( const AnisotropicDisplacementParameters & adps, const PointGroup & point_group, const CrystalLattice & crystal_lattice )
 {
-    // We need U_star
+    // We need U_star.
     SymmetricMatrix3D U_star = adps.U_star( crystal_lattice );
     SymmetricMatrix3D sum( U_star );
     for ( size_t i( 1 ); i != point_group.nsymmetry_operators(); ++i )
@@ -227,6 +217,62 @@ AnisotropicDisplacementParameters adjust_to_site_symmetry( const AnisotropicDisp
 //        }
 //    }
     return AnisotropicDisplacementParameters( U_cart );
+}
+
+// ********************************************************************************
+
+MillerIndices select_realistic_preferred_orientation_direction( const CrystalLattice & crystal_lattice )
+{
+    switch ( crystal_lattice.lattice_system() )
+    {
+        case CrystalLattice::TRICLINIC    :
+        case CrystalLattice::ORTHORHOMBIC : {
+                                                if ( crystal_lattice.a() < crystal_lattice.b() )
+                                                {
+                                                    if ( crystal_lattice.a() < crystal_lattice.c() )
+                                                        return MillerIndices( 1, 0, 0 );
+                                                }
+                                                else // b < a
+                                                {
+                                                    if ( crystal_lattice.b() < crystal_lattice.c() )
+                                                        return MillerIndices( 0, 1, 0 );
+                                                }
+                                                return MillerIndices( 0, 0, 1 );
+                                            }
+        case CrystalLattice::MONOCLINIC_A : return MillerIndices( 1, 0, 0 );
+        case CrystalLattice::MONOCLINIC_B : return MillerIndices( 0, 1, 0 );
+        case CrystalLattice::MONOCLINIC_C :
+        case CrystalLattice::TRIGONAL     :
+        case CrystalLattice::TETRAGONAL   :
+        case CrystalLattice::HEXAGONAL    : return MillerIndices( 0, 0, 1 );
+        case CrystalLattice::RHOMBOHEDRAL :
+        case CrystalLattice::CUBIC        : throw std::runtime_error( "select_realistic_preferred_orientation_direction() : error: no PO possible." );
+    }
+}
+
+// ********************************************************************************
+
+MillerIndices select_realistic_preferred_orientation_direction( const CrystalLattice & crystal_lattice, const SpaceGroup & space_group )
+{
+    MillerIndices result = select_realistic_preferred_orientation_direction( crystal_lattice );
+//    // Check that the PO direction is commensurate with the space-group symmetry.
+    MillerIndices reflection( 37, -23, 3 );
+    Vector3D PO_vector = reciprocal_lattice_point( result, crystal_lattice );
+    Vector3D H = reciprocal_lattice_point( reflection, crystal_lattice );
+    double reference_dot_product = absolute( PO_vector * H );
+//    for ( size_t i( 0 ); i != Laue_class_.nsymmetry_operators(); ++i )
+//    {
+//        MillerIndices equivalent_reflection = reflection * Laue_class_.symmetry_operator( i );
+//        // Now check that the March-Dollase PO corrections are the same for all of them.
+//        Vector3D H = reciprocal_lattice_point( equivalent_reflection, crystal_lattice);
+//        double current_dot_product = absolute( PO_vector * H );
+//        if ( ! nearly_equal( current_dot_product, reference_dot_product ) )
+//        {
+//            std::cout << "select_realistic_preferred_orientation_direction(): Warning: PO direction is not commensurate with space-group symmetry." << std::endl;
+//            return;
+//        }
+//    }
+    return result;
 }
 
 // ********************************************************************************
