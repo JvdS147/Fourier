@@ -40,6 +40,47 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdexcept>
 
+
+// ********************************************************************************
+
+std::vector< Matrix3D > orthorhombic_unit_cell_axes_permutations()
+{
+    std::vector< Matrix3D > result;
+    result.push_back( Matrix3D(  1.0,  0.0,  0.0,
+                                 0.0,  1.0,  0.0,
+                                 0.0,  0.0,  1.0 ) );
+    result.push_back( Matrix3D(  0.0,  0.0,  1.0,
+                                 1.0,  0.0,  0.0,
+                                 0.0,  1.0,  0.0 ) );
+    result.push_back( Matrix3D(  0.0,  1.0,  0.0,
+                                 0.0,  0.0,  1.0,
+                                 1.0,  0.0,  0.0 ) );
+    result.push_back( Matrix3D(  0.0,  1.0,  0.0,
+                                 1.0,  0.0,  0.0,
+                                 0.0,  0.0, -1.0 ) );
+    result.push_back( Matrix3D(  0.0,  0.0,  1.0,
+                                 0.0, -1.0,  0.0,
+                                 1.0,  0.0,  0.0 ) );
+    result.push_back( Matrix3D( -1.0,  0.0,  0.0,
+                                 0.0,  0.0,  1.0,
+                                 0.0,  1.0,  0.0 ) );
+    return result;
+}
+
+// ********************************************************************************
+
+std::vector< std::string > orthorhombic_unit_cell_axes_permutation_labels()
+{
+    std::vector< std::string > result;
+    result.push_back( "abc" );
+    result.push_back( "cab" );
+    result.push_back( "bca" );
+    result.push_back( "ba-c" );
+    result.push_back( "c-ba" );
+    result.push_back( "-acb" );
+    return result;
+}
+
 // ********************************************************************************
 
 Vector3D reciprocal_lattice_point( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice )

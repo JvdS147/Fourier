@@ -65,6 +65,16 @@ class Vector3D;
 
 //SpecialPositionsReport special_positions_report()
 
+// In a orthorhombic space groups we can have a couple of permutations for the axes.
+// There are three axes, so there should be 3! = 6 permutations, I think.
+// They are abc, cab, bca, ba-c, c-ba, -acb.
+// This function returns these six transformation matrices.
+// The first transformation matrix is the identity matrix.
+std::vector< Matrix3D > orthorhombic_unit_cell_axes_permutations();
+
+// Returns abc, cab, bca, ba-c, c-ba, -acb.
+std::vector< std::string > orthorhombic_unit_cell_axes_permutation_labels();
+
 Vector3D reciprocal_lattice_point( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice );
 
 NormalisedVector3D reciprocal_lattice_direction( const MillerIndices miller_indices, const CrystalLattice & crystal_lattice );
