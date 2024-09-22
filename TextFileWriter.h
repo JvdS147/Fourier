@@ -44,13 +44,13 @@ public:
     ~TextFileWriter() { output_file_.close(); }
 
     // Adds newline at end of line.
-    bool write_line( const std::string & line );
+    void write_line( const std::string & line );
 
     // Adds newline at end of line.
-    bool write_line();
+    void write_line();
 
     // No newline is added.
-    bool write( const std::string & text );
+    void write( const std::string & text );
 
 private:
     std::ofstream output_file_;

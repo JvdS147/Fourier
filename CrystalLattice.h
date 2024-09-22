@@ -35,14 +35,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-// a along x, b in xy plane, right-handed coordinate frame
-// We also abuse this class for any functionality related to parallelepipeds
+// a along x, b in xy plane, right-handed coordinate frame.
+// We also abuse this class for any functionality related to parallelepipeds.
 // The CrystalLattice and the SpaceGroup have a mutual dependence that is currently not captured anywhere.
 class CrystalLattice
 {
 public:
 
-    enum LatticeSystem { TRICLINIC, MONOCLINIC_A, MONOCLINIC_B, MONOCLINIC_C, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC };
+    enum LatticeSystem { TRICLINIC, MONOCLINIC_A, MONOCLINIC_B, MONOCLINIC_C, ORTHORHOMBIC, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC };
 
     CrystalLattice();
 
@@ -57,7 +57,7 @@ public:
     void from_CASTEP( const Matrix3D & matrix );
 
     // We need a() as a vector and a() as a length. We cannot overload by return type,
-    // so they must have different names
+    // so they must have different names.
     double a() const { return a_; }
     double b() const { return b_; }
     double c() const { return c_; }
@@ -70,7 +70,7 @@ public:
 
     Vector3D lattice_vector( const size_t index ) const;
 
-    // a along x
+    // a along x.
     Vector3D a_vector() const { return a_vector_; }
     Vector3D b_vector() const { return b_vector_; }
     Vector3D c_vector() const { return c_vector_; }
@@ -91,13 +91,13 @@ public:
 
     Matrix3D metric_matrix() const;
 
-    // Fractional to Cartesian, c along z *and* transposed
+    // Fractional to Cartesian, c along z *and* transposed.
     Matrix3D for_CASTEP() const;
 
     Vector3D orthogonal_to_fractional( const Vector3D & input ) const;
     Vector3D fractional_to_orthogonal( const Vector3D & input ) const;
 
-    // This is the matrix N as used by Grosse-Kunstleve to convert U_cif to U_star
+    // This is the matrix N as used by Grosse-Kunstleve to convert U_cif to U_star.
     SymmetricMatrix3D N() const { return N_; }
     SymmetricMatrix3D N_inverse() const { return N_inverse_; }
 
@@ -117,9 +117,12 @@ public:
     // Returns the shortest distance (in Angstrom) and the shortest difference vector (defined as rhs - lhs, in fractional coordinates).
     void shortest_distance( const Vector3D & lhs, const Vector3D & rhs, double & distance, Vector3D & difference_vector ) const;
 
-    // The lattice system is initialised by deducing it from the unit-cell parameters
+    // The lattice system is initialised by deducing it from the unit-cell parameters.
     LatticeSystem lattice_system() const { return lattice_system_; }
-    void set_lattice_system( const LatticeSystem lattice_system ) { lattice_system_ = lattice_system; }
+    void set_lattice_system( const LatticeSystem lattice_system );
+
+    bool b_is_constrained() const { return b_is_constrained_; } // It can then only be constrained to a.
+    bool c_is_constrained() const { return c_is_constrained_; } // It can then only be constrained to a.
 
     // There are many things we can do to make a lattice more "beautiful": order a, b and c by size,
     // make alpha, beta and gamma all greater than or all less than 90.
@@ -129,18 +132,28 @@ public:
 
     void transform( const Matrix3D & transformation_matrix );
 
-    // Prints a, b, c, alpha, beta, gamma
+    // Prints a, b, c, alpha, beta, gamma.
     void print() const;
 
-    // Shows the full vectors and reciprocal vectors
-    void show() const; // For debugging
+    // Shows the full vectors and reciprocal vectors.
+    void show() const; // For debugging.
 
-    // Some matrices necessary for the formulae given by R. T. Downs / G. V. Gibbs
+    // Some matrices necessary for the formulae given by R. T. Downs / G. V. Gibbs.
 
     Matrix3D Downs_D() const;
     Matrix3D Downs_D_star() const;
     Matrix3D Downs_G() const;
     Matrix3D Downs_G_star() const;
+
+// From lattice_system_ if set by user, otherwise from the unit-cell parameters.
+// 1.  1 b = a.
+// 2.  2 All lengths are equal.
+// 3.  4 All angles are equal.
+// 4.  8 alpha = 90.
+// 5. 16 beta = 90.
+// 6. 32 gamma = 90.
+// 7. 64 gamma = 120.
+    char constraints() const { return constraints_; }
 
 private:
     double a_;
@@ -167,12 +180,34 @@ private:
     SymmetricMatrix3D N_;
     SymmetricMatrix3D N_inverse_;
     LatticeSystem lattice_system_;
-};
+    bool b_is_constrained_; // It can then only be constrained to a.
+    bool c_is_constrained_; // It can then only be constrained to a.
+    char constraints_; // From lattice_system_ if set by user, otherwise from the unit-cell parameters.
 
 // Deduces the lattice system based on the unit-cell parameters.
-CrystalLattice::LatticeSystem deduce_lattice_system( const CrystalLattice & crystal_lattice );
+    void deduce_lattice_system();
+
+};
 
 std::string LatticeSystem2string( const CrystalLattice::LatticeSystem lattice_system );
+
+// 1.  1 b = a.
+// 2.  2 All lengths are equal.
+// 3.  4 All angles are equal.
+// 4.  8 alpha = 90.
+// 5. 16 beta = 90.
+// 6. 32 gamma = 90.
+// 7. 64 gamma = 120.
+char constraints( const CrystalLattice::LatticeSystem lattice_system );
+
+// 1.  1 b = a.
+// 2.  2 All lengths are equal.
+// 3.  4 All angles are equal.
+// 4.  8 alpha = 90.
+// 5. 16 beta = 90.
+// 6. 32 gamma = 90.
+// 7. 64 gamma = 120.
+char constraints( const double a, const double b, const double c, const Angle alpha, const Angle beta, const Angle gamma );
 
 // To calculate the average of four values:
 // CrystalLattice average = average( value_1, value_2 );
@@ -191,7 +226,7 @@ std::string LatticeSystem2string( const CrystalLattice::LatticeSystem lattice_sy
 //    }
 CrystalLattice average( const CrystalLattice & lhs, const CrystalLattice & rhs, const double weight = 1.0 );
 
-// Length tolerance is relative, angle tolerance is absolute
+// Length tolerance is relative, angle tolerance is absolute.
 bool nearly_equal( const CrystalLattice & lhs, const CrystalLattice & rhs, double length_tolerance_percentage = 10.0, const Angle angle_tolerance = Angle::from_degrees( 10.0 ) );
 
 #endif // CRYSTALLATTICE_H

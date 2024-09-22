@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
 #include <string>
+#include <vector>
 
 /*
  Takes care of lots of stuff:
@@ -63,20 +64,20 @@ public:
 
     FileName( const std::string & directory, const std::string & file_name, const std::string & extension );
 
-    // always ends in backslash
+    // Always ends in backslash.
     std::string directory() const { return directory_; }
 
-    // Extension is NOT included, cannot end in a dot
+    // Extension is NOT included, cannot end in a dot.
     std::string file_name() const { return file_name_; }
 
 // @@ We need a file_name_plus_extension() const;
 
-    // Does not include dot
+    // Does not include dot.
     std::string extension() const { return extension_; }
     
     void set_directory( const std::string & directory );
 
-    // Extension is NOT included
+    // Extension is NOT included.
     void set_file_name( const std::string & file_name );
 
     void set_extension( const std::string & extension );
@@ -130,5 +131,9 @@ std::string append_backslash( const std::string & input );
 // The smallest free number is returned. In a way this could be inefficient, and the method could be supplied with a hint as to where
 // to start searching.
 FileName generate_unique_file_name( const FileName & file_name );
+
+// This is to sort file names that are given as arguments.
+// Stable sort. Case insensitive.
+std::vector< FileName > sort_file_names_by_extension( int argc, char** argv, std::vector< std::string > extensions );
 
 #endif // FILENAME_H

@@ -86,7 +86,10 @@ alpha_(alpha), beta_(beta), gamma_(gamma)
     alpha_star_ = angle( b_star_vector_, c_star_vector_ );
     beta_star_  = angle( a_star_vector_, c_star_vector_ );
     gamma_star_ = angle( a_star_vector_, b_star_vector_ );
-    lattice_system_ = deduce_lattice_system( *this );
+    deduce_lattice_system();
+    constraints_ = ::constraints( lattice_system_ );
+    b_is_constrained_ = ( ( constraints_ & 1 ) == 1 );
+    c_is_constrained_ = ( ( constraints_ & 2 ) == 2 );
 }
 
 // ********************************************************************************
@@ -349,10 +352,26 @@ void CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & r
 
 // ********************************************************************************
 
+void CrystalLattice::set_lattice_system( const LatticeSystem lattice_system )
+{
+    // It should be possible to start with the unit-cell parameters of a cubic unit cell,
+    // then manually set it to triclinic and then manually set it to cubic again.
+    char constraints_from_unit_cell_parameters = ::constraints( a_, b_, c_, alpha_, beta_, gamma_ );
+    char constraints_from_lattice_system = ::constraints( lattice_system );
+    if ( ( constraints_from_lattice_system & constraints_from_unit_cell_parameters ) != constraints_from_lattice_system )
+        throw std::runtime_error( "CrystalLattice::set_lattice_system(): error: unit-cell parameters incommensurate with lattice system." );
+    lattice_system_ = lattice_system;
+    constraints_ = constraints_from_lattice_system;
+    b_is_constrained_ = ( ( constraints_ & 1 ) == 1 );
+    c_is_constrained_ = ( ( constraints_ & 2 ) == 2 );
+}
+
+// ********************************************************************************
+
 Matrix3D CrystalLattice::choose_angles_close_to_90() const
 {
     Matrix3D result;
-    // TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC
+    // TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC
     if ( lattice_system_ == CUBIC || lattice_system_ == HEXAGONAL || lattice_system_ == TETRAGONAL || lattice_system_ == ORTHORHOMBIC )
     {
         std::cout << "CrystalLattice::choose_angles_close_to_90(): warning: lattice was already known to be optimal." << std::endl;
@@ -519,65 +538,6 @@ void CrystalLattice::show() const
 
 // ********************************************************************************
 
-CrystalLattice::LatticeSystem deduce_lattice_system( const CrystalLattice & crystal_lattice )
-{
-    bool angles_equal = triquality( crystal_lattice.alpha(), crystal_lattice.beta(), crystal_lattice.gamma() );
-    bool ab_equal = nearly_equal( crystal_lattice.a(), crystal_lattice.b() );
-    bool alpha_is_90 = crystal_lattice.alpha().nearly_90();
-// { TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TRIGONAL, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC }
-    if ( angles_equal )
-    {
-        bool lengths_equal = triquality( crystal_lattice.a(), crystal_lattice.b(), crystal_lattice.c() );
-        if ( alpha_is_90 )
-        {
-            if ( lengths_equal )
-                return CrystalLattice::CUBIC;
-            if ( ! ab_equal )
-                return CrystalLattice::ORTHORHOMBIC;
-            return CrystalLattice::TETRAGONAL;
-        }
-        else if ( lengths_equal )
-            return CrystalLattice::RHOMBOHEDRAL;
-        std::cout << "deduce_lattice_system( CrystalLattice & ): Warning: angles are all equal, but system is monoclinic or triclinic." << std::endl;
-    }
-// { TRICLINIC, MONOCLINIC, TRIGONAL, HEXAGONAL }
-    bool beta_is_90  = crystal_lattice.beta().nearly_90();
-    if ( ab_equal && alpha_is_90 && beta_is_90 && nearly_equal( crystal_lattice.gamma(), Angle::angle_120_degrees() ) )
-        return CrystalLattice::HEXAGONAL;
-    bool gamma_is_90 = crystal_lattice.gamma().nearly_90();
-// { TRICLINIC, MONOCLINIC }
-    if ( beta_is_90 && gamma_is_90 )
-        return CrystalLattice::MONOCLINIC_A;
-    if ( alpha_is_90 && gamma_is_90 )
-        return CrystalLattice::MONOCLINIC_B;
-    if ( alpha_is_90 && beta_is_90 )
-        return CrystalLattice::MONOCLINIC_C;
-// { TRICLINIC }
-    return CrystalLattice::TRICLINIC;
-}
-
-// ********************************************************************************
-
-std::string LatticeSystem2string( const CrystalLattice::LatticeSystem lattice_system )
-{
-    switch ( lattice_system )
-    {
-        case CrystalLattice::TRICLINIC    : return "Triclinic";
-        case CrystalLattice::MONOCLINIC_A : return "Monoclinic";
-        case CrystalLattice::MONOCLINIC_B : return "Monoclinic";
-        case CrystalLattice::MONOCLINIC_C : return "Monoclinic";
-        case CrystalLattice::ORTHORHOMBIC : return "Orthorhombic";
-        case CrystalLattice::TRIGONAL     : return "Trigonal";
-        case CrystalLattice::TETRAGONAL   : return "Tetragonal";
-        case CrystalLattice::HEXAGONAL    : return "Hexagonal";
-        case CrystalLattice::RHOMBOHEDRAL : return "Rhombohedral";
-        case CrystalLattice::CUBIC        : return "Cubic";
-        default                           : return "Error";
-    }
-}
-
-// ********************************************************************************
-
 Matrix3D CrystalLattice::Downs_D() const
 {
     return Matrix3D( a_vector_.x(), b_vector_.x(), c_vector_.x(),
@@ -608,6 +568,156 @@ Matrix3D CrystalLattice::Downs_G_star() const
     return Matrix3D( a_star_ * a_star_                       , a_star_ * b_star_ * gamma_star_.cosine() , a_star_ * c_star_ * beta_star_.cosine() ,
                      a_star_ * b_star_ * gamma_star_.cosine(), b_star_ * b_star_                        , b_star_ * c_star_ * alpha_star_.cosine(),
                      a_star_ * c_star_ * beta_star_.cosine() , b_star_ * c_star_ * alpha_star_.cosine() , c_star_ * c_star_ );
+}
+
+// ********************************************************************************
+
+void CrystalLattice::deduce_lattice_system()
+{
+    bool angles_equal = triquality( alpha(), beta(), gamma() );
+    bool ab_equal = nearly_equal( a(), b() );
+    bool alpha_is_90 = alpha().nearly_90();
+// { TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC }
+    if ( angles_equal )
+    {
+        bool lengths_equal = triquality( a(), b(), c() );
+        if ( alpha_is_90 )
+        {
+            if ( lengths_equal )
+            {
+                lattice_system_ = CUBIC;
+                return;
+            }
+            if ( ab_equal )
+                lattice_system_ = TETRAGONAL;
+            else
+                lattice_system_ = ORTHORHOMBIC;
+            return;
+        }
+        if ( lengths_equal )
+        {
+                lattice_system_ = RHOMBOHEDRAL;
+                return;
+        }
+        std::cout << "CrystalLattice::deduce_lattice_system(): Warning: angles are all equal, but system is triclinic." << std::endl;
+        lattice_system_ = TRICLINIC;
+        return;
+    }
+// { TRICLINIC, MONOCLINIC, HEXAGONAL }
+    bool beta_is_90 = beta().nearly_90();
+    if ( alpha_is_90 && beta_is_90 )
+    {
+        if ( ab_equal && nearly_equal( gamma(), Angle::angle_120_degrees() ) )
+            lattice_system_ = HEXAGONAL;
+        else
+            lattice_system_ = MONOCLINIC_C;
+        return;
+    }
+// { TRICLINIC, MONOCLINIC }
+    if ( gamma().nearly_90() )
+    {
+        if ( beta_is_90  )
+        {
+            lattice_system_ = MONOCLINIC_A;
+            return;
+        }
+        if ( alpha_is_90  )
+        {
+            lattice_system_ = MONOCLINIC_B;
+            return;
+        }
+    }
+    lattice_system_ = TRICLINIC;
+}
+
+// ********************************************************************************
+
+std::string LatticeSystem2string( const CrystalLattice::LatticeSystem lattice_system )
+{
+    switch ( lattice_system )
+    {
+        case CrystalLattice::TRICLINIC    : return "Triclinic";
+        case CrystalLattice::MONOCLINIC_A : return "Monoclinic";
+        case CrystalLattice::MONOCLINIC_B : return "Monoclinic";
+        case CrystalLattice::MONOCLINIC_C : return "Monoclinic";
+        case CrystalLattice::ORTHORHOMBIC : return "Orthorhombic";
+        case CrystalLattice::TETRAGONAL   : return "Tetragonal";
+        case CrystalLattice::HEXAGONAL    : return "Hexagonal";
+        case CrystalLattice::RHOMBOHEDRAL : return "Rhombohedral";
+        case CrystalLattice::CUBIC        : return "Cubic";
+        default                           : throw std::runtime_error( "CrystalLattice::set_lattice_system(): error: unit-cell parameters incommensurate with lattice system." );
+    }
+}
+
+// ********************************************************************************
+
+// 1.  1 b = a.
+// 2.  2 All lengths are equal.
+// 3.  4 All angles are equal.
+// 4.  8 alpha = 90.
+// 5. 16 beta = 90.
+// 6. 32 gamma = 90.
+// 7. 64 gamma = 120.
+char constraints( const CrystalLattice::LatticeSystem lattice_system )
+{
+    switch ( lattice_system )
+    {
+        case CrystalLattice::TRICLINIC    : return 0;
+        case CrystalLattice::MONOCLINIC_A : return 16+32;
+        case CrystalLattice::MONOCLINIC_B : return 8+32;
+        case CrystalLattice::MONOCLINIC_C : return 8+16;
+        case CrystalLattice::ORTHORHOMBIC : return 4+8+16+32;
+        case CrystalLattice::TETRAGONAL   : return 1+4+8+16+32;
+        case CrystalLattice::HEXAGONAL    : return 1+4+8+16+32;
+        case CrystalLattice::RHOMBOHEDRAL : return 1+2+4;
+        case CrystalLattice::CUBIC        : return 1+2+4+8+16+32;
+        default                           : throw std::runtime_error( "CrystalLattice::set_lattice_system(): error: unit-cell parameters incommensurate with lattice system." );
+    }
+}
+
+// ********************************************************************************
+
+char constraints( const double a, const double b, const double c, const Angle alpha, const Angle beta, const Angle gamma )
+{
+    bool angles_equal = triquality( alpha, beta, gamma );
+    bool ab_equal = nearly_equal( a, b );
+    bool alpha_is_90 = alpha.nearly_90();
+// { TRICLINIC, MONOCLINIC, ORTHORHOMBIC, TETRAGONAL, HEXAGONAL, RHOMBOHEDRAL, CUBIC }
+    if ( angles_equal )
+    {
+        bool lengths_equal = triquality( a, b, c );
+        if ( alpha_is_90 )
+        {
+            if ( lengths_equal )
+                return constraints( CrystalLattice::CUBIC );
+            if ( ab_equal )
+                return constraints( CrystalLattice::TETRAGONAL );
+            else
+                return constraints( CrystalLattice::ORTHORHOMBIC );
+        }
+        if ( lengths_equal )
+            return constraints( CrystalLattice::RHOMBOHEDRAL );
+        else
+            return constraints( CrystalLattice::TRICLINIC );
+    }
+// { TRICLINIC, MONOCLINIC, HEXAGONAL }
+    bool beta_is_90 = beta.nearly_90();
+    if ( alpha_is_90 && beta_is_90 )
+    {
+        if ( ab_equal && nearly_equal( gamma, Angle::angle_120_degrees() ) )
+            return constraints( CrystalLattice::HEXAGONAL );
+        else
+            return constraints( CrystalLattice::MONOCLINIC_C );
+    }
+// { TRICLINIC, MONOCLINIC }
+    if ( gamma.nearly_90() )
+    {
+        if ( beta_is_90  )
+            return constraints( CrystalLattice::MONOCLINIC_A );
+        if ( alpha_is_90  )
+            return constraints( CrystalLattice::MONOCLINIC_B );
+    }
+    return constraints( CrystalLattice::TRICLINIC );
 }
 
 // ********************************************************************************

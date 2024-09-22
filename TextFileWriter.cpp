@@ -41,26 +41,23 @@ TextFileWriter::TextFileWriter( const FileName & file_name )
 
 // ********************************************************************************
 
-bool TextFileWriter::write_line( const std::string & line )
+void TextFileWriter::write_line( const std::string & line )
 {
     output_file_ << line << std::endl;
-    return true;
 }
 
 // ********************************************************************************
 
-bool TextFileWriter::write_line()
+void TextFileWriter::write_line()
 {
     output_file_ << std::endl;
-    return true;
 }
 
 // ********************************************************************************
 
-bool TextFileWriter::write( const std::string & text )
+void TextFileWriter::write( const std::string & text )
 {
     output_file_ << text;
-    return true;
 }
 
 // ********************************************************************************

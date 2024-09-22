@@ -283,7 +283,6 @@ MillerIndices select_realistic_preferred_orientation_direction( const CrystalLat
         case CrystalLattice::MONOCLINIC_A : return MillerIndices( 1, 0, 0 );
         case CrystalLattice::MONOCLINIC_B : return MillerIndices( 0, 1, 0 );
         case CrystalLattice::MONOCLINIC_C :
-        case CrystalLattice::TRIGONAL     :
         case CrystalLattice::TETRAGONAL   :
         case CrystalLattice::HEXAGONAL    : return MillerIndices( 0, 0, 1 );
         case CrystalLattice::RHOMBOHEDRAL :

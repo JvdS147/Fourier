@@ -28,13 +28,23 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class CrystalLattice;
 class FileName;
+class TextFileWriter;
 
 #include <string>
+
+// This is the bit that is constant and global.
+void write_preamble( TextFileWriter & text_file_writer );
 
 // From .cif file
 // aal = additional atom label, a string that is appended to each atom label
 void inp_writer( const FileName & input_cif_file_name, const FileName & input_xye_file_name, const std::string & aal = "" );
+
+// Only call this function if the refinement is parametric.
+void write_unit_cell_variables( TextFileWriter & text_file_writer, const CrystalLattice & crystal_lattice, const bool variable_temperature = false );
+
+void write_unit_cell( TextFileWriter & text_file_writer, const CrystalLattice & crystal_lattice, const bool parametric_refinement = false, const bool variable_temperature = false );
 
 #endif // INPWRITER_H
 
