@@ -282,6 +282,13 @@ std::string append_backslash( const std::string & input )
 
 // ********************************************************************************
 
+std::string FileName::correct_slashes( const std::string & input ) const
+{
+    return replace( input, "\\", slash_character_ );
+}
+
+// ********************************************************************************
+
 FileName generate_unique_file_name( const FileName & file_name )
 {
     size_t i( 1 );
@@ -292,9 +299,36 @@ FileName generate_unique_file_name( const FileName & file_name )
 
 // ********************************************************************************
 
-std::string FileName::correct_slashes( const std::string & input ) const
+std::vector< FileName > sort_file_names_by_extension( int argc, char** argv, std::vector< std::string > extensions )
 {
-    return replace( input, "\\", slash_character_ );
+    std::string expected_extensions;
+    for ( size_t i( 0 ); i != extensions.size(); ++i )
+        expected_extensions += " " + extensions[i];
+    if ( argc != extensions.size() + 1 )
+        throw std::runtime_error( "sort_file_names_by_extension(): Error: expected" + expected_extensions + "." );
+    std::vector< FileName > result;
+    for ( size_t i( 0 ); i != extensions.size(); ++i )
+        result.push_back( FileName( argv[ i+1 ] ) );
+    for ( size_t i( 0 ); i != extensions.size(); ++i )
+    {
+        if ( to_upper( result[i].extension() ) == to_upper( extensions[i] ) )
+            continue;
+        bool match_found( false );
+        for ( size_t j( i+1 ); j != extensions.size(); ++j )
+        {
+            if ( to_upper( result[j].extension() ) == to_upper( extensions[i] ) )
+            {
+                std::swap( result[i], result[j] );
+                std::swap( extensions[i], extensions[j] );
+                match_found = true;
+                break;
+            }
+        }
+        if ( ! match_found )
+            throw std::runtime_error( "sort_file_names_by_extension(): Error: expected" + expected_extensions + "." );
+    }
+    return result;
 }
 
 // ********************************************************************************
+

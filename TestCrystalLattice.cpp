@@ -41,39 +41,39 @@ void test_crystal_lattice( TestSuite & test_suite )
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::from_degrees( 89.0 ), Angle::from_degrees( 92.0 ), Angle::from_degrees( 75.6 ) );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::TRICLINIC, "deduce_lattice_system() triclinic" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::TRICLINIC, "deduce_lattice_system() triclinic" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::from_degrees( 92.0 ), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC_A, "deduce_lattice_system() monoclinic 1" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::MONOCLINIC_A, "deduce_lattice_system() monoclinic 1" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::angle_90_degrees(), Angle::from_degrees( 92.0 ), Angle::angle_90_degrees() );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC_B, "deduce_lattice_system() monoclinic 2" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::MONOCLINIC_B, "deduce_lattice_system() monoclinic 2" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::from_degrees( 92.0 ) );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::MONOCLINIC_C, "deduce_lattice_system() monoclinic 3" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::MONOCLINIC_C, "deduce_lattice_system() monoclinic 3" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 10.2, 12.34, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::ORTHORHOMBIC, "deduce_lattice_system() orthorhombic" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::ORTHORHOMBIC, "deduce_lattice_system() orthorhombic" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 4.56, 12.34, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::TETRAGONAL, "deduce_lattice_system() tetragonal" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::TETRAGONAL, "deduce_lattice_system() tetragonal" );
     }
     {
     CrystalLattice crystal_lattice( 4.56, 4.56, 12.34, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_120_degrees() );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::HEXAGONAL, "deduce_lattice_system() hexagonal" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::HEXAGONAL, "deduce_lattice_system() hexagonal" );
     }
     {
     CrystalLattice crystal_lattice( 10.2, 10.2, 10.2, Angle::from_degrees( 92.0 ), Angle::from_degrees( 92.0 ), Angle::from_degrees( 92.0 ) );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::RHOMBOHEDRAL, "deduce_lattice_system() rhombohedral" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::RHOMBOHEDRAL, "deduce_lattice_system() rhombohedral" );
     }
     {
     CrystalLattice crystal_lattice( 10.2, 10.2, 10.2, Angle::angle_90_degrees(), Angle::angle_90_degrees(), Angle::angle_90_degrees() );
-    test_suite.test_equality( deduce_lattice_system( crystal_lattice ), CrystalLattice::CUBIC, "deduce_lattice_system() cubic" );
+    test_suite.test_equality( crystal_lattice.lattice_system(), CrystalLattice::CUBIC, "deduce_lattice_system() cubic" );
     }
 }
 

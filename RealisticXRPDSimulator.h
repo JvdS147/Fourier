@@ -37,7 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class CrystalStructure;
 
 /*
-
+    If you call calculate() twice in a row, you get different noise.
 */
 class RealisticXRPDSimulator
 {
