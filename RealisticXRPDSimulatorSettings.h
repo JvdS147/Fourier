@@ -58,8 +58,10 @@ public:
     // which moves the pattern to the right.
     // I think that the +/- convention is the same as in DASH and TOPAS.
     void set_zero_point_error( const Angle zero_point_error );
-    void unset_zero_point_error() { include_zero_point_error_ = false; }
+    void unset_zero_point_error();
     bool include_zero_point_error() const { return include_zero_point_error_; }
+
+    // It is guaranteed that this returns 0.0 if no zero-point error included.
     Angle zero_point_error() const { return zero_point_error_; }
 
     // A March-Dollase model is used.
@@ -80,6 +82,15 @@ public:
 
     bool include_noise() const { return include_noise_; }
     void set_include_noise( const bool include_noise ) { include_noise_ = include_noise; }
+
+    // If the number of counts is zero, the Poisson noise is also zero.
+    // So a powder pattern that is simulated without background but with noise would still have
+    // no noise where there is no Bragg signal.
+    // If include_noise_for_zero_background is set to true, noise is included even if there is no background.
+    bool include_noise_for_zero_background() const { return include_noise_for_zero_background_; }
+    void set_include_noise_for_zero_background( const size_t threshold );
+    void unset_include_noise_for_zero_background() { include_noise_for_zero_background_ = false; }
+    double noise_for_zero_background_threshold() const { return noise_for_zero_background_threshold_; }
 
     double Bragg_total_signal_normalisation() const { return Bragg_total_signal_normalisation_; }
     void set_Bragg_total_signal_normalisation( const double Bragg_total_signal_normalisation ) { Bragg_total_signal_normalisation_ = Bragg_total_signal_normalisation; }
@@ -105,6 +116,8 @@ private:
     double B_; // Finger-Cox-Jephcoat.
     bool include_background_;
     bool include_noise_;
+    bool include_noise_for_zero_background_;
+    size_t noise_for_zero_background_threshold_;
     double Bragg_total_signal_normalisation_;
     double background_total_signal_normalisation_;
     double highest_peak_;

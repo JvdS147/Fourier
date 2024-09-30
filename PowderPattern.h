@@ -105,7 +105,7 @@ public:
     void read_mdi( const FileName & file_name );
     void read_brml( const FileName & file_name );
     void read_txt( const FileName & file_name );
-//    void read_cif( const FileName & file_name );
+    void read_cif( const FileName & file_name );
     void save_xye( const FileName & file_name, const bool include_wave_length ) const;
 
     // Writes to std::cout the code that is necessary to generate the PowderPattern object.
@@ -144,6 +144,11 @@ public:
     // makes all points of the pattern behave as Gaussian.
     // Note that Poisson noise is only defined for positive integer values, so after adding noise all intensities are integers.
     void add_Poisson_noise();
+
+    // If the number of counts is less than threshold, adds threshold, then calculates the Poisson noise,
+    // then subtracts the threshold, then makes the remainder positive.
+    // If the maximum is scaled to be 10,000 counts, a good threshold value is 20.
+    void add_Poisson_noise_including_zero( const size_t threshold = 20 );
 
     void make_counts_integer();
 
@@ -193,6 +198,11 @@ PowderPattern calculate_Brueckner_background( const PowderPattern & powder_patte
 // @@ but we do not have an
 // @@ PowderPattern & operator+=( const std::vector< double > & rhs );
 PowderPattern calculate_Poisson_noise( const PowderPattern & powder_pattern );
+
+// If the number of counts is less than threshold, adds threshold, then calculates the Poisson noise,
+// then subtracts the threshold, then makes the remainder positive.
+// If the maximum is scaled to be 10,000 counts, a good threshold value is 20.
+PowderPattern calculate_Poisson_noise_including_zero( const PowderPattern & powder_pattern, const size_t threshold = 20 );
 
 // Useful for Variable Count Time schemes.
 // The 2theta values must currently be the same.

@@ -643,85 +643,118 @@ void PowderPattern::read_txt( const FileName & file_name )
 //  874.178024   0            0           0         
 //  834.93539    0            0           0         
 //
-//void PowderPattern::read_cif( const FileName & file_name )
-//{
-//    *this = PowderPattern();
-//    TextFileReader text_file_reader( file_name );
-//    text_file_reader.set_skip_empty_lines( true );
-//    std::vector< std::string > words;
-//  //  size_t stage( 1 );
-//    Angle two_theta_start;
-//    Angle two_theta_step;
-//    Angle two_theta_end;
-//    size_t number_of_points( 0 );
-// //   size_t i( 0 );
-//    bool found_pd_meas_2theta_range_min( false );
-//    bool found_pd_meas_2theta_range_max( false );
-//    bool found_pd_meas_2theta_range_inc( false );
-//    bool found_pd_meas_number_of_points( false );
-//    while ( text_file_reader.get_next_line( words ) )
-//    {
-//        if ( words[0] == "_pd_meas_2theta_range_min" )
-//        {
-//            if ( words.size() == 1 )
-//                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_min does not have value." );
-//            two_theta_start = Angle::from_degrees( string2double( words[1] ) );
-//            found_pd_meas_2theta_range_min = true;
-//            continue;
-//        }
-//        if ( words[0] == "_pd_meas_2theta_range_max" )
-//        {
-//            if ( words.size() == 1 )
-//                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_max does not have value." );
-//            two_theta_end = Angle::from_degrees( string2double( words[1] ) );
-//            found_pd_meas_2theta_range_max = true;
-//            continue;
-//        }
-//        if ( words[0] == "_pd_meas_2theta_range_inc" )
-//        {
-//            if ( words.size() == 1 )
-//                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_inc does not have value." );
-//            two_theta_step = Angle::from_degrees( string2double( words[1] ) );
-//            found_pd_meas_2theta_range_inc = true;
-//            continue;
-//        }
-//        if ( words[0] == "_pd_meas_number_of_points" )
-//        {
-//            if ( words.size() == 1 )
-//                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_number_of_points does not have value." );
-//            number_of_points = string2size_t( words[1] );
-//            found_pd_meas_number_of_points = true;
-//            continue;
-//        }
-//         
-//      
-//        if ( words.size() == 3 )
-//        {
-//            if ( stage != 1 )
-//                throw std::runtime_error( "PowderPattern::read_cif(): keyword out of place." );
-//            two_theta_start = Angle::from_degrees( string2double( words[0] ) );
-//            two_theta_step  = Angle::from_degrees( string2double( words[1] ) );
-//            two_theta_end   = Angle::from_degrees( string2double( words[2] ) );
-//            stage = 3;
-//            continue;
-//        }
-//       
-//        push_back( ( i * two_theta_step ) + two_theta_start, string2double( words[0] ) );
-//        ++i;
-//    }
-//    if ( ! found_pd_meas_2theta_range_min )
-//        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_min not found." );
-//    if ( ! found_pd_meas_2theta_range_max )
-//        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_max not found." );
-//    if ( ! found_pd_meas_2theta_range_inc )
-//        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_inc not found." );
-//    if ( found_pd_meas_number_of_points )
-//    {
-//        // Consistency check.
-//        
-//    }
 //
-//}
+//_pd_meas_2theta_range_min     5.0019
+//_pd_meas_2theta_range_inc     0.0025
+//_pd_meas_2theta_range_max     40.0019
+//_pd_meas_number_of_points     14001
+//
+//loop_
+//      _pd_meas_counts_total
+//32393   32393   32357   32330   32321   32406   32472   32505   32492   32484   #   5.0519   
+//32484   32519   32512   32454   32442   32433   32426   32386   32380   32410   #   5.0769   
+//32487   32525   32526   32508   32489   32469   32518   32530   32509   32492   #   5.1019   
+//32352   32361   32416   32393   32376   32386   32388   32390   32391   32392   #   5.0269   
+//32309   32331   32335   32310   32293   32289   32307   32350   32377   32370   #   5.0019   
+void PowderPattern::read_cif( const FileName & file_name )
+{
+    *this = PowderPattern();
+    TextFileReader text_file_reader( file_name );
+    text_file_reader.set_skip_empty_lines( true );
+    std::vector< std::string > words;
+    Angle two_theta_start;
+    Angle two_theta_step;
+    Angle two_theta_end;
+    size_t number_of_points( 0 );
+    bool found_pd_meas_2theta_range_min( false );
+    bool found_pd_meas_2theta_range_max( false );
+    bool found_pd_meas_2theta_range_inc( false );
+    bool found_pd_meas_number_of_points( false );
+    std::vector< double > counts;
+    while ( text_file_reader.get_next_line( words ) )
+    {
+        if ( words[0] == "_pd_meas_2theta_range_min" )
+        {
+            if ( words.size() != 2 )
+                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_min does not have value." );
+            two_theta_start = Angle::from_degrees( string2double( words[1] ) );
+            found_pd_meas_2theta_range_min = true;
+            continue;
+        }
+        if ( words[0] == "_pd_meas_2theta_range_max" )
+        {
+            if ( words.size() != 2 )
+                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_max does not have value." );
+            two_theta_end = Angle::from_degrees( string2double( words[1] ) );
+            found_pd_meas_2theta_range_max = true;
+            continue;
+        }
+        if ( words[0] == "_pd_meas_2theta_range_inc" )
+        {
+            if ( words.size() != 2 )
+                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_inc does not have value." );
+            two_theta_step = Angle::from_degrees( string2double( words[1] ) );
+            found_pd_meas_2theta_range_inc = true;
+            continue;
+        }
+        if ( words[0] == "_pd_meas_number_of_points" )
+        {
+            if ( words.size() != 2 )
+                throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_number_of_points does not have value." );
+            number_of_points = string2integer( words[1] );
+            found_pd_meas_number_of_points = true;
+            continue;
+        }
+        if ( words[0] == "loop_" )
+        {
+            if ( words.size() != 1 )
+                throw std::runtime_error( "PowderPattern::read_cif(): loop_ should be the only keyword on a line." );
+            if ( ! text_file_reader.get_next_line( words ) )
+                throw std::runtime_error( "PowderPattern::read_cif(): loop_ not followed by values." );
+            if ( words[0] != "_pd_meas_counts_total" )
+                throw std::runtime_error( "PowderPattern::read_cif(): only _pd_meas_counts_total in loop_ has been implemented." );
+            std::string line;
+            while ( text_file_reader.get_next_line( line ) )
+            {
+                line = remove_from( line, '#' );
+                words = split( line );
+                try
+                {
+                    for ( size_t i( 0 ); i != words.size(); ++i )
+                        counts.push_back( string2double( words[ i ] ) );
+                }
+                catch ( std::exception & e )
+                {
+                    break;
+                }
+            }
+            continue;
+        }
+    }
+    if ( ! found_pd_meas_2theta_range_min )
+        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_min not found." );
+    if ( ! found_pd_meas_2theta_range_max )
+        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_max not found." );
+    if ( ! found_pd_meas_2theta_range_inc )
+        throw std::runtime_error( "PowderPattern::read_cif(): keyword _pd_meas_2theta_range_inc not found." );
+    // Consistency check.
+    if ( found_pd_meas_number_of_points )
+    {
+        if ( number_of_points != counts.size() )
+            throw std::runtime_error( "PowderPattern::read_cif(): _pd_meas_number_of_points inconsistent with the actual number of points." );
+        Angle two_theta_step_should_be = ( two_theta_end - two_theta_start ) / ( number_of_points - 1 );
+    }
+    if ( counts.size() < 2 )
+        throw std::runtime_error( "PowderPattern::read_cif(): there are fewer than two points in the pattern." );
+    Angle two_theta_step_should_be = ( two_theta_end - two_theta_start ) / ( counts.size() - 1 );
+    std::cout << "two_theta_step_should_be = " << two_theta_step_should_be << std::endl;
+    std::cout << "two_theta_step           = " << two_theta_step << std::endl;
+    // @@ This is a poor algorithm: two_theta_step was probably rounded and we need the exact value.
+    for ( size_t i( 0 ); i != counts.size(); ++i )
+    {
+        push_back( ( i * two_theta_step_should_be ) + two_theta_start, counts[ i ] );
+    }
+}
 
 // ********************************************************************************
 
@@ -863,6 +896,23 @@ void PowderPattern::add_Poisson_noise()
 {
     for ( size_t i( 0 ); i != size(); ++i )
         intensities_[i] = Poisson_distribution( round_to_int( intensities_[i] ) );
+}
+
+// ********************************************************************************
+
+void PowderPattern::add_Poisson_noise_including_zero( const size_t threshold )
+{
+    for ( size_t i( 0 ); i != size(); ++i )
+    {
+        if ( intensities_[i] < threshold )
+        {
+            int intensity = round_to_int( intensities_[i] ) + threshold;
+            intensity = Poisson_distribution( intensity ) - static_cast<int>(threshold);
+            intensities_[i] = std::abs( intensity );
+        }
+        else
+            intensities_[i] = Poisson_distribution( round_to_int( intensities_[i] ) );
+    }
 }
 
 // ********************************************************************************
@@ -1068,13 +1118,36 @@ PowderPattern calculate_Poisson_noise( const PowderPattern & powder_pattern )
 
 // ********************************************************************************
 
+// If the number of counts is less than threshold, adds threshold, then calculates the Poisson noise,
+// then subtracts the threshold, then makes the remainder positive.
+// If the maximum is scaled to be 10,000 counts, a good threshold value is 20.
+PowderPattern calculate_Poisson_noise_including_zero( const PowderPattern & powder_pattern, const size_t threshold )
+{
+    PowderPattern result;
+    result.set_wavelength( powder_pattern.wavelength() );
+    result.reserve( powder_pattern.size() );
+    for ( size_t i( 0 ); i != powder_pattern.size(); ++i )
+    {
+        int old_intensity = powder_pattern.intensity( i );
+        int new_intensity;
+        if ( old_intensity < threshold )
+            new_intensity = std::abs( Poisson_distribution( old_intensity + threshold ) - static_cast<double>(threshold) );
+        else
+            new_intensity = Poisson_distribution( old_intensity );
+        result.push_back( powder_pattern.two_theta( i ), new_intensity - old_intensity, 0.0 );
+    }
+    return result;
+}
+
+// ********************************************************************************
+
 PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_patterns, const std::vector< double > & noscp2ts )
 {
     if ( powder_patterns.empty() )
         throw std::runtime_error( "add_powder_patterns(): Error: no powder patterns provided." );
     if ( powder_patterns.size() != noscp2ts.size() )
         throw std::runtime_error( "add_powder_patterns(): Error: powder_patterns and noscp2ts not the same size." );
-    // Check that they have the same wavelength and average_two_theta_step
+    // Check that they have the same wavelength and average_two_theta_step.
     for ( size_t i( 1 ); i != powder_patterns.size(); ++i )
     {
         if ( ! nearly_equal( powder_patterns[0].wavelength(), powder_patterns[i].wavelength() ) )
@@ -1082,7 +1155,7 @@ PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_p
         if ( ! nearly_equal( powder_patterns[0].average_two_theta_step(), powder_patterns[i].average_two_theta_step() ) )
             throw std::runtime_error( "add_powder_patterns(): Error: average_two_theta_step not the same." );
     }
-    // Find the smallest and largest 2theta values
+    // Find the smallest and largest 2theta values.
     Angle two_theta_min = powder_patterns[0].two_theta_start();
     Angle two_theta_max = powder_patterns[0].two_theta_end();
     for ( size_t i( 1 ); i != powder_patterns.size(); ++i )

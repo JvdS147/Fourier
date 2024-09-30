@@ -57,6 +57,7 @@ public:
         return MillerIndices( -this->h(), -this->k(), -this->k() );
     }
 
+    // "5 -3 0"
     std::string to_string() const;
 
 private:

@@ -64,13 +64,14 @@ public:
 
     FileName( const std::string & directory, const std::string & file_name, const std::string & extension );
 
-    // Always ends in backslash.
+    // Always ends in backslash unless empty.
     std::string directory() const { return directory_; }
 
     // Extension is NOT included, cannot end in a dot.
-    std::string file_name() const { return file_name_; }
+    std::string name() const { return name_; }
 
-// @@ We need a file_name_plus_extension() const;
+    // E.g. "Notes.txt".
+    std::string file_name() const { return ( name_ + "." + extension_ ); }
 
     // Does not include dot.
     std::string extension() const { return extension_; }
@@ -78,7 +79,7 @@ public:
     void set_directory( const std::string & directory );
 
     // Extension is NOT included.
-    void set_file_name( const std::string & file_name );
+    void set_name( const std::string & file_name );
 
     void set_extension( const std::string & extension );
 
@@ -103,7 +104,7 @@ public:
 private:
 
     std::string directory_; // Always ends in backslash
-    std::string file_name_; // Extension is NOT included
+    std::string name_; // Extension is NOT included
     std::string extension_; // Does not include dot
     std::string slash_character_;
     
@@ -137,3 +138,4 @@ FileName generate_unique_file_name( const FileName & file_name );
 std::vector< FileName > sort_file_names_by_extension( int argc, char** argv, std::vector< std::string > extensions );
 
 #endif // FILENAME_H
+

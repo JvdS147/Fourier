@@ -47,6 +47,8 @@ include_finger_cox_jephcoat_(false),
 A_(0.0001),
 B_(0.0001),
 include_background_(true),
+include_noise_for_zero_background_(true),
+noise_for_zero_background_threshold_(20),
 include_noise_(true),
 Bragg_total_signal_normalisation_(10000.0),
 background_total_signal_normalisation_(0.2*10000.0),
@@ -73,7 +75,15 @@ void RealisticXRPDSimulatorSettings::set_zero_point_error( const Angle zero_poin
     include_zero_point_error_ = true;
     zero_point_error_ = zero_point_error;
     if ( zero_point_error_.nearly_zero() )
-        std::cout << "RealisticXRPDSimulatorSettings::set_zero_point_error(): Warning: zero-point error has been set to 0.0 ." << std::endl;
+        std::cout << "RealisticXRPDSimulatorSettings::set_zero_point_error(): Warning: zero-point error has been set to 0.0." << std::endl;
+}
+
+// ********************************************************************************
+
+void RealisticXRPDSimulatorSettings::unset_zero_point_error()
+{
+    include_zero_point_error_ = false;
+    zero_point_error_ = Angle();
 }
 
 // ********************************************************************************
@@ -83,6 +93,10 @@ void RealisticXRPDSimulatorSettings::set_preferred_orientation( const MillerIndi
     include_preferred_orientation_ = true;
     preferred_orientation_direction_ = miller_indices;
     r_ = r;
+    if ( preferred_orientation_direction_.is_000() )
+        std::cout << "RealisticXRPDSimulatorSettings::set_preferred_orientation(): Warning: Miller indices have been set to (000)." << std::endl;
+    if ( nearly_equal( r_, 1.0 ) )
+        std::cout << "RealisticXRPDSimulatorSettings::set_preferred_orientation(): Warning: r has been set to 1.0." << std::endl;
 //    // Check that the PO direction is commensurate with the space-group symmetry.
 //    MillerIndices reflection( 37, -23, 3 );
 //    Vector3D PO_vector = reciprocal_lattice_point( preferred_orientation_direction_, crystal_structure_.crystal_lattice() );
@@ -113,6 +127,16 @@ void RealisticXRPDSimulatorSettings::set_finger_cox_jephcoat( const double A, co
     include_finger_cox_jephcoat_ = true;
     A_ = A;
     B_ = B;
+}
+
+// ********************************************************************************
+
+void RealisticXRPDSimulatorSettings::set_include_noise_for_zero_background( const size_t threshold )
+{
+    include_noise_for_zero_background_ = true;
+    noise_for_zero_background_threshold_ = threshold;
+    if ( threshold < 20 )
+        std::cout << "RealisticXRPDSimulatorSettings::set_include_noise_for_zero_background(): Warning: threshold < 20." << std::endl;
 }
 
 // ********************************************************************************

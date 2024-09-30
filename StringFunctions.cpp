@@ -191,6 +191,14 @@ std::string remove_delimiters( const std::string & input, const std::string & st
 
 // ********************************************************************************
 
+// Assumes that c is a character signifying the start of a comment, e.g. "'" in TOPAS or "#".
+std::string remove_from( const std::string & input, const char c )
+{
+    return input.substr( 0, input.find( c ) );
+}
+
+// ********************************************************************************
+
 size_t count_characters( const std::string & input, const char character )
 {
     size_t result( 0 );

@@ -28,11 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include "Angle.h"
-#include "MillerIndices.h"
 #include "PowderPattern.h"
 #include "RealisticXRPDSimulatorSettings.h"
-#include "Wavelength.h"
 
 class CrystalStructure;
 
@@ -65,6 +62,8 @@ public:
     PowderPattern background() const;
     PowderPattern noise() const;
     PowderPattern powder_pattern() const;
+
+    void write_TOPAS_inp_file( const FileName & file_name ) const;
 
 private:
     RealisticXRPDSimulatorSettings settings_;
