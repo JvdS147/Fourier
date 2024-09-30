@@ -31,6 +31,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 /*
+
+    @@ This is wrong: we need the ratio of the two wavelengths (if two are given).
+
+    @@ You cannot even query the class to tell you if there are two wavelengths or just one.
+
 */
 class Wavelength
 {

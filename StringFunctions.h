@@ -75,6 +75,9 @@ void strip( std::vector< std::string > & input );
 // returns "123", not "".
 std::string remove_delimiters( const std::string & input, const std::string & start_delimiter, const std::string & end_delimiter );
 
+// Assumes that c is a character signifying the start of a comment, e.g. "'" in TOPAS or "#".
+std::string remove_from( const std::string & input, const char c );
+
 // Counts number of occurrences of a specified character.
 size_t count_characters( const std::string & input, const char character );
 

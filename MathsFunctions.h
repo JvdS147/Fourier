@@ -46,6 +46,7 @@ class LinearFunction : public Function
 {
 public:
 
+    // y = a + b*x.
     LinearFunction( const double a, const double b );
 
     double operator()( const double x ) const;
@@ -62,6 +63,7 @@ class ExponentialFunction : public Function
 {
 public:
 
+    // y = a*exp(b*x).
     ExponentialFunction( const double a, const double b );
 
     double operator()( const double x ) const;
@@ -79,6 +81,7 @@ class GeneralLogisticFunction : public Function
 {
 public:
 
+    // y = height / ( 1.0 + exp( -slope * ( x - inflection_point ) ) ).
     GeneralLogisticFunction( const double height, const double inflection_point, const double slope );
 
     double operator()( const double x ) const;
@@ -99,6 +102,7 @@ class NormalisedLogisticFunction : public Function
 {
 public:
 
+    // y = 1.0 / ( 1.0 + exp( -slope * ( x - inflection_point ) ) ).
     NormalisedLogisticFunction( const double inflection_point, const double slope );
 
     double operator()( const double x ) const;
@@ -191,6 +195,7 @@ double uniform_distribution_2();
 
 double normal_distribution( const double mean = 0.0, const double sigma = 1.0 );
 
+// Returns 0.0 if mean is 0.0.
 size_t Poisson_distribution( const double mean );
 
 // For testing.

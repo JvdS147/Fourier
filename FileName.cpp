@@ -42,7 +42,7 @@ FileName::FileName()
 {
     slash_character_ = default_slash_character;
     set_directory( "" );
-    set_file_name( "" );
+    set_name( "" );
     set_extension( "" );
 }
 
@@ -56,7 +56,7 @@ FileName::FileName( std::string input )
     input = remove_delimiters( input, "\"", "\"" );
     input = replace( input, "/", "\\" );
     input = replace( input, "\\.\\", "\\" );
-    // Replace all occurrences of "\directory\..\" by "\"
+    // Replace all occurrences of "\directory\..\" by "\".
     bool changed( true );
     while ( changed )
     {
@@ -66,7 +66,7 @@ FileName::FileName( std::string input )
         {
             if ( iPos2 == 0 )
                 throw std::runtime_error( "FileName::FileName( std::string ): directory starts with \\..\\." );
-            // Find "\" starting at iPos2 and searching backwards
+            // Find "\" starting at iPos2 and searching backwards.
             size_t iPos1 = input.find_last_of( '\\', iPos2-1 );
             if ( iPos1 != std::string::npos )
             {
@@ -75,7 +75,7 @@ FileName::FileName( std::string input )
             }
         }
     }
-    // Find the last occurrence of "\\"
+    // Find the last occurrence of "\\".
     size_t iPos1 = input.find_last_of( "\\" );
     if ( iPos1 == std::string::npos )
     {
@@ -96,12 +96,12 @@ FileName::FileName( std::string input )
     if ( ( iPos2 == std::string::npos ) ||
          ( iPos2 < iPos1 ) )
     {
-        set_file_name( "\"" + input.substr( iPos1 ) + "\"" );
+        set_name( "\"" + input.substr( iPos1 ) + "\"" );
         set_extension( "" );
     }
     else
     {
-        set_file_name( "\"" + input.substr( iPos1, iPos2-iPos1 ) + "\"" );
+        set_name( "\"" + input.substr( iPos1, iPos2-iPos1 ) + "\"" );
         set_extension( "\"" + input.substr( iPos2+1 ) + "\"" );
     }
 }
@@ -112,7 +112,7 @@ FileName::FileName( const std::string & directory, const std::string & file_name
 {
     slash_character_ = default_slash_character;
     set_directory( directory );
-    set_file_name( file_name );
+    set_name( file_name );
     set_extension( extension );
 }
 
@@ -149,27 +149,27 @@ void FileName::set_directory( const std::string & directory )
 // ********************************************************************************
 
 // Extension is NOT included
-void FileName::set_file_name( const std::string & file_name )
+void FileName::set_name( const std::string & file_name )
 {
-    file_name_ = strip( file_name );
-    file_name_ = replace( file_name_, "/", "\\" );
-    if ( is_enclosed_in_quotes( file_name_ ) )
-        file_name_ = extract_delimited_text( file_name_, "\"", "\"" );
-    if ( file_name_.substr(0,1) == "\\" )
-        file_name_ = file_name_.substr( 1 );
-    size_t iPos = file_name_.find( "\\" );
+    name_ = strip( file_name );
+    name_ = replace( name_, "/", "\\" );
+    if ( is_enclosed_in_quotes( name_ ) )
+        name_ = extract_delimited_text( name_, "\"", "\"" );
+    if ( name_.substr(0,1) == "\\" )
+        name_ = name_.substr( 1 );
+    size_t iPos = name_.find( "\\" );
     if ( iPos != std::string::npos )
         throw std::runtime_error( "FileName::set_file_name(): file name contains \\: " + file_name );
 
     //    @@ We should check here for other things that are not allowed in file names
         
-    if ( file_name_.empty() )
+    if ( name_.empty() )
         return;
-    if ( file_name_.substr( file_name_.length()-1, 1 ) == "." )
-        file_name_ = file_name.substr( 0, file_name_.length()-1 );
-    if ( file_name_.empty() )
+    if ( name_.substr( name_.length()-1, 1 ) == "." )
+        name_ = file_name.substr( 0, name_.length()-1 );
+    if ( name_.empty() )
         return;
-    if ( file_name_.substr( file_name_.length()-1, 1 ) == "." )
+    if ( name_.substr( name_.length()-1, 1 ) == "." )
         throw std::runtime_error( "FileName::set_file_name(): file name ends in multiple dots." );
 }
 
@@ -237,7 +237,7 @@ std::string FileName::assemble_file_name() const
         contains_space = true;
     else
     {
-        iPos = file_name_.find( " " );
+        iPos = name_.find( " " );
         if ( iPos != std::string::npos )
             contains_space = true;
         else
@@ -248,7 +248,7 @@ std::string FileName::assemble_file_name() const
         }
     }
     std::string result( directory_ );
-    result += file_name_;
+    result += name_;
     if ( ! extension_.empty() )
         result += "." + extension_;
     if ( contains_space )
@@ -260,7 +260,7 @@ std::string FileName::assemble_file_name() const
 
 FileName replace_extension( const FileName & file_name, const std::string & new_extension )
 {
-    return FileName( file_name.directory(), file_name.file_name(), new_extension );
+    return FileName( file_name.directory(), file_name.name(), new_extension );
 }
 
 // ********************************************************************************
@@ -268,7 +268,7 @@ FileName replace_extension( const FileName & file_name, const std::string & new_
 // append_to_file_name( "C:\directory\file.txt", "_2" ) => "C:\directory\file_2.txt"
 FileName append_to_file_name( const FileName & file_name, const std::string & addition )
 {
-    return FileName( file_name.directory(), file_name.file_name() + addition, file_name.extension() );
+    return FileName( file_name.directory(), file_name.name() + addition, file_name.extension() );
 }
 
 // ********************************************************************************

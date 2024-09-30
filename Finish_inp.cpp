@@ -198,8 +198,7 @@ void finish_inp( const FileName & input_file_name )
         {
             std::string line = extract_delimited_text( text_file_reader.get_line(), "(", ")" );
             FileName file_name_FN( line );
-            std::string file_name = file_name_FN.file_name();
-            std::string new_file_name = FileName( file_name_FN.directory(), file_name, "cif" ).full_name();
+            std::string new_file_name = FileName( file_name_FN.directory(), file_name_FN.name(), "cif" ).full_name();
             if ( ! is_enclosed_in_quotes( new_file_name ) )
                 new_file_name = "\"" + new_file_name + "\"";
             text_file_writer.write_line( "    Out_CIF_STR( " + new_file_name + " )" );
@@ -210,7 +209,7 @@ void finish_inp( const FileName & input_file_name )
             // Keep everything between ( and )
             std::string line = extract_delimited_text( text_file_reader.get_line(), "(", ")" );
             FileName file_name_FN( line );
-            std::string file_name = file_name_FN.file_name();
+            std::string file_name = file_name_FN.name();
             if ( file_name.substr( file_name.length() - 5, 5 ) == "_plot" )
                 file_name = file_name.substr( 0, file_name.length() - 4 ) + "profile";
             std::string new_file_name = FileName( file_name_FN.directory(), file_name, "txt" ).full_name();
@@ -229,7 +228,7 @@ void finish_inp( const FileName & input_file_name )
             // Out_Tick("C:\GD\name_plot.tic")
             std::string line = extract_delimited_text( text_file_reader.get_line(), "(", ")" );
             FileName file_name_FN( line );
-            std::string file_name = file_name_FN.file_name();
+            std::string file_name = file_name_FN.name();
             std::string fcf_file_name;
             if ( file_name.substr( file_name.length() - 5, 5 ) == "_plot" )
             {

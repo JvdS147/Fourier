@@ -69,11 +69,11 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     read_cif( input_cif_file_name, crystal_structure );
     // The powder diffraction file must contain a third column with estimated standard deviations or TOPAS cannot read the file.
     // So create that file now.
-    if ( FileName( input_cif_file_name.directory(), input_cif_file_name.file_name(), "xye" ).exists() )
-        throw std::runtime_error( "inp_writer(): can't create " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name(), "xye" ).full_name() + " because it already exists." );
+    if ( FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ).exists() )
+        throw std::runtime_error( "inp_writer(): can't create " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ).full_name() + " because it already exists." );
     PowderPattern powder_pattern( input_xye_file_name );
     powder_pattern.recalculate_estimated_standard_deviations();
-    powder_pattern.save_xye( FileName( input_cif_file_name.directory(), input_cif_file_name.file_name(), "xye" ), false );
+    powder_pattern.save_xye( FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ), false );
     TextFileWriter text_file_writer( replace_extension( input_cif_file_name, "inp" ) );
     bool file_00000001_Bonds_tsv_exists = FileName( input_cif_file_name.directory(), "00000001-Bonds", "tsv" ).exists();
     bool file_00000001_AllAngles_tsv_exists = FileName( input_cif_file_name.directory(), "00000001-AllAngles", "tsv" ).exists();
@@ -182,7 +182,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
 //        }
 //    }
     write_preamble( text_file_writer );
-    text_file_writer.write_line( "xdd " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name(), "xye" ).full_name() + " xye_format" );
+    text_file_writer.write_line( "xdd " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ).full_name() + " xye_format" );
     text_file_writer.write_line( "  bkg @" );
     for ( size_t i( 0 ); i != 20; ++i )
         text_file_writer.write_line( "    0.0" );
@@ -214,11 +214,11 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    CS_L(@ , 9999.99881`)" );
     text_file_writer.write_line( "    Strain_G(@ , 0.49554`)" );
     text_file_writer.write_line( "    Strain_L(@ , 0.03347`)" );
-    text_file_writer.write_line( "    prm  sh_scale_l" + aal + " " + double2string( powder_pattern.cumulative_intensity() * 4.2E-10 ) );
+    text_file_writer.write_line( "    prm sh_scale_l" + aal + " 1.0" );
     text_file_writer.write_line( "    spherical_harmonics_hkl sh_l" + aal );
     text_file_writer.write_line( "      sh_order 6" );
     text_file_writer.write_line( "    lor_fwhm = Abs( sh_scale_l" + aal + " * sh_l" + aal + " );" );
-    text_file_writer.write_line( "    prm  sh_scale_g" + aal + "  0.01948" );
+    text_file_writer.write_line( "    prm sh_scale_g" + aal + " 1.0" );
     text_file_writer.write_line( "    spherical_harmonics_hkl sh_g" + aal );
     text_file_writer.write_line( "      sh_order 6" );
     text_file_writer.write_line( "    gauss_fwhm = Abs( sh_scale_g" + aal + " * sh_g" + aal + " );" );
@@ -229,7 +229,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "'    PO(@ , 1.0, , 1 0 0 )" );
     text_file_writer.write_line( "'    PO_Spherical_Harmonics( sh, 6 )" );
     text_file_writer.write_line( "    macro ref_flag" + aal + " { @ }" );
-    text_file_writer.write_line( "    prm    bnonh" + aal + " 3.0" );
+    text_file_writer.write_line( "    prm bnonh" + aal + " 3.0" );
     text_file_writer.write_line( "    prm bh" + aal + " = 1.2 * bnonh" + aal + ";" );
     for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
     {
@@ -266,20 +266,20 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    prm !flatten_width 0" );
     text_file_writer.write_line( "    prm !flatten_weight    100000" );
     text_file_writer.write_line( "    'Flatten( C19 N11 N35 C47 H54 C50 H58 C45 H49 C34 C46, , 0.0, flatten_width, flatten_weight )" );
-    text_file_writer.write_line( "    Out_CIF_STR( " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name() + "_RR", "cif" ).full_name() + " )" );
-    text_file_writer.write_line( "  xdd_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name() + "_profile", "txt" ).full_name() + " load out_record out_fmt out_eqn" );
+    text_file_writer.write_line( "    Out_CIF_STR( " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_RR", "cif" ).full_name() + " )" );
+    text_file_writer.write_line( "  xdd_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_profile", "txt" ).full_name() + " load out_record out_fmt out_eqn" );
     text_file_writer.write_line( "  {" );
     text_file_writer.write_line( "      \" %11.5f \" = X;" );
     text_file_writer.write_line( "      \" %11.5f \" = Yobs;" );
     text_file_writer.write_line( "      \" %11.5f \" = Ycalc;" );
     text_file_writer.write_line( "      \" %11.5f\\n\" = SigmaYobs;" );
     text_file_writer.write_line( "  }" );
-    text_file_writer.write_line( "  phase_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name() + "_tickmarks", "txt" ).full_name() + " load out_record out_fmt out_eqn" );
+    text_file_writer.write_line( "  phase_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_tickmarks", "txt" ).full_name() + " load out_record out_fmt out_eqn" );
     text_file_writer.write_line( "  {" );
     text_file_writer.write_line( "      \" %11.5f -200\\n\" = 2.0 * Rad * Th;" );
     text_file_writer.write_line( "  }" );
     text_file_writer.write_line( "  ' Structure factors should be in *.fcf, intensities should be in *.hkl." );
-    text_file_writer.write_line( "  out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name(), "fcf" ).full_name() );
+    text_file_writer.write_line( "  out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "fcf" ).full_name() );
     text_file_writer.write_line( "  Out_String(\"\\ndata_\")" );
     text_file_writer.write_line( "  Out(Get(a), \"\\n_cell_length_a %V\")" );
     text_file_writer.write_line( "  Out(Get(b), \"\\n_cell_length_b %V\")" );
@@ -298,7 +298,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "  Out_String(\"\\n_refln_F_squared_meas\")" );
     text_file_writer.write_line( "  Out_String(\"\\n_refln_F_squared_sigma\")" );
     text_file_writer.write_line( "  Out_String(\"\\n_refln_observed_status\")" );
-    text_file_writer.write_line( "  phase_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.file_name(), "fcf" ).full_name() + " append" );
+    text_file_writer.write_line( "  phase_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "fcf" ).full_name() + " append" );
     text_file_writer.write_line( "    load out_record out_fmt out_eqn" );
     text_file_writer.write_line( "    {" );
     text_file_writer.write_line( "      \"\\n%4.0f\" = H;" );

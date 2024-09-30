@@ -103,3 +103,4 @@ int operator*( const MillerIndices & lhs, const MillerIndices & rhs )
 }
 
 // ********************************************************************************
+

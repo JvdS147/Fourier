@@ -47,8 +47,8 @@ void TLSWriter( const FileName & input_file_name )
 {
     bool is_on_inversion_at_origin( true );
     TextFileWriter text_file_writer( replace_extension( append_to_file_name( input_file_name, "_TLS" ), "inp" ) );
-    bool write_bond_restraints = FileName( input_file_name.directory(), input_file_name.file_name() + "_bond_restraints", "txt" ).exists();
-    bool write_angle_restraints = FileName( input_file_name.directory(), input_file_name.file_name() + "_angle_restraints", "txt" ).exists();
+    bool write_bond_restraints = FileName( input_file_name.directory(), input_file_name.name() + "_bond_restraints", "txt" ).exists();
+    bool write_angle_restraints = FileName( input_file_name.directory(), input_file_name.name() + "_angle_restraints", "txt" ).exists();
     std::vector< std::string > bond_labels_1;
     std::vector< std::string > bond_labels_2;
     std::vector< double > bond_target_values;
@@ -59,7 +59,7 @@ void TLSWriter( const FileName & input_file_name )
     if ( write_bond_restraints )
     {
         std::cout << "Bond restraints file found, bond restraints will be written out." << std::endl;
-        TextFileReader_2 file_bond_restraints( FileName( input_file_name.directory(), input_file_name.file_name() + "_bond_restraints", "txt" ) );
+        TextFileReader_2 file_bond_restraints( FileName( input_file_name.directory(), input_file_name.name() + "_bond_restraints", "txt" ) );
         std::vector< std::string > words;
         for ( size_t i( 1 ); i != file_bond_restraints.size(); ++i )
         {
@@ -76,7 +76,7 @@ void TLSWriter( const FileName & input_file_name )
     if ( write_angle_restraints )
     {
         std::cout << "Angle restraints file found, angle restraints will be written out." << std::endl;
-        TextFileReader_2 file_angle_restraints( FileName( input_file_name.directory(), input_file_name.file_name() + "_angle_restraints", "txt" ) );
+        TextFileReader_2 file_angle_restraints( FileName( input_file_name.directory(), input_file_name.name() + "_angle_restraints", "txt" ) );
         std::vector< std::string > words;
         for ( size_t i( 1 ); i != file_angle_restraints.size(); ++i )
         {

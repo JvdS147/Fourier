@@ -57,7 +57,7 @@ FileList::FileList( const std::string & base_directory, const FileName & file_na
 {
     base_directory_ = append_backslash( base_directory_ );
     if ( file_name.directory().empty() )
-        initialise_from_file_2( FileName( base_directory_, file_name.file_name(), file_name.extension() ) );
+        initialise_from_file_2( FileName( base_directory_, file_name.name(), file_name.extension() ) );
     else
         initialise_from_file_2( file_name );
 }
@@ -76,7 +76,7 @@ FileName FileList::value( const size_t i ) const
     if ( i < file_names_.size() )
     {
         if ( prepend_file_name_with_basedirectory_ && file_names_[ i ].directory().empty() )
-            return FileName( base_directory_, file_names_[ i ].file_name(), file_names_[ i ].extension() );
+            return FileName( base_directory_, file_names_[ i ].name(), file_names_[ i ].extension() );
         return file_names_[ i ];
     }
     throw std::runtime_error( " FileList::value(): index out of bounds." );
