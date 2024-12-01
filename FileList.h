@@ -62,7 +62,7 @@ public:
     explicit FileList( const std::vector< FileName > & file_names );
 
     // The base_directory refers to the file names in the list *and* to the file name of the file containing the list,
-    // unless that file already has a directory
+    // unless that file already has a directory.
     FileList( const std::string & base_directory, const FileName & file_name );
 
     FileList( const std::string & base_directory, const std::vector< FileName > & file_names );
@@ -84,13 +84,13 @@ public:
     // This provides a very quick and dirty parallelisation mechanism.
     void split( const size_t n, const std::string & basename ) const;
 
-    // Guaranteed to end in a backslash
+    // Guaranteed to end in a backslash.
     std::string base_directory() const { return base_directory_; }
 
-    // This is wasteful and an iterator would be much more elegant
+    // This is wasteful and an iterator would be much more elegant.
     FileName value( const size_t i ) const;
 
-    // @@ This really needs a flag to indicate if the directory name should explicitly be included / deleted / left as-is
+    // @@ This really needs a flag to indicate if the directory name should explicitly be included / deleted / left as-is.
     void save( const FileName & file_name ) const;
 
 private:
@@ -101,7 +101,7 @@ private:
     void initialise_from_file_2( const FileName & file_name );
 };
 
-FileList merge( const FileList & lhs, const FileList & rhs );
+FileList append( const FileList & lhs, const FileList & rhs );
 
 #endif // FILELIST_H
 

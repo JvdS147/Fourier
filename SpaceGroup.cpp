@@ -620,7 +620,11 @@ void SpaceGroup::decompose()
     if ( has_inversion_ )
         nexpected_symmetry_operators *= 2;
     if ( nexpected_symmetry_operators != symmetry_operators_.size() )
-        throw std::runtime_error( "SpaceGroup::decompose(): number of symmetry operators not consistent." );
+    {
+        std::cout << "SpaceGroup::decompose(): Warning: number of symmetry operators not consistent."<< std::endl;
+        std::cout << "SpaceGroup::decompose(): Warning: you have now constructed an invalid object!"<< std::endl;
+ //       throw std::runtime_error( "SpaceGroup::decompose(): Error: number of symmetry operators not consistent." );
+    }
 }
 
 // ********************************************************************************

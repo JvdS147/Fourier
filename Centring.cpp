@@ -59,13 +59,32 @@ Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_
     }
     if ( ! zero_vector_found )
         throw std::runtime_error( "Centring::Centring(): error: zero vector not found." );
-    // Check for duplicates
-    for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
+    // Remove duplicates.
+    if ( centring_vectors_.size() != 1000 ) // Do not do this if I am playing around with my "Joke" centring.
     {
-        for ( size_t j( i+1 ); j != centring_vectors_.size(); ++j )
+        bool duplicates_found( false );
+        std::vector< Vector3D > new_centring_vectors;
+        std::vector< bool > done( centring_vectors_.size(), false );
+        for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
         {
-            if ( nearly_equal( centring_vectors_[i], centring_vectors_[j] ) )
-                throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): error: duplicate vector found." );
+            if ( done[i] )
+                continue;
+            new_centring_vectors.push_back( centring_vectors_[i] );
+            done[i] = true;
+            for ( size_t j( i+1 ); j != centring_vectors_.size(); ++j )
+            {
+                if ( nearly_equal( centring_vectors_[i], centring_vectors_[j] ) )
+                {
+                    duplicates_found = true;
+                    done[j] = true;
+                }
+            }
+        }
+        if ( duplicates_found )
+        {
+            std::cout << "Centring::Centring( std::vector< Vector3D > ): Warning: duplicate vectors found." << std::endl;
+            std::cout << "We had " << centring_vectors_.size() << " centring vectors, now we have " << new_centring_vectors.size() << "." << std::endl;
+            centring_vectors_ = new_centring_vectors;
         }
     }
     centring_type_ = U; // Unknown

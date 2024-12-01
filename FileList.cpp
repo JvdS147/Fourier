@@ -134,10 +134,10 @@ void FileList::initialise_from_file_2( const FileName & file_name )
 
 // ********************************************************************************
 
-FileList merge( const FileList & lhs, const FileList & rhs )
+FileList append( const FileList & lhs, const FileList & rhs )
 {
     if ( lhs.base_directory() != rhs.base_directory() )
-        throw std::runtime_error( "merge( FileList, FileList ): base directories differ." );
+        throw std::runtime_error( "append( FileList, FileList ): base directories differ." );
     FileList result( lhs );
     for ( size_t i( 0 ); i != rhs.size(); ++i )
         result.push_back( rhs.value( i ) );

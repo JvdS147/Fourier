@@ -66,8 +66,8 @@ private:
 template <class T>
 Mapping sort( const std::vector< T > & values, const bool reverse_order = false )
 {
-    // We don't actually sort the list, but create a sorted map
-    // We use std::stable_sort() with a functor
+    // We don't actually sort the list, but create a sorted map.
+    // We use std::stable_sort() with a functor.
     Mapping sorted_map( values.size() );
     std::stable_sort( sorted_map.begin(), sorted_map.end(), Compare<T>( values, reverse_order ) );
     return sorted_map;

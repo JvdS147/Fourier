@@ -158,6 +158,11 @@ size_t PowderPattern::find_two_theta( const Angle two_theta_value ) const
     {
         --lower_index;
     }
+    for ( size_t i( lower_index ); i != upper_index+1; ++i )
+    {
+        if ( nearly_equal( two_theta( i ), two_theta_value ) )
+            return i;
+    }
     if ( ( upper_index - lower_index ) != 1 )
         throw std::runtime_error( "PowderPattern::find_two_theta(): programming error." );
     if ( ( two_theta_value - two_theta( lower_index ) ) < ( two_theta( upper_index ) - two_theta_value ) )
@@ -1162,7 +1167,7 @@ PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_p
     {
         if ( powder_patterns[i].two_theta_start() < two_theta_min )
             two_theta_min = powder_patterns[i].two_theta_start();
-        if ( powder_patterns[i].two_theta_end() < two_theta_max )
+        if ( powder_patterns[i].two_theta_end() > two_theta_max )
             two_theta_max = powder_patterns[i].two_theta_end();
     }
     Angle two_theta_step = powder_patterns[0].average_two_theta_step();
@@ -1174,6 +1179,7 @@ PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_p
         double sum_of_noscp2ts( 0.0 );
         for ( size_t i( 0 ); i != powder_patterns.size(); ++i )
         {
+            // @@ The following is wrong because "result" includes the min and max 2theta, which may not exist in the current pattern.
             size_t index = powder_patterns[i].find_two_theta( result.two_theta( j ) );
             if ( absolute( powder_patterns[i].two_theta( index ) - result.two_theta( j ) ) < ( two_theta_step / 2.0 ) )
             {
