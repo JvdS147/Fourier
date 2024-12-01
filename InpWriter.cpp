@@ -48,14 +48,14 @@ void write_preamble( TextFileWriter & text_file_writer )
     text_file_writer.write_line( "penalties_weighting_K1 5" );
     text_file_writer.write_line( "'do_errors_include_penalties" );
     text_file_writer.write_line( "prm JvdS_shift = Get(refine_ls_shift_on_su_max); : 0.0" );
-    text_file_writer.write_line( "prm JvdS_numpar = Get(number_independent_parameters); :  0.0" );
-    text_file_writer.write_line( "r_exp  0.0" );
-    text_file_writer.write_line( "r_exp_dash  0.0" );
-    text_file_writer.write_line( "r_wp  0.0" );
-    text_file_writer.write_line( "r_wp_dash  0.0" );
-    text_file_writer.write_line( "r_p  0.0" );
-    text_file_writer.write_line( "r_p_dash  0.0" );
-    text_file_writer.write_line( "gof  0.0" );
+    text_file_writer.write_line( "prm JvdS_numpar = Get(number_independent_parameters); : 0.0" );
+    text_file_writer.write_line( "r_exp 0.0" );
+    text_file_writer.write_line( "r_exp_dash 0.0" );
+    text_file_writer.write_line( "r_wp 0.0" );
+    text_file_writer.write_line( "r_wp_dash 0.0" );
+    text_file_writer.write_line( "r_p 0.0" );
+    text_file_writer.write_line( "r_p_dash 0.0" );
+    text_file_writer.write_line( "gof 0.0" );
     text_file_writer.write_line( "'continue_after_convergence" );
 }
 
@@ -209,11 +209,11 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    ymin_on_ymax 0.001" );
     text_file_writer.write_line( "    la 1 lo 1.540560" );
     text_file_writer.write_line( "  str" );
-    text_file_writer.write_line( "    r_bragg  0.0" );
+    text_file_writer.write_line( "    r_bragg 0.0" );
     text_file_writer.write_line( "    CS_G(@ , 107.03272`)" );
     text_file_writer.write_line( "    CS_L(@ , 9999.99881`)" );
     text_file_writer.write_line( "    Strain_G(@ , 0.49554`)" );
-    text_file_writer.write_line( "    Strain_L(@ , 0.03347`)" );
+    text_file_writer.write_line( "    Strain_L(@ , 0.03347`)" ); 
     text_file_writer.write_line( "    prm sh_scale_l" + aal + " 1.0" );
     text_file_writer.write_line( "    spherical_harmonics_hkl sh_l" + aal );
     text_file_writer.write_line( "      sh_order 6" );
@@ -225,7 +225,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     write_unit_cell( text_file_writer, crystal_structure.crystal_lattice() );
     text_file_writer.write_line( "    MVW( 0.0, 0.0, 0.0 )");
     text_file_writer.write_line( "    space_group \"" + remove( remove( crystal_structure.space_group().name(), '_' ), ' ') + "\"");
-    text_file_writer.write_line( "    scale @  0.0001" );
+    text_file_writer.write_line( "    scale @ 0.0001" );
     text_file_writer.write_line( "'    PO(@ , 1.0, , 1 0 0 )" );
     text_file_writer.write_line( "'    PO_Spherical_Harmonics( sh, 6 )" );
     text_file_writer.write_line( "    macro ref_flag" + aal + " { @ }" );
@@ -244,8 +244,8 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     }
     if ( file_00000001_Bonds_tsv_exists )
     {
-        text_file_writer.write_line( "    prm !bond_width   0" );
-        text_file_writer.write_line( "    prm !bond_weight  10000" );
+        text_file_writer.write_line( "    prm !bond_width  0" );
+        text_file_writer.write_line( "    prm !bond_weight 10000" );
         for ( size_t i( 0 ); i != bond_labels_1.size(); ++i )
         {
             if ( element_from_atom_label( bond_labels_1[i] ).is_H_or_D() || element_from_atom_label( bond_labels_2[i] ).is_H_or_D() )
@@ -263,8 +263,8 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
            text_file_writer.write_line( "    Angle_Restrain( " + angle_labels_1[i] + " " + angle_labels_2[i] + " " + angle_labels_3[i] + ", " + double2string( angle_target_values[i] ) + ", 0.0, angle_width, angle_weight )" );
         }
     }
-    text_file_writer.write_line( "    prm !flatten_width 0" );
-    text_file_writer.write_line( "    prm !flatten_weight    100000" );
+    text_file_writer.write_line( "    prm !flatten_width  0" );
+    text_file_writer.write_line( "    prm !flatten_weight 100000" );
     text_file_writer.write_line( "    'Flatten( C19 N11 N35 C47 H54 C50 H58 C45 H49 C34 C46, , 0.0, flatten_width, flatten_weight )" );
     text_file_writer.write_line( "    Out_CIF_STR( " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_RR", "cif" ).file_name() + " )" );
     text_file_writer.write_line( "  xdd_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_profile", "txt" ).file_name() + " load out_record out_fmt out_eqn" );
@@ -318,6 +318,61 @@ void write_unit_cell_variables( TextFileWriter & text_file_writer, const Crystal
 {
     if ( variable_temperature )
     {
+//    a  = Exp(Ln(a0) + ((a1 * theta_a_1)/(Exp(theta_a_1/T380)-1))); :  9.22358`
+//    b  = Exp(Ln(b0) + ((b1 * theta_b_1)/(Exp(theta_b_1/T380)-1)) + ((b2 * theta_b_2)/(Exp(theta_b_2/T380)-1))); :  24.29974`
+        text_file_writer.write_line( "prm a0 " + double2string( crystal_lattice.a() ) );
+        text_file_writer.write_line( "prm theta_a_1 100.0" );
+        text_file_writer.write_line( "prm a1_0 10.0" );
+        text_file_writer.write_line( "prm a1 = a1_0 / 100000.0;" );
+        if ( ! crystal_lattice.b_is_constrained() )
+        {
+            text_file_writer.write_line( "prm b0 " + double2string( crystal_lattice.b() ) );
+            text_file_writer.write_line( "prm theta_b_1 100.0" );
+            text_file_writer.write_line( "prm theta_b_2 1000.0" );
+            text_file_writer.write_line( "prm b1_0 10.0" );
+            text_file_writer.write_line( "prm b1 = b1_0 / 100000.0;" );
+            text_file_writer.write_line( "prm b2_0 -10.0" );
+            text_file_writer.write_line( "prm b2 = b2_0 / 100000.0;" );
+        }
+        if ( ! crystal_lattice.c_is_constrained() )
+        {
+            text_file_writer.write_line( "prm c0 " + double2string( crystal_lattice.c() ) );
+            text_file_writer.write_line( "prm theta_c_1 100.0" );
+            text_file_writer.write_line( "prm c1_0 10.0" );
+            text_file_writer.write_line( "prm c1 = c1_0 / 100000.0;" );
+        }
+        if ( ( crystal_lattice.lattice_system() == CrystalLattice::CUBIC ) ||
+             ( crystal_lattice.lattice_system() == CrystalLattice::TETRAGONAL ) ||
+             ( crystal_lattice.lattice_system() == CrystalLattice::HEXAGONAL ) ||
+             ( crystal_lattice.lattice_system() == CrystalLattice::ORTHORHOMBIC ) )
+            return;
+        if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_B )
+        {
+            text_file_writer.write_line( "prm JvdS_uc_beta_0 " + double2string( crystal_lattice.beta().value_in_degrees() ) );
+            text_file_writer.write_line( "prm JvdS_uc_beta_1_0 10.0" );
+            text_file_writer.write_line( "prm JvdS_uc_beta_1 = JvdS_uc_beta_1_0 / 100000.0" );
+        }
+        else if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_C )
+        {
+            text_file_writer.write_line( "prm JvdS_uc_gamma_0 " + double2string( crystal_lattice.gamma().value_in_degrees() ) );
+            text_file_writer.write_line( "prm JvdS_uc_gamma_1_0 10.0" );
+            text_file_writer.write_line( "prm JvdS_uc_gamma_1 = JvdS_uc_gamma_1_0 / 100000.0" );
+        }
+        else
+        {
+            text_file_writer.write_line( "prm JvdS_uc_alpha_0 " + double2string( crystal_lattice.alpha().value_in_degrees() ) );
+            text_file_writer.write_line( "prm JvdS_uc_alpha_1_0 10.0" );
+            text_file_writer.write_line( "prm JvdS_uc_alpha_1 = JvdS_uc_alpha_1_0 / 100000.0" );
+            if ( crystal_lattice.lattice_system() == CrystalLattice::TRICLINIC )
+            {
+                text_file_writer.write_line( "prm JvdS_uc_beta_0 " + double2string( crystal_lattice.beta().value_in_degrees() ) );
+                text_file_writer.write_line( "prm JvdS_uc_beta_1_0 10.0" );
+                text_file_writer.write_line( "prm JvdS_uc_beta_1 = JvdS_uc_beta_1_0 / 100000.0" );
+                text_file_writer.write_line( "prm JvdS_uc_gamma_0 " + double2string( crystal_lattice.gamma().value_in_degrees() ) );
+                text_file_writer.write_line( "prm JvdS_uc_gamma_1_0 10.0" );
+                text_file_writer.write_line( "prm JvdS_uc_gamma_1 = JvdS_uc_gamma_1_0 / 100000.0" );
+            }
+        }
     }
     else // Not variable temperature.
     {
@@ -355,18 +410,62 @@ void write_unit_cell( TextFileWriter & text_file_writer, const CrystalLattice & 
     {
         if ( variable_temperature )
         {
+//    a  = Exp(Ln(a0) + ((a1 * theta_a_1)/(Exp(theta_a_1/T380)-1))); :  9.22358`
+//    b  = Exp(Ln(b0) + ((b1 * theta_b_1)/(Exp(theta_b_1/T380)-1)) + ((b2 * theta_b_2)/(Exp(theta_b_2/T380)-1))); :  24.29974`
+            text_file_writer.write_line( "    a = Exp(Ln(a0) + ((a1 * theta_a_1)/(Exp(theta_a_1/JvdS_temperature)-1))); : 0.0" );
+            if ( crystal_lattice.b_is_constrained() )
+                text_file_writer.write_line( "    b = Exp(Ln(a0) + ((a1 * theta_a_1)/(Exp(theta_a_1/JvdS_temperature)-1))); : 0.0" );
+            else
+                text_file_writer.write_line( "    b  = Exp(Ln(b0) + ((b1 * theta_b_1)/(Exp(theta_b_1/JvdS_temperature)-1)) + ((b2 * theta_b_2)/(Exp(theta_b_2/JvdS_temperature)-1))); : 0.0" );
+            if ( crystal_lattice.c_is_constrained() )
+                text_file_writer.write_line( "    c = Exp(Ln(a0) + ((a1 * theta_a_1)/(Exp(theta_a_1/JvdS_temperature)-1))); : 0.0" );
+            else
+                text_file_writer.write_line( "    c = Exp(Ln(c0) + ((c1 * theta_c_1)/(Exp(theta_c_1/JvdS_temperature)-1))); : 0.0" );
+            if ( crystal_lattice.lattice_system() == CrystalLattice::TRICLINIC )
+            {
+                
+                text_file_writer.write_line( "    al = JvdS_uc_alpha_0 + JvdS_uc_alpha_1 * JvdS_temperature; : 0.0" );
+                text_file_writer.write_line( "    be = JvdS_uc_beta_0 + JvdS_uc_beta_1 * JvdS_temperature; : 0.0" );
+                text_file_writer.write_line( "    ga = JvdS_uc_gamma_0 + JvdS_uc_gamma_1 * JvdS_temperature; : 0.0" );
+            }
+            else if ( crystal_lattice.lattice_system() == CrystalLattice::RHOMBOHEDRAL )
+            {
+                text_file_writer.write_line( "    al = JvdS_uc_alpha_0 + JvdS_uc_alpha_1 * JvdS_temperature; : 0.0" );
+                text_file_writer.write_line( "    be = JvdS_uc_alpha_0 + JvdS_uc_alpha_1 * JvdS_temperature; : 0.0" );
+                text_file_writer.write_line( "    ga = JvdS_uc_alpha_0 + JvdS_uc_alpha_1 * JvdS_temperature; : 0.0" );
+            }
+            else if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_A )
+            {
+                text_file_writer.write_line( "    al = JvdS_uc_alpha_0 + JvdS_uc_alpha_1 * JvdS_temperature; : 0.0" );
+                text_file_writer.write_line( "    be 90.0" );
+                text_file_writer.write_line( "    ga 90.0" );
+            }
+            else
+            {
+                text_file_writer.write_line( "    al 90.0" );
+                if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_B )
+                    text_file_writer.write_line( "    be = JvdS_uc_beta_0 + JvdS_uc_beta_1 * JvdS_temperature; : 0.0" );
+                else
+                    text_file_writer.write_line( "    be 90.0" );
+                if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_C )
+                    text_file_writer.write_line( "    ga = JvdS_uc_gamma_0 + JvdS_uc_gamma_1 * JvdS_temperature; : 0.0" );
+                else if ( crystal_lattice.lattice_system() == CrystalLattice::HEXAGONAL )
+                    text_file_writer.write_line( "    ga 120.0" );
+                else
+                    text_file_writer.write_line( "    ga 90.0" );
+            }
         }
         else // Not variable temperature.
         {
-            text_file_writer.write_line( "    a  =JvdS_uc_a;" );
+            text_file_writer.write_line( "    a =JvdS_uc_a;" );
             if ( crystal_lattice.b_is_constrained() )
-                text_file_writer.write_line( "    b  =JvdS_uc_a;" );
+                text_file_writer.write_line( "    b =JvdS_uc_a;" );
             else
-                text_file_writer.write_line( "    b  =JvdS_uc_b;" );
+                text_file_writer.write_line( "    b =JvdS_uc_b;" );
             if ( crystal_lattice.c_is_constrained() )
-                text_file_writer.write_line( "    c  =JvdS_uc_a;" );
+                text_file_writer.write_line( "    c =JvdS_uc_a;" );
             else
-                text_file_writer.write_line( "    c  =JvdS_uc_c;" );
+                text_file_writer.write_line( "    c =JvdS_uc_c;" );
             if ( crystal_lattice.lattice_system() == CrystalLattice::TRICLINIC )
             {
                 text_file_writer.write_line( "    al =JvdS_uc_alpha;" );
@@ -382,22 +481,22 @@ void write_unit_cell( TextFileWriter & text_file_writer, const CrystalLattice & 
             else if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_A )
             {
                 text_file_writer.write_line( "    al =JvdS_uc_alpha;" );
-                text_file_writer.write_line( "    be   90.0" );
-                text_file_writer.write_line( "    ga   90.0" );
+                text_file_writer.write_line( "    be 90.0" );
+                text_file_writer.write_line( "    ga 90.0" );
             }
             else
             {
-                text_file_writer.write_line( "    al   90.0" );
+                text_file_writer.write_line( "    al 90.0" );
                 if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_B )
                     text_file_writer.write_line( "    be =JvdS_uc_beta;" );
                 else
-                    text_file_writer.write_line( "    be   90.0" );
+                    text_file_writer.write_line( "    be 90.0" );
                 if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_C )
                     text_file_writer.write_line( "    ga =JvdS_uc_gamma;" );
                 else if ( crystal_lattice.lattice_system() == CrystalLattice::HEXAGONAL )
                     text_file_writer.write_line( "    ga 120.0" );
                 else
-                    text_file_writer.write_line( "    ga   90.0" );
+                    text_file_writer.write_line( "    ga 90.0" );
             }
         }
     }
@@ -413,13 +512,13 @@ void write_unit_cell( TextFileWriter & text_file_writer, const CrystalLattice & 
         }
         else
         {
-            text_file_writer.write_line( "    a  @ " + double2string( crystal_lattice.a() ) );
-            text_file_writer.write_line( "    b  @ " + double2string( crystal_lattice.b() ) );
+            text_file_writer.write_line( "    a @ " + double2string( crystal_lattice.a() ) );
+            text_file_writer.write_line( "    b @ " + double2string( crystal_lattice.b() ) );
         }
         if ( crystal_lattice.c_is_constrained() )
             text_file_writer.write_line( "    c = JvdS_uc_a;" );
         else
-            text_file_writer.write_line( "    c  @ " + double2string( crystal_lattice.c() ) );
+            text_file_writer.write_line( "    c @ " + double2string( crystal_lattice.c() ) );
         if ( crystal_lattice.lattice_system() == CrystalLattice::TRICLINIC )
         {
             text_file_writer.write_line( "    al @ " + double2string( crystal_lattice.alpha().value_in_degrees() ) );
@@ -436,22 +535,22 @@ void write_unit_cell( TextFileWriter & text_file_writer, const CrystalLattice & 
         else if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_A )
         {
             text_file_writer.write_line( "    al @ " + double2string( crystal_lattice.alpha().value_in_degrees() ) );
-            text_file_writer.write_line( "    be   90.0" );
-            text_file_writer.write_line( "    ga   90.0" );
+            text_file_writer.write_line( "    be 90.0" );
+            text_file_writer.write_line( "    ga 90.0" );
         }
         else
         {
-            text_file_writer.write_line( "    al   90.0" );
+            text_file_writer.write_line( "    al 90.0" );
             if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_B )
                 text_file_writer.write_line( "    be @ " + double2string( crystal_lattice.beta().value_in_degrees() ) );
             else
-                text_file_writer.write_line( "    be   90.0" );
+                text_file_writer.write_line( "    be 90.0" );
             if ( crystal_lattice.lattice_system() == CrystalLattice::MONOCLINIC_C )
                 text_file_writer.write_line( "    ga @ " + double2string( crystal_lattice.gamma().value_in_degrees() ) );
             else if ( crystal_lattice.lattice_system() == CrystalLattice::HEXAGONAL )
                 text_file_writer.write_line( "    ga 120.0" );
             else
-                text_file_writer.write_line( "    ga   90.0" );
+                text_file_writer.write_line( "    ga 90.0" );
         }
     }
 }
