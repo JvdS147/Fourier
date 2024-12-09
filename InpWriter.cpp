@@ -61,7 +61,7 @@ void write_preamble( TextFileWriter & text_file_writer )
 
 // ********************************************************************************
 
-void inp_writer( const FileName & input_cif_file_name, const FileName & input_xye_file_name, const std::string & aal  )
+void inp_writer( const FileName & input_cif_file_name, const FileName & input_xye_file_name, const std::string & aal )
 {
     bool generate_restraints( false );
     CrystalStructure crystal_structure;
@@ -182,7 +182,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
 //        }
 //    }
     write_preamble( text_file_writer );
-    text_file_writer.write_line( "xdd " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ).full_name() + " xye_format" );
+    text_file_writer.write_line( "xdd " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ).file_name() + " xye_format" );
     text_file_writer.write_line( "  bkg @" );
     for ( size_t i( 0 ); i != 20; ++i )
         text_file_writer.write_line( "    0.0" );
@@ -213,7 +213,7 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    CS_G(@ , 107.03272`)" );
     text_file_writer.write_line( "    CS_L(@ , 9999.99881`)" );
     text_file_writer.write_line( "    Strain_G(@ , 0.49554`)" );
-    text_file_writer.write_line( "    Strain_L(@ , 0.03347`)" ); 
+    text_file_writer.write_line( "    Strain_L(@ , 0.03347`)" );
     text_file_writer.write_line( "    prm sh_scale_l" + aal + " 1.0" );
     text_file_writer.write_line( "    spherical_harmonics_hkl sh_l" + aal );
     text_file_writer.write_line( "      sh_order 6" );
@@ -266,6 +266,140 @@ void inp_writer( const FileName & input_cif_file_name, const FileName & input_xy
     text_file_writer.write_line( "    prm !flatten_width  0" );
     text_file_writer.write_line( "    prm !flatten_weight 100000" );
     text_file_writer.write_line( "    'Flatten( C19 N11 N35 C47 H54 C50 H58 C45 H49 C34 C46, , 0.0, flatten_width, flatten_weight )" );
+    text_file_writer.write_line( "    Out_CIF_STR( " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_RR", "cif" ).file_name() + " )" );
+    text_file_writer.write_line( "  xdd_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_profile", "txt" ).file_name() + " load out_record out_fmt out_eqn" );
+    text_file_writer.write_line( "  {" );
+    text_file_writer.write_line( "      \" %11.5f \" = X;" );
+    text_file_writer.write_line( "      \" %11.5f \" = Yobs;" );
+    text_file_writer.write_line( "      \" %11.5f \" = Ycalc;" );
+    text_file_writer.write_line( "      \" %11.5f\\n\" = SigmaYobs;" );
+    text_file_writer.write_line( "  }" );
+    text_file_writer.write_line( "  phase_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_tickmarks", "txt" ).file_name() + " load out_record out_fmt out_eqn" );
+    text_file_writer.write_line( "  {" );
+    text_file_writer.write_line( "      \" %11.5f -200\\n\" = 2.0 * Rad * Th;" );
+    text_file_writer.write_line( "  }" );
+    text_file_writer.write_line( "  ' Structure factors should be in *.fcf, intensities should be in *.hkl." );
+    text_file_writer.write_line( "  out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "fcf" ).file_name() );
+    text_file_writer.write_line( "  Out_String(\"\\ndata_\")" );
+    text_file_writer.write_line( "  Out(Get(a), \"\\n_cell_length_a %V\")" );
+    text_file_writer.write_line( "  Out(Get(b), \"\\n_cell_length_b %V\")" );
+    text_file_writer.write_line( "  Out(Get(c), \"\\n_cell_length_c %V\")" );
+    text_file_writer.write_line( "  Out(Get(al), \"\\n_cell_angle_alpha %V\")" );
+    text_file_writer.write_line( "  Out(Get(be), \"\\n_cell_angle_beta  %V\")" );
+    text_file_writer.write_line( "  Out(Get(ga), \"\\n_cell_angle_gamma %V\")" );
+    text_file_writer.write_line( "  Out_String(\"\\n_shelx_F_squared_multiplier 1\")" );
+    text_file_writer.write_line( "  Out_String(\"\\nloop_\\n_symmetry_equiv_pos_as_xyz\")" );
+    text_file_writer.write_line( "  Out(Get(sp_xyzs_txt), \"%s\")" );
+    text_file_writer.write_line( "  Out_String(\"\\nloop_\")" );
+    text_file_writer.write_line( "  Out_String(\"\\n_refln_index_h\")" );
+    text_file_writer.write_line( "  Out_String(\"\\n_refln_index_k\")" );
+    text_file_writer.write_line( "  Out_String(\"\\n_refln_index_l\")" );
+    text_file_writer.write_line( "  Out_String(\"\\n_refln_F_squared_calc\")" );
+    text_file_writer.write_line( "  Out_String(\"\\n_refln_F_squared_meas\")" );
+    text_file_writer.write_line( "  Out_String(\"\\n_refln_F_squared_sigma\")" );
+    text_file_writer.write_line( "  Out_String(\"\\n_refln_observed_status\")" );
+    text_file_writer.write_line( "  phase_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "fcf" ).file_name() + " append" );
+    text_file_writer.write_line( "    load out_record out_fmt out_eqn" );
+    text_file_writer.write_line( "    {" );
+    text_file_writer.write_line( "      \"\\n%4.0f\" = H;" );
+    text_file_writer.write_line( "      \" %4.0f\" = K;" );
+    text_file_writer.write_line( "      \" %4.0f\" = L;" );
+    text_file_writer.write_line( "      \" %12.2f\" = I_no_scale_pks / ( Get( scale ) * M ); ' This is the calculated F^2, same as F2_Merged" );
+    text_file_writer.write_line( "      \" %12.2f\" = Iobs_no_scale_pks / ( Get( scale ) * M ); ' M is the multiplicity" );
+    text_file_writer.write_line( "      \" %9.3f o\" = Iobs_no_scale_pks_err / ( Get( scale ) * M );" );
+    text_file_writer.write_line( "    }" );
+    copy_text_file( replace_extension( input_cif_file_name, "inp" ), replace_extension( input_cif_file_name, "org" ) );
+}
+
+// ********************************************************************************
+
+void inp_writer_distance_restraints( const FileName & input_cif_file_name, const FileName & input_xye_file_name, const std::string & aal )
+{
+    CrystalStructure crystal_structure;
+    std::cout << "Now reading cif... " + input_cif_file_name.full_name() << std::endl;
+    read_cif( input_cif_file_name, crystal_structure );
+    // The powder diffraction file must contain a third column with estimated standard deviations or TOPAS cannot read the file.
+    // So create that file now.
+    if ( FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ).exists() )
+        throw std::runtime_error( "inp_writer(): can't create " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ).full_name() + " because it already exists." );
+    PowderPattern powder_pattern( input_xye_file_name );
+    powder_pattern.recalculate_estimated_standard_deviations();
+    powder_pattern.save_xye( FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ), false );
+    TextFileWriter text_file_writer( replace_extension( input_cif_file_name, "inp" ) );
+    write_preamble( text_file_writer );
+    text_file_writer.write_line( "xdd " + FileName( input_cif_file_name.directory(), input_cif_file_name.name(), "xye" ).file_name() + " xye_format" );
+    text_file_writer.write_line( "  bkg @" );
+    for ( size_t i( 0 ); i != 20; ++i )
+        text_file_writer.write_line( "    0.0" );
+    text_file_writer.write_line( "  start_X       " + double2string( powder_pattern.two_theta_start().value_in_degrees() ) );
+    text_file_writer.write_line( "  finish_X      " + double2string( powder_pattern.two_theta_end().value_in_degrees() ) );
+    text_file_writer.write_line( "  x_calculation_step " + double2string( powder_pattern.average_two_theta_step().value_in_degrees() ) );
+    text_file_writer.write_line( "'  Specimen_Displacement(@ , 0.0 )" );
+    text_file_writer.write_line( "'  Absorption(@ , 0,0 )" );
+    text_file_writer.write_line( "  Zero_Error(@ , 0.02 )" );
+    text_file_writer.write_line( "'Synchrotron use: LP_Factor( 90.0 )" );
+    text_file_writer.write_line( "'Neutrons use: LP_Factor( 90.0 )" );
+    text_file_writer.write_line( "'No monochromator use: LP_Factor( 0.0 )" );
+    text_file_writer.write_line( "'Ge Monochromator, Cu radiation, use LP_Factor( 27.3 )" );
+    text_file_writer.write_line( "'Graphite Monochromator, Cu radiation, use LP_Factor( 26.4 )" );
+    text_file_writer.write_line( "'Quartz Monochromator, Cu radiation, use LP_Factor( 26.6 )" );
+    text_file_writer.write_line( "  LP_Factor( 26.5 )" );
+    text_file_writer.write_line( "'  Variable_Divergence(@ , 30.0 )" );
+    text_file_writer.write_line( "  axial_conv" );
+    text_file_writer.write_line( "    filament_length @ 4.97890" );
+    text_file_writer.write_line( "    sample_length @ 2.43658" );
+    text_file_writer.write_line( "    receiving_slit_length @ 5.25714" );
+    text_file_writer.write_line( "    axial_n_beta 50" );
+    text_file_writer.write_line( "  lam" );
+    text_file_writer.write_line( "    ymin_on_ymax 0.001" );
+    text_file_writer.write_line( "    la 1 lo 1.540560" );
+    text_file_writer.write_line( "  str" );
+    text_file_writer.write_line( "    r_bragg 0.0" );
+    text_file_writer.write_line( "    CS_G(@ , 107.03272`)" );
+    text_file_writer.write_line( "    CS_L(@ , 9999.99881`)" );
+    text_file_writer.write_line( "    Strain_G(@ , 0.49554`)" );
+    text_file_writer.write_line( "    Strain_L(@ , 0.03347`)" );
+    text_file_writer.write_line( "    prm sh_scale_l" + aal + " 1.0" );
+    text_file_writer.write_line( "    spherical_harmonics_hkl sh_l" + aal );
+    text_file_writer.write_line( "      sh_order 6" );
+    text_file_writer.write_line( "    lor_fwhm = Abs( sh_scale_l" + aal + " * sh_l" + aal + " );" );
+    text_file_writer.write_line( "    prm sh_scale_g" + aal + " 1.0" );
+    text_file_writer.write_line( "    spherical_harmonics_hkl sh_g" + aal );
+    text_file_writer.write_line( "      sh_order 6" );
+    text_file_writer.write_line( "    gauss_fwhm = Abs( sh_scale_g" + aal + " * sh_g" + aal + " );" );
+    write_unit_cell( text_file_writer, crystal_structure.crystal_lattice() );
+    text_file_writer.write_line( "    MVW( 0.0, 0.0, 0.0 )");
+    text_file_writer.write_line( "    space_group \"" + remove( remove( crystal_structure.space_group().name(), '_' ), ' ') + "\"");
+    text_file_writer.write_line( "    scale @ 0.0001" );
+    text_file_writer.write_line( "'    PO(@ , 1.0, , 1 0 0 )" );
+    text_file_writer.write_line( "'    PO_Spherical_Harmonics( sh, 6 )" );
+    text_file_writer.write_line( "    macro ref_flag" + aal + " { @ }" );
+    text_file_writer.write_line( "    prm bnonh" + aal + " 3.0" );
+    text_file_writer.write_line( "    prm bh" + aal + " = 1.2 * bnonh" + aal + ";" );
+    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    {
+        text_file_writer.write( "    site " + crystal_structure.atom( i ).label() + aal + " x ref_flag" + aal + " " + double2string_pad_plus( crystal_structure.atom( i ).position().x(), 5, ' ' ) +
+                                                                                          " y ref_flag" + aal + " " + double2string_pad_plus( crystal_structure.atom( i ).position().y(), 5, ' ' ) +
+                                                                                          " z ref_flag" + aal + " " + double2string_pad_plus( crystal_structure.atom( i ).position().z(), 5, ' ' ) +
+                                " occ " + pad( crystal_structure.atom( i ).element().symbol(), 2, ' ' ) + " 1 beq = " );
+        if ( crystal_structure.atom( i ).element().is_H_or_D() )
+            text_file_writer.write_line( "bh" + aal + ";" );
+        else
+            text_file_writer.write_line( "bnonh" + aal + ";" );
+    }
+    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    {
+        text_file_writer.write_line( "    site " + crystal_structure.atom( i ).label() + aal + "_0" + " x " + double2string_pad_plus( crystal_structure.atom( i ).position().x(), 5, ' ' ) +
+                                                                                                      " y " + double2string_pad_plus( crystal_structure.atom( i ).position().y(), 5, ' ' ) +
+                                                                                                      " z " + double2string_pad_plus( crystal_structure.atom( i ).position().z(), 5, ' ' ) +
+                                     " occ " + pad( crystal_structure.atom( i ).element().symbol(), 2, ' ' ) + " 0.0 beq 3.0" );
+    }
+    text_file_writer.write_line( "    prm !bond_width  0" );
+    text_file_writer.write_line( "    prm !bond_weight 10000" );
+    for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+    {
+        text_file_writer.write_line( "    Distance_Restrain( " + crystal_structure.atom( i ).label() + aal + " " + crystal_structure.atom( i ).label() + aal + "_0, 0.0, 0.0, bond_width, bond_weight )" );
+    }
     text_file_writer.write_line( "    Out_CIF_STR( " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_RR", "cif" ).file_name() + " )" );
     text_file_writer.write_line( "  xdd_out " + FileName( input_cif_file_name.directory(), input_cif_file_name.name() + "_profile", "txt" ).file_name() + " load out_record out_fmt out_eqn" );
     text_file_writer.write_line( "  {" );
@@ -423,7 +557,6 @@ void write_unit_cell( TextFileWriter & text_file_writer, const CrystalLattice & 
                 text_file_writer.write_line( "    c = Exp(Ln(c0) + ((c1 * theta_c_1)/(Exp(theta_c_1/JvdS_temperature)-1))); : 0.0" );
             if ( crystal_lattice.lattice_system() == CrystalLattice::TRICLINIC )
             {
-                
                 text_file_writer.write_line( "    al = JvdS_uc_alpha_0 + JvdS_uc_alpha_1 * JvdS_temperature; : 0.0" );
                 text_file_writer.write_line( "    be = JvdS_uc_beta_0 + JvdS_uc_beta_1 * JvdS_temperature; : 0.0" );
                 text_file_writer.write_line( "    ga = JvdS_uc_gamma_0 + JvdS_uc_gamma_1 * JvdS_temperature; : 0.0" );

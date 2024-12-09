@@ -41,6 +41,9 @@ void write_preamble( TextFileWriter & text_file_writer );
 // aal = additional atom label, a string that is appended to each atom label
 void inp_writer( const FileName & input_cif_file_name, const FileName & input_xye_file_name, const std::string & aal = "" );
 
+// Each atoms is tethered to its initial postion with a little spring.
+void inp_writer_distance_restraints( const FileName & input_cif_file_name, const FileName & input_xye_file_name, const std::string & aal = "" );
+
 // Only call this function if the refinement is parametric.
 void write_unit_cell_variables( TextFileWriter & text_file_writer, const CrystalLattice & crystal_lattice, const bool variable_temperature = false );
 
