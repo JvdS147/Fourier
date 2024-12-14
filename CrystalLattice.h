@@ -107,6 +107,10 @@ public:
     // adjusts accordingly.
     void rescale_volume( const double target_volume, size_t Z = 0 );
 
+    // Expansion coefficient = 1.7 x 10^-4 K^-1 ( https://pubs.rsc.org/en/content/articlelanding/2021/sc/d1sc01076j ).
+    // Temperature difference in Kelvin.
+    void expand_with_temperature( const double temperature_difference );
+
     // Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
     double shortest_distance( const Vector3D & lhs, const Vector3D & rhs ) const;
 

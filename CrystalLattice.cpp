@@ -268,6 +268,17 @@ void CrystalLattice::rescale_volume( const double target_volume, size_t Z )
 
 // ********************************************************************************
 
+// Expansion coefficient = 1.7 x 10^-4 K^-1 ( https://pubs.rsc.org/en/content/articlelanding/2021/sc/d1sc01076j ).
+void CrystalLattice::expand_with_temperature( const double temperature_difference )
+{
+//    double new_volume = volume_ * 1.7E-4 * temperature_difference;
+//    rescale_volume( new_volume );
+    double k = std::pow( 1.7E-4 * temperature_difference, 1.0/3.0 );
+    *this = CrystalLattice( a()*k, b()*k, c()*k, alpha(), beta(), gamma() );
+}
+
+// ********************************************************************************
+
 // Finds shortest distance, in Angstrom, between two positions given in fractional coordinates.
 double CrystalLattice::shortest_distance( const Vector3D & lhs, const Vector3D & rhs ) const
 {
