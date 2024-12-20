@@ -70,6 +70,7 @@ public:
     SymmetricMatrix3D U_cart() const;
     SymmetricMatrix3D U_cif( const CrystalLattice & crystal_lattice ) const;
 
+    // return U_cart().trace() / 3.0;
     double U_iso() const;
     
     // Returns the square of the average displacement along a vector.
