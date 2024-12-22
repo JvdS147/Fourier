@@ -27,6 +27,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "RealisticXRPDSimulatorSettings.h"
 #include "BasicMathsFunctions.h"
+#include "TextFileWriter.h"
+//#include "FileName.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -54,6 +56,32 @@ Bragg_total_signal_normalisation_(10000.0),
 background_total_signal_normalisation_(0.2*10000.0),
 highest_peak_(10000.0)
 {
+}
+
+// ********************************************************************************
+
+RealisticXRPDSimulatorSettings::RealisticXRPDSimulatorSettings( const FileName & file_name ):
+wavelength_(1.54056),
+two_theta_start_(5.0,Angle::DEGREES),
+two_theta_end_(35.0,Angle::DEGREES),
+two_theta_step_(0.015,Angle::DEGREES),
+FWHM_(0.1),
+include_zero_point_error_(false),
+include_preferred_orientation_(false),
+preferred_orientation_direction_( 0, 0, 0 ),
+r_(1.0),
+include_finger_cox_jephcoat_(false),
+A_(0.0001),
+B_(0.0001),
+include_background_(true),
+include_noise_(true),
+include_noise_for_zero_background_(true),
+noise_for_zero_background_threshold_(20),
+Bragg_total_signal_normalisation_(10000.0),
+background_total_signal_normalisation_(0.2*10000.0),
+highest_peak_(10000.0)
+{
+
 }
 
 // ********************************************************************************
@@ -137,6 +165,35 @@ void RealisticXRPDSimulatorSettings::set_include_noise_for_zero_background( cons
     noise_for_zero_background_threshold_ = threshold;
     if ( threshold < 20 )
         std::cout << "RealisticXRPDSimulatorSettings::set_include_noise_for_zero_background(): Warning: threshold < 20." << std::endl;
+}
+
+// ********************************************************************************
+
+void RealisticXRPDSimulatorSettings::save( const FileName & file_name ) const
+{
+    TextFileWriter tfw( file_name );
+//    tfw.write_line();
+//    Wavelength wavelength_;
+//    Angle two_theta_start_;
+//    Angle two_theta_end_;
+//    Angle two_theta_step_;
+//    double FWHM_;
+//    bool include_zero_point_error_;
+//    Angle zero_point_error_;
+//    bool include_preferred_orientation_;
+//    MillerIndices preferred_orientation_direction_;
+//    double r_;
+//    bool include_finger_cox_jephcoat_;
+//    double A_; // Finger-Cox-Jephcoat.
+//    double B_; // Finger-Cox-Jephcoat.
+//    bool include_background_;
+//    bool include_noise_;
+//    bool include_noise_for_zero_background_;
+//    size_t noise_for_zero_background_threshold_;
+//    double Bragg_total_signal_normalisation_;
+//    double background_total_signal_normalisation_;
+//    double highest_peak_;
+
 }
 
 // ********************************************************************************

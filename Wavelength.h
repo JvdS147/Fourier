@@ -31,45 +31,46 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 /*
-
-    @@ This is wrong: we need the ratio of the two wavelengths (if two are given).
-
-    @@ You cannot even query the class to tell you if there are two wavelengths or just one.
-
+    There is a minor grey zone here: the radiation that is used in single crystal is generally given as the average of the two CuK(alpha)
+    wavelengths, so there is only one wavelength, but it is not monochromated. In this class, that counts as "monochromated" in the sense that only
+    a single wavelength is considered.
 */
 class Wavelength
 {
 public:
 
-    // Default constructor: CuKa1
+    // Default constructor: CuKa1.
     Wavelength();
 
     explicit Wavelength( const double wavelength );
 
-//    explicit Wavelength( const std::string & anode_material );
-    
-    Wavelength( const double wavelength_1, const double wavelength_2 );
-    
-    // "CuKa", "CuKa1". "'Cu K\a~1~'" is also allowed
-//    explicit Wavelength( const std::string & wavelength );
-    
+    // "CuKa", "CuKa1". "Cu K\a~1~" is also allowed,
+//    Wavelength( const std::string & anode_material, const bool is_monochromated );
+
+    // "ratio" is the amount of wavelength_2 and must be given such that the amount of wavelength_1 is 1.0.
+    Wavelength( const double wavelength_1, const double wavelength_2, const double ratio );
+
     double wavelength_1() const { return wavelength_1_; }
-    double wavelength_2() const { return wavelength_2_; }
+    double wavelength_2() const;
+
+    double ratio() const;
     double average_wavelength() const;
-    
-    bool monochromated() const { return monochromated_; }
-    void set_monochromated( const bool b ) { monochromated_ = b; }
+
+    bool is_monochromated() const { return is_monochromated_; }
+    void set_wavelength_2( const double wavelength_2, const double ratio );
+    void unset_wavelength_2();
 
     bool is_lab_source() const { return is_lab_source_; }
-    void unset_is_lab_source() { is_lab_source_ = false; }
+    void set_is_lab_source( const bool is_lab_source ) { is_lab_source_ = is_lab_source; }
 
-    // For "_diffrn_radiation_type", e.g. 'Cu K\a~1~' or "Synchrotron"
+    // For "_diffrn_radiation_type", e.g. 'Cu K\a~1~' or 'Synchrotron'
     std::string cif_style() const;
 
 private:
     double wavelength_1_;
     double wavelength_2_;
-    bool monochromated_;
+    double ratio_;
+    bool is_monochromated_;
     bool is_lab_source_;
 
 };

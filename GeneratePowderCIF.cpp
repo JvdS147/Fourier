@@ -142,11 +142,12 @@ void GeneratePowderCIF::generate()
     iLine = file_inp_.find( "ymin_on_ymax" );
     words = split( file_inp_.line( iLine+1 ) );
     double wavelength_1 = string2double( words[3] );
+    std::string ratio_wavelength_1 = words[1];
     words = split( file_inp_.line( iLine+2 ) );
     if ( ( words.size() == 4 ) && ( words[0] == "la" ) )
     {
         double wavelength_2 = string2double( words[3] );
-        wavelength_ = Wavelength( wavelength_1, wavelength_2 );
+        wavelength_ = Wavelength( wavelength_1, wavelength_2, string2double( words[1] ) / string2double( ratio_wavelength_1 ) );
     }
     else
         wavelength_ = Wavelength( wavelength_1 );

@@ -28,6 +28,8 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
+class FileName;
+
 #include "Angle.h"
 #include "MillerIndices.h"
 #include "Wavelength.h"
@@ -39,8 +41,10 @@ class RealisticXRPDSimulatorSettings
 {
 public:
 
-    // Default constructor
+    // Default constructor.
     RealisticXRPDSimulatorSettings();
+
+    explicit RealisticXRPDSimulatorSettings( const FileName & file_name );
 
     Wavelength wavelength() const { return wavelength_; }
     void set_wavelength( const Wavelength & wavelength ) { wavelength_ = wavelength; }
@@ -56,7 +60,7 @@ public:
     // Note that the zero-point error is the error itself, not the correction for it.
     // Sample displacement gives rise to a positive error of the order of, say 0.04,
     // which moves the pattern to the right.
-    // I think that the +/- convention is the same as in DASH and TOPAS.
+    // The +/- convention is the same as in DASH and TOPAS.
     void set_zero_point_error( const Angle zero_point_error );
     void unset_zero_point_error();
     bool include_zero_point_error() const { return include_zero_point_error_; }
@@ -99,6 +103,8 @@ public:
 
     double highest_peak() const { return highest_peak_; }
     void set_highest_peak( const double highest_peak ) { highest_peak_ = highest_peak; }
+
+    void save( const FileName & file_name ) const;
 
 private:
     Wavelength wavelength_;

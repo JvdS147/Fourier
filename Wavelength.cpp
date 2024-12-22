@@ -47,7 +47,8 @@ static const double anode_wavelength_2[num_anode_materials] = { 1.54439, 2.29361
 Wavelength::Wavelength() :
 wavelength_1_( 1.54056 ),
 wavelength_2_( 0.0 ),
-monochromated_( true ),
+ratio_(0.0),
+is_monochromated_( true ),
 is_lab_source_( true )
 {
 }
@@ -57,25 +58,27 @@ is_lab_source_( true )
 Wavelength::Wavelength( const double wavelength ) :
 wavelength_1_( wavelength ),
 wavelength_2_( 0.0 ),
-monochromated_( true )
+ratio_(0.0),
+is_monochromated_( true ),
+is_lab_source_( true )
 {
     for ( size_t i( 0 ); i != num_anode_materials; ++i )
     {
-        if ( nearly_equal( wavelength, (anode_wavelength_1[i]+anode_wavelength_2[i])/2.0, 0.005 ) )
-        {
-            is_lab_source_ = true;
+        if ( nearly_equal( wavelength, anode_wavelength_1[i], 0.0001 ) )
             return;
-        }
+        if ( nearly_equal( wavelength, ( anode_wavelength_1[i] + ( 0.5 * anode_wavelength_2[i] ) ) / 1.5, 0.0001 ) )
+            return;
     }
     is_lab_source_ = false;
 }
 
 // ********************************************************************************
 
-Wavelength::Wavelength( const double wavelength_1, const double wavelength_2 ) :
+Wavelength::Wavelength( const double wavelength_1, const double wavelength_2, const double ratio ) :
 wavelength_1_( wavelength_1 ),
 wavelength_2_( wavelength_2 ),
-monochromated_( false ),
+ratio_(ratio),
+is_monochromated_( false ),
 is_lab_source_( true )
 {
 }
@@ -84,10 +87,45 @@ is_lab_source_( true )
 
 double Wavelength::average_wavelength() const
 {
-    if ( monochromated_ )
+    if ( is_monochromated_ )
         return wavelength_1_;
     else
-        return ( 2.0 * wavelength_1_ + wavelength_2_ ) / 3.0;
+        return ( wavelength_1_ + ( ratio_ * wavelength_2_ ) ) / ( 1.0 + ratio_ );
+}
+
+// ********************************************************************************
+
+double Wavelength::wavelength_2() const
+{
+    if ( is_monochromated_ )
+        throw std::runtime_error( "Wavelength::wavelength_2(): error: the wavelength is monochromated." );
+    return wavelength_2_;
+}
+
+// ********************************************************************************
+
+double Wavelength::ratio() const
+{
+    if ( is_monochromated_ )
+        throw std::runtime_error( "Wavelength::ratio(): error: the wavelength is monochromated." );
+    return ratio_;
+}
+
+// ********************************************************************************
+
+void Wavelength::set_wavelength_2( const double wavelength_2, const double ratio )
+{
+    is_monochromated_ = false;
+    wavelength_2_ = wavelength_2;
+    ratio_ = ratio;
+    is_lab_source_ = true;
+}
+
+// ********************************************************************************
+
+void Wavelength::unset_wavelength_2()
+{
+    is_monochromated_ = true;
 }
 
 // ********************************************************************************
@@ -99,10 +137,11 @@ std::string Wavelength::cif_style() const
         return "'Synchrotron'";
     for ( size_t i( 0 ); i != num_anode_materials; ++i )
     {
-        if ( nearly_equal( wavelength_1_, (anode_wavelength_1[i]+anode_wavelength_2[i])/2.0, 0.005 ) )
+        if ( nearly_equal( wavelength_1_, anode_wavelength_1[i], 0.0001 ) ||
+             nearly_equal( wavelength_1_, ( anode_wavelength_1[i] + ( 0.5 * anode_wavelength_2[i] ) ) / 1.5, 0.0001 ) )
         {
             std::string result( "'" + anode_material[i] + " K\\a");
-            if ( monochromated_ )
+            if ( is_monochromated_ )
                 result += "~1~";
             result += "'";
             return result;
@@ -115,7 +154,20 @@ std::string Wavelength::cif_style() const
 
 bool nearly_equal( const Wavelength & lhs, const Wavelength & rhs )
 {
-    return nearly_equal( lhs.wavelength_1(), rhs.wavelength_1() );
+    if ( lhs.is_lab_source() != lhs.is_lab_source() )
+        return false;
+    if ( lhs.is_monochromated() != lhs.is_monochromated() )
+        return false;
+    if ( ! nearly_equal( lhs.wavelength_1(), rhs.wavelength_1() ) )
+        return false;
+    if ( lhs.is_monochromated() )
+    {
+        if ( ! nearly_equal( lhs.wavelength_2(), rhs.wavelength_2() ) )
+            return false;
+        if ( ! nearly_equal( lhs.ratio(), rhs.ratio() ) )
+            return false;
+    }
+    return true;
 }
 
 // ********************************************************************************
