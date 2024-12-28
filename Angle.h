@@ -147,7 +147,7 @@ private:
     // is negligible.
     
     // Private constructor for named constructors.
-    explicit Angle( const double value ) : angle_(value) {}
+    explicit Angle( const double value ): angle_(value) {}
 };
 
 inline Angle absolute( const Angle angle ) { return ( angle.angle_ < 0.0 ) ? Angle( -angle.angle_ ) : angle; }

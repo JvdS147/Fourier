@@ -72,8 +72,8 @@ longest_z_(0)
 
 void GeneratePowderCIF::generate()
 {
-    // TODO @@ remove duplicates from bond list and angle list
-    // Needless to say, atom labels must be consistent
+    // TODO @@ remove duplicates from bond list and angle list.
+    // Needless to say, atom labels must be consistent.
     file_cif_.read_file( FileName( directory_, base_name_, "cif" ) );
     file_inp_.read_file( FileName( directory_, base_name_, "inp" ) );
     replace_hydrogen_atoms_ = FileName( directory_, base_name_ + "_Hmi", "cif" ).exists();
@@ -146,11 +146,12 @@ void GeneratePowderCIF::generate()
     words = split( file_inp_.line( iLine+2 ) );
     if ( ( words.size() == 4 ) && ( words[0] == "la" ) )
     {
-        double wavelength_2 = string2double( words[3] );
-        wavelength_ = Wavelength( wavelength_1, wavelength_2, string2double( words[1] ) / string2double( ratio_wavelength_1 ) );
+        if ( ! nearly_equal( string2double( words[1] ) / string2double( ratio_wavelength_1 ), 0.5, 0.001 ) )
+            std::cout << "GeneratePowderCIF::generate(): warning: wavelength ratio is not 0.5." << std::endl;
+        wavelength_ = Wavelength( determine_radiation_source_from_wavelength( wavelength_1 ), false, false );
     }
     else
-        wavelength_ = Wavelength( wavelength_1 );
+        wavelength_ = Wavelength::determine_from_wavelength( wavelength_1 );
     iLine = file_ext_.find( "Z_prime" );
     std::string line = file_ext_.line( iLine );
     size_t iPos = line.find( "Z_prime" );
@@ -354,8 +355,8 @@ void GeneratePowderCIF::generate()
             insert_keyword_and_value( "_refine_ls_R_I_factor", words[1] );
     }
     insert_keyword( "_refine_ls_number_parameters" );
-    // Count all the distance, angle and planarity restraints
-    // Ignore the ones that have been commented out
+    // Count all the distance, angle and planarity restraints.
+    // Ignore the ones that have been commented out.
     size_t nrestraints( 0 );
     iLine = file_inp_.find( "Distance_Restrain" );
     while ( iLine != std::string::npos )

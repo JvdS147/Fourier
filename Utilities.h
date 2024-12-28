@@ -103,6 +103,8 @@ double string2double( std::string input );
 
 int string2integer( const std::string & input );
 
+size_t string2size_t( const std::string & input );
+
 // The configurability of double2string() suggests that a class is called for.
 // The class could be fed all numbers to be printed so that it can determine optimum values for length and precision
 // E.g. explicit "+"

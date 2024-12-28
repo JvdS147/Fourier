@@ -92,7 +92,14 @@ bool operator==( const MillerIndices & lhs, const MillerIndices & rhs )
 {
     return ( ( lhs.h() == rhs.h() ) &&
              ( lhs.k() == rhs.k() ) &&
-             ( lhs.l() == rhs.l() ));
+             ( lhs.l() == rhs.l() ) );
+}
+
+// ********************************************************************************
+
+bool operator!=( const MillerIndices & lhs, const MillerIndices & rhs )
+{
+    return ! ( lhs == rhs );
 }
 
 // ********************************************************************************

@@ -73,7 +73,7 @@ bool string2bool( const std::string & input )
         return true;
     if ( input_2 == "FALSE" )
         return false;
-    throw std::runtime_error( "string2bool(): input string >" + input + "< is not a valid boolean value." );
+    throw std::runtime_error( "string2bool(): error: input string >" + input + "< is not a valid boolean value." );
 }
 
 // ********************************************************************************
@@ -81,7 +81,7 @@ bool string2bool( const std::string & input )
 double string2double_2( const std::string & input, const bool float_allowed )
 {
     if ( input.empty() )
-        throw std::runtime_error( "string2double_2(): input string is empty." );
+        throw std::runtime_error( "string2double_2(): error: input string is empty." );
     double result( 0.0 );
     bool is_negative( false );
     size_t iPos( 0 );
@@ -102,9 +102,9 @@ double string2double_2( const std::string & input, const bool float_allowed )
         if ( input[iPos] == '.' )
         {
             if ( ! float_allowed )
-                throw std::runtime_error( "string2double_2(): period found in integer value : >" + input + "<" );
+                throw std::runtime_error( "string2double_2(): error: period found in integer value : >" + input + "<" );
             if ( after_period )
-                throw std::runtime_error( "string2double_2(): second period found : >" + input + "<" );
+                throw std::runtime_error( "string2double_2(): error: second period found : >" + input + "<" );
             after_period = true;
             ++iPos;
             continue;
@@ -113,12 +113,12 @@ double string2double_2( const std::string & input, const bool float_allowed )
 //        if ( ( input[iPos] == 'E' ) || ( input[iPos] == 'e' ) || ( input[iPos] == 'D' ) || ( input[iPos] == 'd' ) )
         {
             if ( ! float_allowed )
-                throw std::runtime_error( "string2double_2(): exponent found in integer value : >" + input + "<" );
+                throw std::runtime_error( "string2double_2(): error: exponent found in integer value : >" + input + "<" );
             if ( ! at_least_one_digit_found )
-                throw std::runtime_error( "string2double(): no digits before exponent : >" + input + "<" );
+                throw std::runtime_error( "string2double(): error: no digits before exponent : >" + input + "<" );
             ++iPos;
             if ( iPos == input.length() )
-                throw std::runtime_error( "string2double(): no digits after exponent : >" + input + "<" );
+                throw std::runtime_error( "string2double(): error: no digits after exponent : >" + input + "<" );
             exponent_found = true;
             exponent = string2double_2( input.substr( iPos ), false );
             break;
@@ -135,10 +135,10 @@ double string2double_2( const std::string & input, const bool float_allowed )
             ++iPos;
             continue;
         }
-        throw std::runtime_error( "string2double_2(): invalid character found : >" + input + "<" );
+        throw std::runtime_error( "string2double_2(): error: invalid character found : >" + input + "<" );
     }
     if ( ! at_least_one_digit_found )
-        throw std::runtime_error( "string2double_2(): no digits found : >" + input + "<" );
+        throw std::runtime_error( "string2double_2(): error: no digits found : >" + input + "<" );
     if ( exponent_found )
         result *= std::pow( 10.0, exponent );
     if ( is_negative )
@@ -155,12 +155,12 @@ double string2double( std::string input )
     if ( iPos1 == std::string::npos )
     {
         if ( iPos2 != std::string::npos )
-            throw std::runtime_error( "string2double(): parentheses not closed properly :  >" + input + "<" );
+            throw std::runtime_error( "string2double(): error: parentheses not closed properly :  >" + input + "<" );
     }
     else
     {
         if ( iPos2 != input.length()-1 )
-            throw std::runtime_error( "string2double(): parentheses not closed properly :  >" + input + "<" );
+            throw std::runtime_error( "string2double(): error: parentheses not closed properly :  >" + input + "<" );
         input.erase( iPos1 );
     }
     return string2double_2( input, true );
@@ -171,6 +171,13 @@ double string2double( std::string input )
 int string2integer( const std::string & input )
 {
     return round_to_int( string2double_2( input, false ) );
+}
+
+// ********************************************************************************
+
+size_t string2size_t( const std::string & input )
+{
+    return round_to_size_t( string2double_2( input, false ) );
 }
 
 // ********************************************************************************

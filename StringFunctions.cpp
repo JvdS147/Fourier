@@ -661,3 +661,15 @@ std::string escape_slashes( const std::string & input )
 }
 
 // ********************************************************************************
+
+// Expects lines like "zero-point error : 0.01", with Splitter(":"), returns "0.01" (without whitespace).
+std::string extract_variable_value( const std::string & line, const Splitter & splitter )
+{
+    std::vector< std::string > words = splitter.split( line );
+    if ( words.size() != 2 )
+        throw std::runtime_error( "extract_variable_value(): ERROR: no variable / value pair found." );
+    return strip( words[1] );
+}
+
+// ********************************************************************************
+

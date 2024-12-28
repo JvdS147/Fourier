@@ -85,7 +85,6 @@ std::vector< double > peak_shape( const Angle two_theta_step, const double FWHM 
 // ********************************************************************************
 
 PowderPatternCalculator::PowderPatternCalculator( const CrystalStructure & crystal_structure ):
-wavelength_(1.54056),
 two_theta_start_(5.0,Angle::DEGREES),
 two_theta_end_(30.0,Angle::DEGREES),
 two_theta_step_(0.01,Angle::DEGREES),

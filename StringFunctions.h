@@ -66,10 +66,10 @@ std::string strip( const std::string & input );
 // Removes all spaces and tabs from the end.
 std::string remove_trailing_whitespace( const std::string & input );
 
-// Removes all spaces and tabs from the beginning and the end
+// Removes all spaces and tabs from the beginning and the end.
 void strip( std::vector< std::string > & input );
 
-// Removes delimiters if both present, removes exactly one from start and one from beginning
+// Removes delimiters if both present, removes exactly one from start and one from beginning.
 // If the delimiters overlap, returns the original string:
 // remove_delimiters( "123", "12", "23" );
 // returns "123", not "".
@@ -98,7 +98,7 @@ std::string pad_plus( const std::string & input, const size_t padded_length = 0,
 std::string pad( const std::string & input, const size_t padded_length = 0, const char padding_character = ' ' );
 
 // Replaces a piece of text by another piece of text. The two do not have to have the same length.
-// The second string can be empty
+// The second string can be empty.
 std::string replace( const std::string & input, const std::string & old_str, const std::string & new_str );
 
 // Splits a line into individual words, currently the separator is hard-coded to be a space or a tab
@@ -182,6 +182,9 @@ bool is_enclosed_in_quotes( const std::string & input );
 
 // Turns "C:\Data\file_name.txt" into "C:\\Data\\file_name.txt", necessary when writing input files for e.g. R.
 std::string escape_slashes( const std::string & input );
+
+// Expects lines like "zero-point error : 0.01", with Splitter(":"), returns "0.01" (without whitespace).
+std::string extract_variable_value( const std::string & line, const Splitter & splitter );
 
 #endif // STRINGFUNCTIONS_H
 

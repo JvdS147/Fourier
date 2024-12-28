@@ -27,7 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "Wavelength.h"
 #include "BasicMathsFunctions.h"
+#include "StringFunctions.h"
 
+#include <iostream> // For warnings.
 #include <stdexcept>
 
 namespace
@@ -38,133 +40,173 @@ static const size_t num_anode_materials = 5;
 static const std::string anode_material[num_anode_materials] = { "Cu", "Cr", "Fe", "Co", "Mo" };
 static const double anode_wavelength_1[num_anode_materials] = { 1.54056, 2.28970, 1.93604, 1.78897, 0.70930 };
 static const double anode_wavelength_2[num_anode_materials] = { 1.54439, 2.29361, 1.93998, 1.79285, 0.71359 };
+static const double anode_average_wavelength[num_anode_materials] = { 1.54184, 2.29100, 1.93735, 1.79026, 0.71073 };
 
 } // namespace
 
 // ********************************************************************************
 
-// Default constructor: CuKa1
-Wavelength::Wavelength() :
-wavelength_1_( 1.54056 ),
-wavelength_2_( 0.0 ),
-ratio_(0.0),
-is_monochromated_( true ),
-is_lab_source_( true )
+// Throws if radiation_type is SYNCHROTRON, because that would require a wavelength.
+Wavelength::Wavelength( const RadiationSource radiation_source, const bool is_monochromated, const bool use_average ):
+radiation_source_(radiation_source),
+is_monochromated_(is_monochromated),
+use_average_(use_average)
 {
+    if ( radiation_source_ == SYNCHROTRON )
+        throw std::runtime_error( "Wavelength::Wavelength(): error: radiation_type is SYNCHROTRON." );
+    if ( is_monochromated_ && use_average_ )
+        throw std::runtime_error( "Wavelength::Wavelength(): error: cannot use average if wavelength is monochromated, ." );
 }
 
 // ********************************************************************************
 
-Wavelength::Wavelength( const double wavelength ) :
-wavelength_1_( wavelength ),
-wavelength_2_( 0.0 ),
-ratio_(0.0),
-is_monochromated_( true ),
-is_lab_source_( true )
+Wavelength Wavelength::synchrotron_radiation( const double wavelength )
+{
+    return Wavelength( SYNCHROTRON, wavelength, true, false );
+}
+
+// ********************************************************************************
+
+Wavelength Wavelength::determine_from_wavelength( const double wavelength )
 {
     for ( size_t i( 0 ); i != num_anode_materials; ++i )
     {
         if ( nearly_equal( wavelength, anode_wavelength_1[i], 0.0001 ) )
-            return;
-        if ( nearly_equal( wavelength, ( anode_wavelength_1[i] + ( 0.5 * anode_wavelength_2[i] ) ) / 1.5, 0.0001 ) )
-            return;
+            return Wavelength( static_cast<RadiationSource>(i), 0.0, true, false );
+        if ( nearly_equal( wavelength, anode_average_wavelength[i], 0.0001 ) )
+            return Wavelength( static_cast<RadiationSource>(i), 0.0, false, true );
     }
-    is_lab_source_ = false;
+    return Wavelength( SYNCHROTRON, wavelength, true, false );
 }
 
 // ********************************************************************************
 
-Wavelength::Wavelength( const double wavelength_1, const double wavelength_2, const double ratio ) :
-wavelength_1_( wavelength_1 ),
-wavelength_2_( wavelength_2 ),
-ratio_(ratio),
-is_monochromated_( false ),
-is_lab_source_( true )
+double Wavelength::wavelength() const
 {
+    if ( ( ! is_monochromated_ ) && ( ! use_average_ ) )
+        throw std::runtime_error( "Wavelength::wavelength(): error: a single wavelength is not defined." );
+    if ( radiation_source_ == SYNCHROTRON )
+        return wavelength_;
+    if ( use_average_ )
+        return anode_average_wavelength[radiation_source_];
+    return anode_wavelength_1[radiation_source_];
 }
 
 // ********************************************************************************
 
-double Wavelength::average_wavelength() const
+double Wavelength::wavelength_1() const
 {
-    if ( is_monochromated_ )
-        return wavelength_1_;
-    else
-        return ( wavelength_1_ + ( ratio_ * wavelength_2_ ) ) / ( 1.0 + ratio_ );
+    if ( radiation_source_ == SYNCHROTRON )
+        throw std::runtime_error( "Wavelength::wavelength_1(): error: synchrotron radiation only has one wavelength." );
+    if ( use_average_ )
+        std::cout << "Wavelength::wavelength_1(): warning: use_average() set to true." << std::endl;
+    return anode_wavelength_1[radiation_source_];
 }
 
 // ********************************************************************************
 
 double Wavelength::wavelength_2() const
 {
+    if ( radiation_source_ == SYNCHROTRON )
+        throw std::runtime_error( "Wavelength::wavelength_2(): error: synchrotron radiation only has one wavelength." );
     if ( is_monochromated_ )
         throw std::runtime_error( "Wavelength::wavelength_2(): error: the wavelength is monochromated." );
-    return wavelength_2_;
+    if ( use_average_ )
+        std::cout << "Wavelength::wavelength_2(): warning: use_average() set to true." << std::endl;
+    return anode_wavelength_2[radiation_source_];
 }
 
 // ********************************************************************************
 
-double Wavelength::ratio() const
+double Wavelength::average_wavelength() const
 {
+    if ( radiation_source_ == SYNCHROTRON )
+        throw std::runtime_error( "Wavelength::average_wavelength(): error: synchrotron radiation only has one wavelength." );
     if ( is_monochromated_ )
-        throw std::runtime_error( "Wavelength::ratio(): error: the wavelength is monochromated." );
-    return ratio_;
+        throw std::runtime_error( "Wavelength::average_wavelength(): error: the radiation is monochromated." );
+    if ( ! use_average_ )
+        std::cout << "Wavelength::average_wavelength(): warning: use_average() set to false." << std::endl;
+    return anode_average_wavelength[radiation_source_];
 }
 
 // ********************************************************************************
 
-void Wavelength::set_wavelength_2( const double wavelength_2, const double ratio )
-{
-    is_monochromated_ = false;
-    wavelength_2_ = wavelength_2;
-    ratio_ = ratio;
-    is_lab_source_ = true;
-}
-
-// ********************************************************************************
-
-void Wavelength::unset_wavelength_2()
-{
-    is_monochromated_ = true;
-}
-
-// ********************************************************************************
-
-// For "_diffrn_radiation_type", e.g. 'Cu K\a~1~' or "Synchrotron"
+// For "_diffrn_radiation_type", e.g. 'Cu K\a~1~' or 'Synchrotron'.
 std::string Wavelength::cif_style() const
 {
-    if ( ! is_lab_source_ )
+    if ( radiation_source_ == SYNCHROTRON )
         return "'Synchrotron'";
+    std::string result( "'" + anode_material[radiation_source_] + " K\\a");
+    if ( is_monochromated_ )
+        result += "~1~";
+    result += "'";
+    return result;
+}
+
+// ********************************************************************************
+
+std::string radiation_source_to_string( const Wavelength::RadiationSource radiation_source )
+{
+    switch ( radiation_source )
+    {
+        case Wavelength::SYNCHROTRON : return "SYNCHROTRON";
+        case Wavelength::Cu : return "Cu";
+        case Wavelength::Cr : return "Cr";
+        case Wavelength::Fe : return "Fe";
+        case Wavelength::Co : return "Co";
+        case Wavelength::Mo : return "Mo";
+        default : throw std::runtime_error( "radiation_source_to_string(): error: unknown radiation_source." );
+    }
+}
+
+// ********************************************************************************
+
+Wavelength::RadiationSource string_to_radiation_source( std::string input )
+{
+    input = to_upper( input );
+    if ( input == "SYNCHROTRON" )
+        return Wavelength::SYNCHROTRON;
+    if ( input == "CU" )
+        return Wavelength::Cu;
+    if ( input == "CR" )
+        return Wavelength::Cr;
+    if ( input == "FE" )
+        return Wavelength::Fe;
+    if ( input == "CO" )
+        return Wavelength::Co;
+    if ( input == "MO" )
+        return Wavelength::Mo;
+    throw std::runtime_error( "string_to_radiation_source(): error: unknown radiation_source." );
+}
+
+// ********************************************************************************
+
+// You can only give one wavelength and no ratio. Will recognise an average wavelength (as used in single-crystal diffraction)
+// properly, but that information will be lost.
+Wavelength::RadiationSource determine_radiation_source_from_wavelength( const double wavelength )
+{
     for ( size_t i( 0 ); i != num_anode_materials; ++i )
     {
-        if ( nearly_equal( wavelength_1_, anode_wavelength_1[i], 0.0001 ) ||
-             nearly_equal( wavelength_1_, ( anode_wavelength_1[i] + ( 0.5 * anode_wavelength_2[i] ) ) / 1.5, 0.0001 ) )
-        {
-            std::string result( "'" + anode_material[i] + " K\\a");
-            if ( is_monochromated_ )
-                result += "~1~";
-            result += "'";
-            return result;
-        }
+        if ( nearly_equal( wavelength, anode_wavelength_1[i], 0.0001 ) ||
+             nearly_equal( wavelength, anode_average_wavelength[i], 0.0001 ) )
+            return static_cast<Wavelength::RadiationSource>(i);
     }
-    throw std::runtime_error( "Wavelength::cif_style(): error: unknown lab wavelength." );
+    return Wavelength::SYNCHROTRON;
 }
 
 // ********************************************************************************
 
 bool nearly_equal( const Wavelength & lhs, const Wavelength & rhs )
 {
-    if ( lhs.is_lab_source() != lhs.is_lab_source() )
+    if ( lhs.radiation_source() != rhs.radiation_source() )
         return false;
-    if ( lhs.is_monochromated() != lhs.is_monochromated() )
+    if ( lhs.is_monochromated() != rhs.is_monochromated() )
         return false;
-    if ( ! nearly_equal( lhs.wavelength_1(), rhs.wavelength_1() ) )
+    if ( lhs.use_average() != rhs.use_average() )
         return false;
-    if ( lhs.is_monochromated() )
+    if ( lhs.radiation_source() == Wavelength::SYNCHROTRON )
     {
-        if ( ! nearly_equal( lhs.wavelength_2(), rhs.wavelength_2() ) )
-            return false;
-        if ( ! nearly_equal( lhs.ratio(), rhs.ratio() ) )
+        if ( ! nearly_equal( lhs.wavelength(), rhs.wavelength() ) )
             return false;
     }
     return true;

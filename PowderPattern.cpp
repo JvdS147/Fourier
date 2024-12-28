@@ -344,7 +344,7 @@ void PowderPattern::read_xye( const FileName & file_name )
     if ( text_file_reader.get_next_line( words ) )
     {
         if ( words.size() == 1 )
-            wavelength_ = Wavelength( string2double( words[0] ) );
+            wavelength_ = Wavelength::determine_from_wavelength( string2double( words[0] ) );
         else
             text_file_reader.push_back_last_line();
     }

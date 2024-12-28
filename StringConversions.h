@@ -1,5 +1,5 @@
-#ifndef MILLERINDICES_H
-#define MILLERINDICES_H
+#ifndef STRINGCONVERSIONS_H
+#define STRINGCONVERSIONS_H
 
 /* *********************************************
 Copyright (c) 2013-2024, Cornelis Jan (Jacco) van de Streek
@@ -28,51 +28,26 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include <iosfwd>
+// This file exists to decouple low-lying classes like Angle and Matrix3D from conversions to and from a std::string.
 
-/*
-  Miller indices. True Miller indices are relative prime (co-prime), if they are not then technically they are
-  called Laue indices. These Miller indices are NOT relative prime, so 002 is a perfectly acceptable
-  value for this class. However, there is a member function to make all indices relative prime.
+class Angle;
+class Matrix3D;
+class MillerIndices;
+class Vector3D;
 
-  We mainly need this class for sorting.
-*/
-class MillerIndices
-{
-public:
+#include <string>
 
-    MillerIndices( const int h, const int k, const int l );
+Angle Angle_from_string( const std::string & input );
+Matrix3D Matrix3D_from_string( std::string input );
+MillerIndices MillerIndices_from_string( std::string input );
+Vector3D Vector3D_from_string( std::string input );
+//Angle Angle_from_string( const std::string & input );
+//Angle Angle_from_string( const std::string & input );
 
-    int h() const { return h_; }
-    int k() const { return k_; }
-    int l() const { return l_; }
-    
-    void make_relative_prime();
+std::string to_string( const Angle input );
+std::string to_string( const Matrix3D & input );
+std::string to_string( const MillerIndices & input );
+std::string to_string( const Vector3D & input );
 
-    // if (hkl) = (000), there can be surprises.
-    bool is_000() const;
-
-    MillerIndices operator-() const
-    {
-        return MillerIndices( -this->h(), -this->k(), -this->k() );
-    }
-
-    // "5 -3 0"
-    std::string to_string() const;
-
-private:
-    int h_;
-    int k_;
-    int l_;
-};
-
-std::ostream & operator<<( std::ostream & os, const MillerIndices & miller_indices );
-
-bool operator<( const MillerIndices & lhs, const MillerIndices & rhs );
-bool operator==( const MillerIndices & lhs, const MillerIndices & rhs );
-bool operator!=( const MillerIndices & lhs, const MillerIndices & rhs );
-// The transposition is implied
-int operator*( const MillerIndices & lhs, const MillerIndices & rhs );
-
-#endif // MILLERINDICES_H
+#endif // STRINGCONVERSIONS_H
 

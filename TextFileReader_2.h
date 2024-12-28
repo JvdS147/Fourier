@@ -57,7 +57,7 @@ public:
 
     explicit TextFileReader_2( const FileName & file_name );
 
-    // For testing
+    // For testing.
     explicit TextFileReader_2( const std::vector< std::string > & lines );
 
     void read_file( const FileName & file_name );
@@ -71,17 +71,17 @@ public:
     // comment_identifier must start at the start of the line.
     void purge_comment_lines( std::string comment_identifier, const bool case_sensitive = true );
 
-    // Empty means empty, a line with only whitespace is not empty
+    // Empty means empty, a line with only whitespace is not empty.
     void purge_empty_lines();
 
-    // Starts search from line i
-    // return a line number or std::string::npos
-    // An empty string matches nothing
+    // Starts search from line i_start.
+    // Returns a line number or std::string::npos.
+    // An empty string matches nothing.
     size_t find( const std::string & word, const size_t i_start = 0 ) const;
 
-    // Starts search from line i
-    // return a line number or std::string::npos
-    // An empty string matches nothing
+    // Starts search from line i_start.
+    // Returns a line number or std::string::npos.
+    // An empty string matches nothing.
     size_t find_whole_word( const std::string & word, const size_t i_start = 0 ) const;
 
 private:

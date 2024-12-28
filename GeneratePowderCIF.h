@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
-// TODO: relabel
+// TODO: relabel.
 class GeneratePowderCIF
 {
 public:

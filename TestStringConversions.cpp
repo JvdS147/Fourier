@@ -1,6 +1,3 @@
-#ifndef MILLERINDICES_H
-#define MILLERINDICES_H
-
 /* *********************************************
 Copyright (c) 2013-2024, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
@@ -28,51 +25,50 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-#include <iosfwd>
+#include "StringConversions.h"
+#include "TestSuite.h"
+#include "Angle.h"
+#include "Matrix3D.h"
+#include "MillerIndices.h"
+#include "Vector3D.h"
 
-/*
-  Miller indices. True Miller indices are relative prime (co-prime), if they are not then technically they are
-  called Laue indices. These Miller indices are NOT relative prime, so 002 is a perfectly acceptable
-  value for this class. However, there is a member function to make all indices relative prime.
+#include <iostream>
+#include <string>
 
-  We mainly need this class for sorting.
-*/
-class MillerIndices
+void test_StringConversions( TestSuite & test_suite )
 {
-public:
+    std::cout << "Now running tests for StringConversions." << std::endl;
 
-    MillerIndices( const int h, const int k, const int l );
-
-    int h() const { return h_; }
-    int k() const { return k_; }
-    int l() const { return l_; }
-    
-    void make_relative_prime();
-
-    // if (hkl) = (000), there can be surprises.
-    bool is_000() const;
-
-    MillerIndices operator-() const
     {
-        return MillerIndices( -this->h(), -this->k(), -this->k() );
+        Angle input( 181.4, Angle::DEGREES );
+        std::string result = to_string( input );
+        Angle output = Angle_from_string( result );
+        if ( ! nearly_equal( input, output ) )
+            test_suite.log_error( "Angle_from_string( to_string( Angle ) )" );
+    }
+    {
+        Matrix3D input( 1.2556, -3.4778 , 5.6992,
+                        0.0   ,  9.47325, 2.453 ,
+                        3.562 ,  4.279  , 3.4805 );
+        std::string result = to_string( input );
+        Matrix3D output = Matrix3D_from_string( result );
+        if ( ! nearly_equal( input, output ) )
+            test_suite.log_error( "Matrix3D_from_string( to_string( Matrix3d ) )" );
+    }
+    {
+        MillerIndices input( -1, 2, 0 );
+        std::string result = to_string( input );
+        MillerIndices output = MillerIndices_from_string( result );
+        if ( input != output )
+            test_suite.log_error( "MillerIndices_from_string( to_string( MillerIndices ) )" );
+    }
+    {
+        Vector3D input( 1.2556, -3.4778, 5.6992 );
+        std::string result = to_string( input );
+        Vector3D output = Vector3D_from_string( result );
+        if ( ! nearly_equal( input, output ) )
+            test_suite.log_error( "Vector3D_from_string( to_string( Vector3D ) )" );
     }
 
-    // "5 -3 0"
-    std::string to_string() const;
-
-private:
-    int h_;
-    int k_;
-    int l_;
-};
-
-std::ostream & operator<<( std::ostream & os, const MillerIndices & miller_indices );
-
-bool operator<( const MillerIndices & lhs, const MillerIndices & rhs );
-bool operator==( const MillerIndices & lhs, const MillerIndices & rhs );
-bool operator!=( const MillerIndices & lhs, const MillerIndices & rhs );
-// The transposition is implied
-int operator*( const MillerIndices & lhs, const MillerIndices & rhs );
-
-#endif // MILLERINDICES_H
+}
 

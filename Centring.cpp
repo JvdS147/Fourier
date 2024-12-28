@@ -44,6 +44,15 @@ Centring::Centring()
 
 Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_vectors_(centring_vectors)
 {
+    // If I am playing around with my "Joke" centring, don't do any exhaustive checking.
+    if ( centring_vectors_.size() == 1000 )
+    {
+        // The first one should be the zero vector.
+        if ( ! centring_vectors_[0].nearly_zero() )
+            throw std::runtime_error( "Centring::Centring(): error: centring is J but the first centring vector is not the zero vector." );
+        centring_type_ = J;
+        return;
+    }
     if ( centring_vectors_.empty() )
         throw std::runtime_error( "Centring::Centring( std::vector< Vector3D > ): error: a centring must have at least one centring vector." );
     // Make the zero vector the first centring vector.
@@ -60,32 +69,29 @@ Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_
     if ( ! zero_vector_found )
         throw std::runtime_error( "Centring::Centring(): error: zero vector not found." );
     // Remove duplicates.
-    if ( centring_vectors_.size() != 1000 ) // Do not do this if I am playing around with my "Joke" centring.
+    bool duplicates_found( false );
+    std::vector< Vector3D > new_centring_vectors;
+    std::vector< bool > done( centring_vectors_.size(), false );
+    for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
     {
-        bool duplicates_found( false );
-        std::vector< Vector3D > new_centring_vectors;
-        std::vector< bool > done( centring_vectors_.size(), false );
-        for ( size_t i( 0 ); i != centring_vectors_.size(); ++i )
+        if ( done[i] )
+            continue;
+        new_centring_vectors.push_back( centring_vectors_[i] );
+        done[i] = true;
+        for ( size_t j( i+1 ); j != centring_vectors_.size(); ++j )
         {
-            if ( done[i] )
-                continue;
-            new_centring_vectors.push_back( centring_vectors_[i] );
-            done[i] = true;
-            for ( size_t j( i+1 ); j != centring_vectors_.size(); ++j )
+            if ( nearly_equal( centring_vectors_[i], centring_vectors_[j] ) )
             {
-                if ( nearly_equal( centring_vectors_[i], centring_vectors_[j] ) )
-                {
-                    duplicates_found = true;
-                    done[j] = true;
-                }
+                duplicates_found = true;
+                done[j] = true;
             }
         }
-        if ( duplicates_found )
-        {
-            std::cout << "Centring::Centring( std::vector< Vector3D > ): Warning: duplicate vectors found." << std::endl;
-            std::cout << "We had " << centring_vectors_.size() << " centring vectors, now we have " << new_centring_vectors.size() << "." << std::endl;
-            centring_vectors_ = new_centring_vectors;
-        }
+    }
+    if ( duplicates_found )
+    {
+        std::cout << "Centring::Centring( std::vector< Vector3D > ): Warning: duplicate vectors found." << std::endl;
+        std::cout << "We had " << centring_vectors_.size() << " centring vectors, now we have " << new_centring_vectors.size() << "." << std::endl;
+        centring_vectors_ = new_centring_vectors;
     }
     centring_type_ = U; // Unknown
     if ( centring_vectors_.size() == 1 )
@@ -116,7 +122,10 @@ Centring::Centring( const std::vector< Vector3D > & centring_vectors ):centring_
             centring_type_ = F;
     }
     else if ( centring_vectors_.size() == 1000 ) // J-centred
+    {
+        std::cout << "Centring::Centring( std::vector< Vector3D > ): Warning: centring is J but there were duplicate vectors." << std::endl;
         centring_type_ = J;
+    }
 }
 
 // ********************************************************************************
@@ -295,7 +304,7 @@ std::string centring_type_to_string( const Centring::CentringType centring_type 
         case Centring::R_REVERSE : return "R_REVERSE";
         case Centring::U : return "U";
         case Centring::J : return "J";
-        default : return "Error";
+        default : throw std::runtime_error( "centring_type_to_string(): error: unknown centring." );
     }
 }
 

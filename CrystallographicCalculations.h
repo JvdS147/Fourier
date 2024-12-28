@@ -49,6 +49,7 @@ class SymmetryOperator;
 //class Vector2D;
 class Vector3D;
 
+#include <string>
 #include <vector>
 
 //struct SpecialPositionsReport

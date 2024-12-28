@@ -45,7 +45,7 @@ class Vector3D;
 
 #include <vector>
 
-// Gram-Schmidt orthogonalisation
+// Gram-Schmidt orthogonalisation.
 NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const Vector3D & r );
 
 Vector3D change_of_basis( const Vector3D & point, const CoordinateFrame & before, const CoordinateFrame & after );

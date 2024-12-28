@@ -40,7 +40,7 @@ class Matrix3D
 {
 public:
 
-    // Constructs a scalar matrix
+    // Constructs a scalar matrix.
     explicit Matrix3D( const double scalar = 1.0 );
 
     Matrix3D( const double a00, const double a01, const double a02,
@@ -114,3 +114,4 @@ Matrix3D inverse( const Matrix3D & matrix3d );
 Matrix3D transpose( const Matrix3D & matrix3d );
 
 #endif // MATRIX3D_H
+
