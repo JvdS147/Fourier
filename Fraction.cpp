@@ -549,7 +549,6 @@ Fraction Farey( double target, const int maximum_denominator )
 {
     if ( maximum_denominator < 1 )
         throw std::runtime_error( "Farey(): maximum_denominator must be greater than 0." );
-
     bool is_negative = false;
     if ( target < 0.0 )
     {
@@ -558,7 +557,6 @@ Fraction Farey( double target, const int maximum_denominator )
     }
     double integer_part;
     target = modf( target, &integer_part );
-    
     Fraction lower_limit( 0, 1 );
     Fraction upper_limit( 1, 1 ); // Note that this is stored as Fraction( 1, 0, 1 )
     Fraction mediant( 1, 2 );
@@ -571,18 +569,16 @@ Fraction Farey( double target, const int maximum_denominator )
             upper_limit = mediant;
     }
     Fraction result = ( std::abs( lower_limit.to_double() - target ) < std::abs( upper_limit.to_double() - target ) ) ? lower_limit : upper_limit;
-
     result += Fraction( round_to_int( integer_part ) );
     if ( is_negative )
         result = -result;
-        
     return result;
 }
 
 // ********************************************************************************
 
 // Implementation is elegant but inefficient: every call to Farey() extracts the integer part
-// and tests if the target is negative, which later get added back in again. Especially the first
+// and tests if the target is negative, which later gets added back in again. Especially the first
 // call, Farey( target, 1 ), which can only return 0 or 1, is ludicrously inefficient.
 Fraction Farey_terminate_on_error( const double target, const double epsilon )
 {

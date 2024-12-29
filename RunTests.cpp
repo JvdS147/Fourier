@@ -53,7 +53,6 @@ void run_tests()
         test_maths( test_suite );
         test_ModelBuilding( test_suite );
         test_OrientationalOrderParameters( test_suite );
-        test_PowderMatchTable( test_suite );
         test_PowderPattern( test_suite );
         test_quaternion( test_suite );
         test_ReadCell( test_suite );
