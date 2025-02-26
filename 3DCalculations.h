@@ -87,6 +87,8 @@ SymmetricMatrix3D Matrix3D2SymmetricMatrix3D( const Matrix3D & matrix, const dou
 
 Vector3D operator*( const Matrix3D & matrix, const Vector3D & vector );
 Vector3D operator*( const SymmetricMatrix3D & matrix, const Vector3D & vector );
+Vector3D operator*( const Matrix3D & matrix, const NormalisedVector3D & vector );
+Vector3D operator*( const SymmetricMatrix3D & matrix, const NormalisedVector3D & vector );
 
 // The transposition is implied.
 Vector3D operator*( const Vector3D & vector, const Matrix3D & matrix );

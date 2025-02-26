@@ -231,6 +231,26 @@ Vector3D operator*( const SymmetricMatrix3D & matrix, const Vector3D & vector )
 
 // ********************************************************************************
 
+Vector3D operator*( const Matrix3D & matrix, const NormalisedVector3D & vector )
+{
+    return Vector3D( matrix.value( 0, 0 ) * vector.x() + matrix.value( 0, 1 ) * vector.y() + matrix.value( 0, 2 ) * vector.z(),
+                     matrix.value( 1, 0 ) * vector.x() + matrix.value( 1, 1 ) * vector.y() + matrix.value( 1, 2 ) * vector.z(),
+                     matrix.value( 2, 0 ) * vector.x() + matrix.value( 2, 1 ) * vector.y() + matrix.value( 2, 2 ) * vector.z()
+                   );
+}
+
+// ********************************************************************************
+
+Vector3D operator*( const SymmetricMatrix3D & matrix, const NormalisedVector3D & vector )
+{
+    return Vector3D( matrix.value( 0, 0 ) * vector.x() + matrix.value( 0, 1 ) * vector.y() + matrix.value( 0, 2 ) * vector.z(),
+                     matrix.value( 1, 0 ) * vector.x() + matrix.value( 1, 1 ) * vector.y() + matrix.value( 1, 2 ) * vector.z(),
+                     matrix.value( 2, 0 ) * vector.x() + matrix.value( 2, 1 ) * vector.y() + matrix.value( 2, 2 ) * vector.z()
+                   );
+}
+
+// ********************************************************************************
+
 Vector3D operator*( const Vector3D & vector, const Matrix3D & matrix )
 {
     return Vector3D( matrix.value( 0, 0 ) * vector.x() + matrix.value( 1, 0 ) * vector.y() + matrix.value( 2, 0 ) * vector.z(),
