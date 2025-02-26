@@ -94,6 +94,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SkipBo.h"
 #include "Sort.h"
 #include "SphericalHarmonics.h"
+#include "StringConversions.h"
 #include "StringFunctions.h"
 #include "Sudoku.h"
 #include "SudokuSolver.h"
@@ -268,18 +269,362 @@ int main( int argc, char** argv )
         std::cout << e.what() << std::endl;
     }
 
-    try // Generate a powder diffraction pattern from SHELX .hkl file.
+    try // Take all disordered atoms that have been modelled as large ADPs and change them into a split-atom model.
     {
-        // We need a CrystalLattice and a space group.
-        std::string directory( "Experimental" );
-        FileName input_file_name( directory, "GF", "cif" );
+        if ( argc < 3 )
+            throw std::runtime_error( "Please give the name of a .cif file, a threshold (ca. 0.1 / 0.125) and a factor (ca. 0.75)." );
+        FileName input_file_name( argv[ 1 ] );
+        double threshold = 0.1;
+        if ( argc > 2 )
+            threshold = string2double( argv[ 2 ] );
+        std::cout << "Threshold = " << threshold << " (good values are 0.1 to 0.125)." << std::endl;
+        double factor = 0.75;
+        if ( argc == 4 )
+            factor = string2double( argv[ 3 ] );
+        std::cout << "Factor = " << factor << " (a good value is 0.75)." << std::endl;
         CrystalStructure crystal_structure;
         std::cout << "Now reading cif... " + input_file_name.full_name() << std::endl;
         read_cif( input_file_name, crystal_structure );
+        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+        {
+            Atom atom = crystal_structure.atom( i );
+            if ( atom.ADPs_type() != Atom::ANISOTROPIC )
+                continue;
+            SymmetricMatrix3D Ucart = atom.anisotropic_displacement_parameters().U_cart();
+            std::vector< double > eigenvalues;
+            std::vector< NormalisedVector3D > eigenvectors;
+            calculate_eigenvalues( Ucart, eigenvalues, eigenvectors );
+            if ( eigenvalues[2] < threshold )
+                continue;
+            // Uiso = U_cart().trace() / 3.0;
+            // U_cart().trace() = eigenvalues[2] + eigenvalues[1] + eigenvalues[0]
+            // By splitting an atom over two positions, we say that only half of the largest principal axis is to be assigned to this atom, the other half should be assigned to the other atom.
+            // So the U_cart().trace() for this atom should be ( 0.5 * eigenvalues[2] ) + eigenvalues[1] + eigenvalues[0]
+            // double new_Uiso = ( ( 0.5 * eigenvalues[2] ) + eigenvalues[1] + eigenvalues[0] ) / 3.0;
+            // I did not like these Uisos, they were too big. The volume of an ellipsoid is k * a * b * c where a, b, and c are the principal axes. For a sphere, it is k * r^3.
+            // So just calculate the volume, and calculate the radius that would give a sphere with half the volume.
+            double new_Uiso = std::pow( 0.5 * eigenvalues[2] * eigenvalues[1] * eigenvalues[0], 1.0/3.0 );
+            // It is clear that some random scaling factor must be involved, because the size of the ADP depends on the probability level.
+            // Empirically, 1.58 corresponds to 50%, which is the default in Mercury. It is probably something like pi/sqrt(4), but I have
+            // not been able to find the exact value.
+            // It may be 1.5382, which is the C in Table 6.1 in CCDC/develop_related/chap6.pdf .
+            // But we do not want to be on the outer edge of the ADP, we want the two new atoms to both be within the ADP. Then a value of 0.75 is much better.
+            // r = r +/- s * sqrt( eigenvalues[2] ) * G-1 * eigenvectors[2]
+            Vector3D delta_r = factor * sqrt( eigenvalues[2] ) * ( crystal_structure.crystal_lattice().orthogonal_to_fractional_matrix() * eigenvectors[2] );
+            Atom new_atom_1( atom.element(), atom.position() + delta_r, atom.label() + "a" );
+            new_atom_1.set_occupancy( 0.5 );
+            new_atom_1.set_Uiso( new_Uiso );
+            crystal_structure.add_atom( new_atom_1 );
+            Atom new_atom_2( atom.element(), atom.position() - delta_r, atom.label() + "b" );
+            new_atom_2.set_occupancy( 0.5 );
+            new_atom_2.set_Uiso( new_Uiso );
+            crystal_structure.add_atom( new_atom_2 );
+        }
+        crystal_structure.save_cif( append_to_file_name( input_file_name, "_split" ) );
+    MACRO_END_GAME
+
+    // Transformation of the crystal structure (unit cell + atomic coordinates including ADPs + space group)
+    // followed by a transformation of the atomic coordinates including ADPs.
+    try
+    {
+        if ( argc < 2 )
+            throw std::runtime_error( "Please give the name of a .cif file, a transformation matrix, e.g. \"[[-2,0,-1],[0,0,-1],[0,-1,0]]\", a rotation matrix, e.g. \"I\", and a shift, e.g. \"[0.0.5,0]\"." );
+        FileName input_file_name( argv[ 1 ] );
+        Matrix3D tranformation_matrix(  1.0,  0.0,  0.0,
+                                        0.0,  1.0,  0.0,
+                                        0.0,  0.0,  1.0 );
+        Matrix3D rotation(  1.0,  0.0,  0.0,
+                            0.0,  1.0,  0.0,
+                            0.0,  0.0,  1.0 );
+        Vector3D shift( 0.0, 0.0, 0.0 );
+        if ( argc > 2 )
+            tranformation_matrix = Matrix3D_from_string( argv[ 2 ] );
+        std::cout << "Unit-cell transformation:" << std::endl;
+        tranformation_matrix.show();
+        if ( argc > 3 )
+            rotation = Matrix3D_from_string( argv[ 3 ] );
+        std::cout << "Atoms are rotated by:" << std::endl;
+        rotation.show();
+        if ( argc == 5 )
+            shift = Vector3D_from_string( argv[ 4 ] );
+        std::cout << "Atoms are shifted by:" << std::endl;
+        shift.show();
+        bool there_is_a_transformation = ( ! tranformation_matrix.is_nearly_the_identity() );
+        bool there_is_a_rotation = ( ! rotation.is_nearly_the_identity() );
+        bool there_is_a_translation = ( ! shift.nearly_zero() );
+        if ( ( ! there_is_a_transformation ) && ( ! there_is_a_rotation ) && ( ! there_is_a_translation ) )
+        {
+            std::cout << "There was nothing to do." << std::endl;
+            return 0;
+        }
+        CrystalStructure crystal_structure;
+        std::cout << "Now reading cif... " + input_file_name.full_name() << std::endl;
+        read_cif( input_file_name, crystal_structure );
+        Vector3D com = crystal_structure.centre_of_mass( false );
+        std::cout << "Centre of mass = " << std::endl;
+        com.show();
+        if ( there_is_a_transformation )
+        {
+            crystal_structure.transform( tranformation_matrix );
+            std::cout << "Inverse transformation matrix:" << std::endl;
+            std::cout << inverse( tranformation_matrix ) << std::endl;
+        }
+//        shift -= com;
+        if ( there_is_a_rotation || there_is_a_translation )
+        {
+            for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+            {
+                Atom new_atom( crystal_structure.atom( i ) );
+                if ( there_is_a_rotation )
+                {
+                    new_atom.set_position( ( rotation * crystal_structure.atom( i ).position() ) + shift );
+                    if ( new_atom.ADPs_type() == Atom::ANISOTROPIC )
+                        new_atom.set_anisotropic_displacement_parameters( rotate_adps( new_atom.anisotropic_displacement_parameters(), rotation, crystal_structure.crystal_lattice() ) );
+                }
+                else if ( there_is_a_translation )
+                    new_atom.set_position( ( crystal_structure.atom( i ).position() ) + shift );
+                crystal_structure.set_atom( i, new_atom );
+            }
+        }
+        // In Mercury, if the space-group name and the set of symmetry operators do not match up,
+        // the space-group name takes precedence, so we have to erase it to ensure that the
+        // symmetry operators are used instead.
+        if ( ( tranformation_matrix.determinant() < 0.75 ) || ( tranformation_matrix.determinant() > 1.5 ) )
+        {
+            SpaceGroup space_group = crystal_structure.space_group();
+            space_group.set_name( "" );
+            // If the determinant is 1/2, 1/3, 1/4 etc. then we are probably
+            // reducing a centred unit cell to primitive, so the number of symmetry
+            // operators is also reduced, namely by a factor of 2, 3, 4 etc.
+            // the determinant is either 1 or <= 1/2, so I use 3/4 as a value to
+            // circumvent rounding errors.
+            if ( tranformation_matrix.determinant() < 0.75 )
+                space_group.remove_duplicate_symmetry_operators();
+            if ( tranformation_matrix.determinant() > 1.5 )
+                add_centring_to_space_group_after_transformation( tranformation_matrix, space_group );
+            crystal_structure.set_space_group( space_group );
+        }
+        crystal_structure.save_cif( append_to_file_name( input_file_name, "_transformed" ) );
+    MACRO_END_GAME
+
+    try // Collapse Z'=2 into disordered Z'=1.
+    {
+        if ( argc != 5 )
+            throw std::runtime_error( "Usage: u v w <name>.cif" );
+        size_t u( string2size_t( argv[ 1 ] ) );
+        size_t v( string2size_t( argv[ 2 ] ) );
+        size_t w( string2size_t( argv[ 3 ] ) );
+        FileName input_file_name( argv[ 4 ] );
+        CrystalStructure crystal_structure;
+        read_cif( input_file_name, crystal_structure );
+
+        if ( crystal_structure.space_group().nsymmetry_operators() != 1 )
+            std::cout << "Warning: the space group was reset to P1." << std::endl;
+
+        crystal_structure.convert_to_P1();
+        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
+        {
+            Atom atom( crystal_structure.atom( i ) );
+            Vector3D position = atom.position();
+            if ( u != 1 )
+                position.set_x( adjust_for_translations( u * position.x() ) );
+            if ( v != 1 )
+                position.set_y( adjust_for_translations( v * position.y() ) );
+            if ( w != 1 )
+                position.set_z( adjust_for_translations( w * position.z() ) );
+            atom.set_position( position );
+            crystal_structure.set_atom( i, atom );
+        }
+        CrystalLattice crystal_lattice( crystal_structure.crystal_lattice().a() / u,
+                                        crystal_structure.crystal_lattice().b() / v,
+                                        crystal_structure.crystal_lattice().c() / w,
+                                        crystal_structure.crystal_lattice().alpha(),
+                                        crystal_structure.crystal_lattice().beta(),
+                                        crystal_structure.crystal_lattice().gamma() );
+        crystal_structure.set_crystal_lattice( crystal_lattice );
+        crystal_structure.save_cif( append_to_file_name( input_file_name, "_collapsed" ) );
+    MACRO_END_GAME
+
+    try // Insert one hydrogen atom between two atoms.
+    {
+        // Sometimes we need the shortest distance, sometimes we need the second shortest distance.
+        // This is currently not possible with this code.
+        if ( argc != 4 )
+            throw std::runtime_error( "Please give the name of a .cif file and two atom labels." );
+        FileName input_file_name( argv[ 1 ] );
+        CrystalStructure crystal_structure;
+        std::cout << "Now reading cif... " + input_file_name.full_name() << std::endl;
+        read_cif( input_file_name, crystal_structure );
+        std::string origin_atom_label( argv[ 2 ] );
+        std::string neighbour_atom_label( argv[ 3 ] );
+        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
+        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
+        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
+        double distance;
+        Vector3D difference_frac;
+        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
+        if ( distance > 3.0 )
+            std::cout << "Warning: distance > 3.0 A" << std::endl;
+        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
+        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
+        double target_bond_length( 1.0 );
+        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
+            target_bond_length = 1.089;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
+            target_bond_length = 1.015;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
+            target_bond_length = 0.993;
+        difference_cart *= target_bond_length / distance;
+        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
+        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
+        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
+        if ( (false) )
+        {
+        std::string origin_atom_label( "O41" );
+        std::string neighbour_atom_label( "O40" );
+        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
+        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
+        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
+        double distance;
+        Vector3D difference_frac;
+        crystal_structure.second_shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
+            std::cout << "Warning: distance = " << distance << std::endl;
+        if ( distance > 3.0 )
+            std::cout << "Warning: distance > 3.0 A" << std::endl;
+        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
+        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
+        double target_bond_length( 1.0 );
+        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
+            target_bond_length = 1.089;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
+            target_bond_length = 1.015;
+        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
+            target_bond_length = 0.993;
+        difference_cart *= target_bond_length / distance;
+        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
+        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
+        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
+        }
+        std::string name = input_file_name.name();
+        if ( ( name.length() > 11 ) && ( name.substr( name.length()-11, 11 ) == "_H_inserted" ) )
+           crystal_structure.save_cif( input_file_name );
+        else
+           crystal_structure.save_cif( append_to_file_name( input_file_name, "_H_inserted" ) );
+    MACRO_END_GAME
+
+    try // Rotate group.
+    {
+        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
+        if ( true )
+        {
+        std::string atom_1_label( "C11" );
+        std::string atom_2_label( "C12" );
+        Vector3D C1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_1_label ) ).position() );
+        Vector3D C2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_2_label ) ).position() );
+        NormalisedVector3D n = normalised_vector( C1 - C2 );
+        std::vector< std::string > labels_to_be_rotated;
+        labels_to_be_rotated.push_back( "F0_" );
+        labels_to_be_rotated.push_back( "F1_" );
+        labels_to_be_rotated.push_back( "H12" );
+        Angle additional_angle = Angle::from_degrees( 180.0 );
+        for ( size_t i( 0 ); i != labels_to_be_rotated.size(); ++i )
+        {
+            std::cout << labels_to_be_rotated[i] << std::endl;
+            Atom new_atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
+            Vector3D tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
+            tVector = rotate_point_about_axis( tVector, C1, n, additional_angle );
+            new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
+        //    new_atom.set_label( labels_to_be_rotated[i] + "a" );
+        //    crystal_structure.add_atom( new_atom ); // Copy, then rotate
+
+       //     new_atom = Atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
+       //     tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
+       //     tVector = rotate_point_about_axis( tVector, C1, n, -additional_angle );
+       //     new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
+       //     new_atom.set_label( labels_to_be_rotated[i] + "b" );
+            crystal_structure.set_atom( crystal_structure.find_label( labels_to_be_rotated[i] ), new_atom );
+        }
+        }
+
+        if ( false )
+        {
+        std::string atom_1_label( "C117" );
+        std::string atom_2_label( "C121" );
+        Vector3D C1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_1_label ) ).position() );
+        Vector3D C2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_2_label ) ).position() );
+        NormalisedVector3D n = normalised_vector( C1 - C2 );
+        std::vector< std::string > labels_to_be_rotated;
+        labels_to_be_rotated.push_back( "O17" );
+        labels_to_be_rotated.push_back( "O21" );
+        labels_to_be_rotated.push_back( "H105" );
+        Angle additional_angle = Angle::from_degrees( 180.0 );
+        for ( size_t i( 0 ); i != labels_to_be_rotated.size(); ++i )
+        {
+            std::cout << labels_to_be_rotated[i] << std::endl;
+            Atom new_atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
+            Vector3D tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
+            tVector = rotate_point_about_axis( tVector, C1, n, additional_angle );
+            new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
+        //    new_atom.set_label( labels_to_be_rotated[i] + "a" );
+        //    crystal_structure.add_atom( new_atom ); // Copy, then rotate
+
+       //     new_atom = Atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
+       //     tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
+       //     tVector = rotate_point_about_axis( tVector, C1, n, -additional_angle );
+       //     new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
+       //     new_atom.set_label( labels_to_be_rotated[i] + "b" );
+            crystal_structure.set_atom( crystal_structure.find_label( labels_to_be_rotated[i] ), new_atom );
+        }
+        }
+
+        if ( false )
+        {
+        std::string atom_1_label( "C61" );
+        std::string atom_2_label( "C65" );
+        Vector3D C1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_1_label ) ).position() );
+        Vector3D C2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_2_label ) ).position() );
+        NormalisedVector3D n = normalised_vector( C1 - C2 );
+        std::vector< std::string > labels_to_be_rotated;
+        labels_to_be_rotated.push_back( "O5" );
+        labels_to_be_rotated.push_back( "O9" );
+        labels_to_be_rotated.push_back( "H49" );
+        Angle additional_angle = Angle::from_degrees( 180.0 );
+        for ( size_t i( 0 ); i != labels_to_be_rotated.size(); ++i )
+        {
+            std::cout << labels_to_be_rotated[i] << std::endl;
+            Atom new_atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
+            Vector3D tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
+            tVector = rotate_point_about_axis( tVector, C1, n, additional_angle );
+            new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
+        //    new_atom.set_label( labels_to_be_rotated[i] + "a" );
+        //    crystal_structure.add_atom( new_atom ); // Copy, then rotate
+
+       //     new_atom = Atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
+       //     tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
+       //     tVector = rotate_point_about_axis( tVector, C1, n, -additional_angle );
+       //     new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
+       //     new_atom.set_label( labels_to_be_rotated[i] + "b" );
+            crystal_structure.set_atom( crystal_structure.find_label( labels_to_be_rotated[i] ), new_atom );
+        }
+        }
+
+        crystal_structure.save_cif( append_to_file_name( input_file_name, "_rotated" ) );
+    MACRO_END_GAME
+
+    try // Generate a powder diffraction pattern from SHELX .hkl file.
+    {
+        std::vector< std::string > extensions;
+        extensions.push_back( "cif" );
+        extensions.push_back( "hkl" );
+        std::vector< FileName > input_file_names = sort_file_names_by_extension( argc, argv, extensions );
+        // We need a CrystalLattice and a space group.
+        CrystalStructure crystal_structure;
+        std::cout << "Now reading cif... " + input_file_names[0].full_name() << std::endl;
+        read_cif( input_file_names[0], crystal_structure );
         crystal_structure.apply_space_group_symmetry();
         PointGroup Laue_class = crystal_structure.space_group().Laue_class();
         ReflectionList reflection_list;
-        reflection_list.read_hkl( FileName( "GP.hkl" ) );
+        reflection_list.read_hkl( input_file_names[1] );
         std::cout << ".hkl file has been read." << std::endl;
         ReflectionList reflection_list_final;
         std::vector< bool > done( reflection_list.size(), false );
@@ -330,7 +675,7 @@ int main( int argc, char** argv )
             double d = 1.0 / ( H.length() );
             reflection_list_final.push_back( miller_indices, F_squared, d, equivalent_reflections.size() );
         }
-        reflection_list_final.save( FileName( directory, "GF_cal", "hkl" ) );
+        reflection_list_final.save( append_to_file_name( input_file_names[1], "_cal" ) );
         PowderPatternCalculator powder_pattern_calculator( crystal_structure );
         powder_pattern_calculator.set_FWHM( 0.05 );
         powder_pattern_calculator.set_two_theta_end( Angle::from_degrees( 40.0 ) );
@@ -475,62 +820,6 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
-    try // Take all disordered atoms that have been modelled as large ADPs and change them into a split-atom model.
-    {
-        if ( argc < 3 )
-            throw std::runtime_error( "Please give the name of a .cif file, a threshold (ca. 0.1 / 0.125) and a factor (ca. 0.75)." );
-        FileName input_file_name( argv[ 1 ] );
-        double threshold = 0.1;
-        if ( argc > 2 )
-            threshold = string2double( argv[ 2 ] );
-        std::cout << "Threshold = " << threshold << " (good values are 0.1 to 0.125)." << std::endl;
-        double factor = 0.75;
-        if ( argc == 4 )
-            factor = string2double( argv[ 3 ] );
-        std::cout << "Factor = " << factor << " (a good value is 0.75)." << std::endl;
-        CrystalStructure crystal_structure;
-        std::cout << "Now reading cif... " + input_file_name.full_name() << std::endl;
-        read_cif( input_file_name, crystal_structure );
-        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        {
-            Atom atom = crystal_structure.atom( i );
-            if ( atom.ADPs_type() != Atom::ANISOTROPIC )
-                continue;
-            SymmetricMatrix3D Ucart = atom.anisotropic_displacement_parameters().U_cart();
-            std::vector< double > eigenvalues;
-            std::vector< NormalisedVector3D > eigenvectors;
-            calculate_eigenvalues( Ucart, eigenvalues, eigenvectors );
-            if ( eigenvalues[2] < threshold )
-                continue;
-            // It is clear that some random scaling factor must be involved, because the size of the ADP depends on the probability level.
-            // Empirically, 1.58 corresponds to 50%, which is the default in Mercury. It is probably something like pi/sqrt(4), but I have
-            // not been able to find the exact value.
-            // It may be 1.5382, which is the C in Table 6.1 in CCDC/develop_related/chap6.pdf .
-            // But we do not want to be on the outer edge of the ADP, we want the two new atoms to both be within the ADP. Then a value of 0.75 is much better.
-            Vector3D new_position_1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( atom.position() ) + factor * sqrt( eigenvalues[2] ) * eigenvectors[2];
-            new_position_1 = crystal_structure.crystal_lattice().orthogonal_to_fractional( new_position_1 );
-            Atom new_atom_1( atom.element(), new_position_1, atom.label() + "a" );
-            new_atom_1.set_occupancy( 0.5 );
-            // Uiso = U_cart().trace() / 3.0;
-            // U_cart().trace() = eigenvalues[2] + eigenvalues[1] + eigenvalues[0]
-            // By splitting an atom over two positions, we say that only half of the largest principal axis is to be assigned to this atom, the other half should be assigned to the other atom.
-            // So the U_cart().trace() for this atom should be ( 0.5 * eigenvalues[2] ) + eigenvalues[1] + eigenvalues[0]
-            // double new_Uiso = ( ( 0.5 * eigenvalues[2] ) + eigenvalues[1] + eigenvalues[0] ) / 3.0;
-            // I did not like these Uisos, they were too big. The volume of an ellipsoid is k * a * b * c where a, b, and c are the principal axes. For a sphere, it is k * r^3.
-            // So just calculate the volume, and calculate the radius that would give a sphere with half the volume.
-            double new_Uiso = std::pow( 0.5 * eigenvalues[2] * eigenvalues[1] * eigenvalues[0], 1.0/3.0 );
-            new_atom_1.set_Uiso( new_Uiso );
-            crystal_structure.add_atom( new_atom_1 );
-            Vector3D new_position_2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( atom.position() ) - factor * sqrt( eigenvalues[2] ) * eigenvectors[2];
-            new_position_2 = crystal_structure.crystal_lattice().orthogonal_to_fractional( new_position_2 );
-            Atom new_atom_2( atom.element(), new_position_2, atom.label() + "b" );
-            new_atom_2.set_occupancy( 0.5 );
-            new_atom_2.set_Uiso( new_Uiso );
-            crystal_structure.add_atom( new_atom_2 );
-        }
-        crystal_structure.save_cif( append_to_file_name( input_file_name, "_split" ) );
-    MACRO_END_GAME
-
     try // Supercell with and without original space group.
     {
         if ( argc != 5 )
@@ -615,135 +904,6 @@ int main( int argc, char** argv )
         GeneratePowderCIF generate_powder_cif( directory, base_name );
     //enum ZoomPolicy { ALWAYS_ZOOM, NEVER_ZOOM, ZOOM_OVER_40 };
         generate_powder_cif.generate_R_input_file( GeneratePowderCIF::ALWAYS_ZOOM );
-    MACRO_END_GAME
-
-    try // Rotate group.
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        if ( true )
-        {
-        std::string atom_1_label( "C31" );
-        std::string atom_2_label( "C32" );
-        Vector3D C1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_1_label ) ).position() );
-        Vector3D C2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_2_label ) ).position() );
-        NormalisedVector3D n = normalised_vector( C1 - C2 );
-        std::vector< std::string > labels_to_be_rotated;
-        labels_to_be_rotated.push_back( "C33a" );
-        Angle additional_angle = Angle::from_degrees( -12.0 );
-        for ( size_t i( 0 ); i != labels_to_be_rotated.size(); ++i )
-        {
-            std::cout << labels_to_be_rotated[i] << std::endl;
-            Atom new_atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
-            Vector3D tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
-            tVector = rotate_point_about_axis( tVector, C1, n, additional_angle );
-            new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
-        //    new_atom.set_label( labels_to_be_rotated[i] + "a" );
-        //    crystal_structure.add_atom( new_atom ); // Copy, then rotate
-
-       //     new_atom = Atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
-       //     tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
-       //     tVector = rotate_point_about_axis( tVector, C1, n, -additional_angle );
-       //     new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
-       //     new_atom.set_label( labels_to_be_rotated[i] + "b" );
-            crystal_structure.set_atom( crystal_structure.find_label( labels_to_be_rotated[i] ), new_atom );
-        }
-        }
-
-        if ( false )
-        {
-        std::string atom_1_label( "N9" );
-        std::string atom_2_label( "C213" );
-        Vector3D C1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_1_label ) ).position() );
-        Vector3D C2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_2_label ) ).position() );
-        NormalisedVector3D n = normalised_vector( C1 - C2 );
-        std::vector< std::string > labels_to_be_rotated;
-        labels_to_be_rotated.push_back( "O29" );
-        labels_to_be_rotated.push_back( "N13" );
-        labels_to_be_rotated.push_back( "H165" );
-        labels_to_be_rotated.push_back( "H161" );
-        Angle additional_angle = Angle::from_degrees( 180.0 );
-        for ( size_t i( 0 ); i != labels_to_be_rotated.size(); ++i )
-        {
-            std::cout << labels_to_be_rotated[i] << std::endl;
-            Atom new_atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
-            Vector3D tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
-            tVector = rotate_point_about_axis( tVector, C1, n, additional_angle );
-            new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
-        //    new_atom.set_label( labels_to_be_rotated[i] + "a" );
-        //    crystal_structure.add_atom( new_atom ); // Copy, then rotate
-
-       //     new_atom = Atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
-       //     tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
-       //     tVector = rotate_point_about_axis( tVector, C1, n, -additional_angle );
-       //     new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
-       //     new_atom.set_label( labels_to_be_rotated[i] + "b" );
-            crystal_structure.set_atom( crystal_structure.find_label( labels_to_be_rotated[i] ), new_atom );
-        }
-        }
-
-        if ( false )
-        {
-        std::string atom_1_label( "C117" );
-        std::string atom_2_label( "C121" );
-        Vector3D C1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_1_label ) ).position() );
-        Vector3D C2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_2_label ) ).position() );
-        NormalisedVector3D n = normalised_vector( C1 - C2 );
-        std::vector< std::string > labels_to_be_rotated;
-        labels_to_be_rotated.push_back( "O17" );
-        labels_to_be_rotated.push_back( "O21" );
-        labels_to_be_rotated.push_back( "H105" );
-        Angle additional_angle = Angle::from_degrees( 180.0 );
-        for ( size_t i( 0 ); i != labels_to_be_rotated.size(); ++i )
-        {
-            std::cout << labels_to_be_rotated[i] << std::endl;
-            Atom new_atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
-            Vector3D tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
-            tVector = rotate_point_about_axis( tVector, C1, n, additional_angle );
-            new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
-        //    new_atom.set_label( labels_to_be_rotated[i] + "a" );
-        //    crystal_structure.add_atom( new_atom ); // Copy, then rotate
-
-       //     new_atom = Atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
-       //     tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
-       //     tVector = rotate_point_about_axis( tVector, C1, n, -additional_angle );
-       //     new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
-       //     new_atom.set_label( labels_to_be_rotated[i] + "b" );
-            crystal_structure.set_atom( crystal_structure.find_label( labels_to_be_rotated[i] ), new_atom );
-        }
-        }
-
-        if ( false )
-        {
-        std::string atom_1_label( "C61" );
-        std::string atom_2_label( "C65" );
-        Vector3D C1 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_1_label ) ).position() );
-        Vector3D C2 = crystal_structure.crystal_lattice().fractional_to_orthogonal( crystal_structure.atom( crystal_structure.find_label( atom_2_label ) ).position() );
-        NormalisedVector3D n = normalised_vector( C1 - C2 );
-        std::vector< std::string > labels_to_be_rotated;
-        labels_to_be_rotated.push_back( "O5" );
-        labels_to_be_rotated.push_back( "O9" );
-        labels_to_be_rotated.push_back( "H49" );
-        Angle additional_angle = Angle::from_degrees( 180.0 );
-        for ( size_t i( 0 ); i != labels_to_be_rotated.size(); ++i )
-        {
-            std::cout << labels_to_be_rotated[i] << std::endl;
-            Atom new_atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
-            Vector3D tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
-            tVector = rotate_point_about_axis( tVector, C1, n, additional_angle );
-            new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
-        //    new_atom.set_label( labels_to_be_rotated[i] + "a" );
-        //    crystal_structure.add_atom( new_atom ); // Copy, then rotate
-
-       //     new_atom = Atom( crystal_structure.atom( crystal_structure.find_label( labels_to_be_rotated[i] ) ) );
-       //     tVector = crystal_structure.crystal_lattice().fractional_to_orthogonal( new_atom.position() );
-       //     tVector = rotate_point_about_axis( tVector, C1, n, -additional_angle );
-       //     new_atom.set_position( crystal_structure.crystal_lattice().orthogonal_to_fractional( tVector ) );
-       //     new_atom.set_label( labels_to_be_rotated[i] + "b" );
-            crystal_structure.set_atom( crystal_structure.find_label( labels_to_be_rotated[i] ), new_atom );
-        }
-        }
-
-        crystal_structure.save_cif( append_to_file_name( input_file_name, "_rotated" ) );
     MACRO_END_GAME
 
     try // Write TOPAS input file for a temperature series.
@@ -977,7 +1137,6 @@ int main( int argc, char** argv )
 
     try // // Write TOPAS input file for a phase transition captured by XRPD.
     {
-// C:\Users\jacco\Documents\PowderPatterns\PhaseTransition\structure_000001.cif C:\Users\jacco\Documents\PowderPatterns\PhaseTransition\structure_000007.cif C:\Users\jacco\Documents\PowderPatterns\PhaseTransition\structure_000001_0.xye
         std::vector< std::string > extensions;
         extensions.push_back( "cif" );
         extensions.push_back( "cif" );
@@ -1135,7 +1294,6 @@ int main( int argc, char** argv )
 
     try // Simulate a phase transition captured by XRPD.
     {
-// C:\Users\jacco\Documents\PowderPatterns/PhaseTransition/structure_000001.cif C:\Users\jacco\Documents\PowderPatterns/PhaseTransition/structure_000007.cif
         std::vector< std::string > extensions;
         extensions.push_back( "cif" );
         extensions.push_back( "cif" );
@@ -1219,117 +1377,6 @@ int main( int argc, char** argv )
         powder_pattern.read_cif( input_file_name );
         powder_pattern.set_wavelength( Wavelength::determine_from_wavelength( 0.81906 ) );
         powder_pattern.save_xye( replace_extension( input_file_name, "xye" ), true );
-    MACRO_END_GAME
-
-    try // Insert one hydrogen atom between two atoms.
-    {
-        MACRO_ONE_CIFFILENAME_AS_ARGUMENT
-        if ( (true) )
-        {
-        std::string origin_atom_label( "O4" );
-        std::string neighbour_atom_label( "O3" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-        if ( (false) )
-        {
-        std::string origin_atom_label( "O41" );
-        std::string neighbour_atom_label( "O40" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-        if ( (false) )
-        {
-        std::string origin_atom_label( "O41" );
-        std::string neighbour_atom_label( "O40" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.second_shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-            std::cout << "Warning: distance = " << distance << std::endl;
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-        if ( (false) )
-        {
-        std::string origin_atom_label( "O2" );
-        std::string neighbour_atom_label( "N2" );
-        Vector3D origin_atom_frac = crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).position();
-        Vector3D neighbour_atom_frac = crystal_structure.atom( crystal_structure.find_label( neighbour_atom_label ) ).position();
-        // Find shortest distance between the two taking periodicity and space-group symmetry into account.
-        double distance;
-        Vector3D difference_frac;
-        crystal_structure.shortest_distance( origin_atom_frac, neighbour_atom_frac, distance, difference_frac );
-        if ( distance > 3.0 )
-            std::cout << "Warning: distance > 3.0 A" << std::endl;
-        // We need to be able to set the length of the X-H bond, so we must work in Cartesian coordinates.
-        Vector3D difference_cart = crystal_structure.crystal_lattice().fractional_to_orthogonal( difference_frac );
-        double target_bond_length( 1.0 );
-        if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "C" ) )
-            target_bond_length = 1.089;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "N" ) )
-            target_bond_length = 1.015;
-        else if ( crystal_structure.atom( crystal_structure.find_label( origin_atom_label ) ).element() == Element( "O" ) )
-            target_bond_length = 0.993;
-        difference_cart *= target_bond_length / distance;
-        difference_frac = crystal_structure.crystal_lattice().orthogonal_to_fractional( difference_cart );
-        Vector3D H_atom_frac = origin_atom_frac + difference_frac;
-        crystal_structure.add_atom( Atom( Element( "H" ), H_atom_frac, "H" + size_t2string( crystal_structure.natoms() ) ) );
-        }
-        crystal_structure.save_cif( append_to_file_name( input_file_name, "_H_inserted" ) );
     MACRO_END_GAME
 
     try // Calculate amount of PO.
@@ -1725,27 +1772,6 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
-    try // Collapse supercell.
-    {
-        std::vector< SymmetryOperator > symmetry_operators;
-        symmetry_operators.push_back( SymmetryOperator( Matrix3D(  1,  0,  0,
-                                                                   0,  1,  0,
-                                                                   0,  0,  1 ), Vector3D( 0.0, 0.0, 0.0 ) ) );
-        symmetry_operators.push_back( SymmetryOperator( Matrix3D( -1,  0,  0,
-                                                                   0,  1,  0,
-                                                                   0,  0, -1 ), Vector3D( 0.5, 0.5, 0.5 ) ) );
-        SpaceGroup space_group( symmetry_operators, "P21/n" );
-        space_group.add_inversion_at_origin();
-        CrystalLattice crystal_lattice( 7.0939, 9.2625, 11.657, Angle::angle_90_degrees(), Angle::from_degrees( 97.672 ), Angle::angle_90_degrees() );
-        std::cout << "Step 1" << std::endl;
-        CrystalStructure crystal_structure;
-        read_cif( FileName( "Paracetamol_fr0001.cif" ), crystal_structure );
-        std::cout << "Step 2" << std::endl;
-        crystal_structure.collapse_supercell( crystal_lattice, space_group );
-        std::cout << "Step 3" << std::endl;
-        crystal_structure.save_xyz( FileName( "collapsed.xyz" ) );
-    MACRO_END_GAME
-
     try // Primitive to centred.
     {
         std::vector< Centring > centrings;
@@ -1966,7 +1992,7 @@ int main( int argc, char** argv )
         }
     MACRO_END_GAME
 
-    try // Cyclic permute unit-cell axes.
+    try // Cyclicly permute unit-cell axes.
     {
         MACRO_ONE_CIFFILENAME_AS_ARGUMENT
         Matrix3D tranformation_matrix(  0.0,  1.0,  0.0,
@@ -3997,38 +4023,6 @@ int main( int argc, char** argv )
         crystal_structure.set_atom( crystal_structure.find_label( neighbour_atom_label ), new_atom );
         }
         crystal_structure.save_cif( append_to_file_name( input_file_name, "_blc" ) );
-    MACRO_END_GAME
-
-    try // Collapse Z'=2 into disordered Z'=1.
-    {
-        if ( argc != 5 )
-            throw std::runtime_error( "Usage: u v w <name>.cif" );
-        size_t u( string2integer( argv[ 1 ] ) );
-        size_t v( string2integer( argv[ 2 ] ) );
-        size_t w( string2integer( argv[ 3 ] ) );
-        FileName input_file_name( argv[ 4 ] );
-        CrystalStructure crystal_structure;
-        read_cif( input_file_name, crystal_structure );
-        if ( crystal_structure.space_group().nsymmetry_operators() != 1 )
-            std::cout << "Warning: the space group is not P1." << std::endl;
-        for ( size_t i( 0 ); i != crystal_structure.natoms(); ++i )
-        {
-            Atom atom( crystal_structure.atom( i ) );
-            Vector3D position = atom.position();
-            position.set_x( u * position.x() );
-            position.set_y( v * position.y() );
-            position.set_z( w * position.z() );
-            atom.set_position( adjust_for_translations( position ) );
-            crystal_structure.set_atom( i, atom );
-        }
-        CrystalLattice crystal_lattice( crystal_structure.crystal_lattice().a() / u,
-                                        crystal_structure.crystal_lattice().b() / v,
-                                        crystal_structure.crystal_lattice().c() / w,
-                                        crystal_structure.crystal_lattice().alpha(),
-                                        crystal_structure.crystal_lattice().beta(),
-                                        crystal_structure.crystal_lattice().gamma() );
-        crystal_structure.set_crystal_lattice( crystal_lattice );
-        crystal_structure.save_cif( append_to_file_name( input_file_name, "_collapsed" ) );
     MACRO_END_GAME
 
     try // Convert powder pattern in ASCII .raw format to .xye.
