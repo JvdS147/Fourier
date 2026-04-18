@@ -141,7 +141,7 @@ void PowderPatternCalculator::set_preferred_orientation( const MillerIndices & m
     for ( size_t i( 0 ); i != Laue_class_.nsymmetry_operators(); ++i )
     {
         MillerIndices equivalent_reflection = reflection * Laue_class_.symmetry_operator( i );
-        // Now check that the March-Dollase PO corrections are the same for all of them
+        // Now check that the March-Dollase PO corrections are the same for all of them.
         Vector3D H = reciprocal_lattice_point( equivalent_reflection, crystal_structure_.crystal_lattice() );
         double current_dot_product = absolute( PO_vector * H );
         if ( ! nearly_equal( current_dot_product, reference_dot_product ) )
@@ -175,7 +175,6 @@ void PowderPatternCalculator::calculate_reflection_list( const bool exact )
 {
     // Get a list of all reflections.
     // As in Mercury, we ignore two_theta_start_ here.
-//    std::cout << "Now generating reflection list... " << std::endl;
     // We add a little extra at the end to avoid cut-off effects.
     Angle theta_end( ( two_theta_end_ / 2.0 ) + Angle::from_degrees( 1.0 ) );
     double one_over_d_min = ( 2.0 * theta_end.sine() ) / wavelength_.wavelength_1();
@@ -196,8 +195,8 @@ void PowderPatternCalculator::calculate_reflection_list( const bool exact )
     int k_lower = -k_upper;
     int l_upper = round_to_int( l_max ) + 1;
     int l_lower = -l_upper;
-    // We can precalculate how many reflections there will be to dimension the vector properly
-    // This can be improved (current numbers are wrong)
+    // We can precalculate how many reflections there will be to dimension the vector properly.
+    // This can be improved (current numbers are wrong).
     size_t cube_size = (2*h_upper+1) * (2*k_upper+1) * (l_upper+1);
     size_t sphere_size = static_cast<size_t>( cube_size/2.0 );
     reflection_list_.reserve( sphere_size );
@@ -212,9 +211,9 @@ void PowderPatternCalculator::calculate_reflection_list( const bool exact )
                     continue;
                 if ( is_systematic_absence( current_reflection ) )
                     continue;
-                // Get a list of all equivalent reflections
+                // Get a list of all equivalent reflections.
                 std::set< MillerIndices > equivalent_reflections = calculate_equivalent_reflections( current_reflection );
-                // Only keep the first one
+                // Only keep the first one.
                 if ( ! ( current_reflection == *equivalent_reflections.begin() ) )
                     continue;
                 Vector3D H = reciprocal_lattice_point( current_reflection, crystal_structure_.crystal_lattice() );
@@ -236,7 +235,6 @@ void PowderPatternCalculator::calculate_reflection_list( const bool exact )
             }
         }
     }
-//    reflection_list_.save( "C:\\Data\\for_testing\\PY110.hkl" );
 }
 
 // ********************************************************************************
@@ -245,7 +243,6 @@ void PowderPatternCalculator::calculate_structure_factors()
 {
     if ( ! crystal_structure_.space_group_symmetry_has_been_applied() )
         throw std::runtime_error( "PowderPatternCalculator::calculate_structure_factors(): Error: space-group symmetry has not been applied for input crystal structure." );
-//    std::cout << "Now calculating F^2 values... " << std::endl;
     // For each reflection, calculate an intensity.
     for ( size_t i( 0 ); i != reflection_list_.size(); ++i )
     {
@@ -266,10 +263,6 @@ void PowderPatternCalculator::calculate_structure_factors()
         double f0_I  = Element( 53 ).scattering_factor( sine_theta_over_lambda );
         for ( size_t j( 0 ); j != crystal_structure_.natoms(); ++j )
         {
-            double x = crystal_structure_.atom(j).position().x();
-            double y = crystal_structure_.atom(j).position().y();
-            double z = crystal_structure_.atom(j).position().z();
-            Angle argument = Angle::from_radians( 2.0 * CONSTANT_PI * ( h*x + k*y + l*z ) );
             // Get the scattering factor from 2theta, the wavelength and the element of the atom.
             double f0;
             switch ( crystal_structure_.atom(j).element().atomic_number() )
@@ -283,13 +276,10 @@ void PowderPatternCalculator::calculate_structure_factors()
                 default : f0 = crystal_structure_.atom(j).element().scattering_factor( sine_theta_over_lambda );
             }
             f0 *= crystal_structure_.atom(j).occupancy();
-//            if ( ! nearly_equal( crystal_structure_.atom(j).occupancy(), 1.0 ) )
-//                std::cout << "occ = " << crystal_structure_.atom(j).occupancy() << std::endl;
-            // The Debije-Waller factor
+            // The Debije-Waller factor.
             double T( 1.0 );
             if ( crystal_structure_.atom(j).ADPs_type() == Atom::ANISOTROPIC )
             {
-//                std::cout << "Anisotropic ADPs used for atom " << j << std::endl;
                 AnisotropicDisplacementParameters ADPs = crystal_structure_.atom(j).anisotropic_displacement_parameters();
                 T = exp( -2.0 * square( CONSTANT_PI ) * ( miller_indices * ADPs.U_star( crystal_structure_.crystal_lattice() ) * miller_indices ) );
             }
@@ -305,6 +295,10 @@ void PowderPatternCalculator::calculate_structure_factors()
                 else
                     T = exp( -8.0 * square( CONSTANT_PI ) * 0.05 * square( sine_theta_over_lambda ) );
             }
+            double x = crystal_structure_.atom(j).position().x();
+            double y = crystal_structure_.atom(j).position().y();
+            double z = crystal_structure_.atom(j).position().z();
+            Angle argument = Angle::from_radians( 2.0 * CONSTANT_PI * ( h*x + k*y + l*z ) );
             double sine;
             double cosine;
             bool use_sincos = true;
@@ -321,7 +315,6 @@ void PowderPatternCalculator::calculate_structure_factors()
         double F_squared = square( cosine_term ) + square( sine_term );
         reflection_list_.set_F_squared( i, F_squared );
     }
-//    reflection_list_.save( FileName( "C:\\Data_Win\\ReflectionList_Cpp.hkl" ) );
 }
 
 // ********************************************************************************
@@ -340,7 +333,6 @@ void PowderPatternCalculator::calculate( const ReflectionList & reflection_list,
         double multiplicity( 0.0 );
         if ( include_preferred_orientation_ )
         {
-      //      std::cout << "PO is included" << std::endl;
             std::set< MillerIndices > equivalent_reflections = calculate_equivalent_reflections( reflection_list.miller_indices( i ) );
             for ( std::set< MillerIndices >::const_iterator it( equivalent_reflections.begin() ); it != equivalent_reflections.end(); ++it )
             {

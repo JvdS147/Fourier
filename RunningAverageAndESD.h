@@ -36,8 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdexcept>
 #include <vector>
 
-#include <iostream> // For debugging
-
 /*
   A running average and running estimated standard deviation, i.e. the average and ESD are calculated on the fly as numbers come in. This is <i>not</i> a running average with a fixed-size window.
 

@@ -41,7 +41,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iostream>
 #include <stdexcept>
 
-// Gram-Schmidt orthogonalisation
+// ********************************************************************************
+
+// Gram-Schmidt orthogonalisation.
 NormalisedVector3D orthogonalise( const NormalisedVector3D & n, const Vector3D & r )
 {
     return normalised_vector( r - (n*r) * n );
@@ -102,7 +104,7 @@ SymmetricMatrix3D covariance_matrix( const std::vector< Vector3D > & points )
 {
     SymmetricMatrix3D result( 0.0 );
     Vector3D centre_of_mass = average( points );
-    // Calculate covariance matrix
+    // Calculate covariance matrix.
     for ( size_t iPoint( 0 ); iPoint != points.size(); ++iPoint )
     {
         Vector3D difference = points[iPoint] - centre_of_mass;
@@ -122,7 +124,7 @@ SymmetricMatrix3D covariance_matrix( const std::vector< Vector3D > & points )
 SymmetricMatrix3D covariance_matrix( const CollectionOfPoints & points )
 {
     SymmetricMatrix3D result( 0.0 );
-    // Calculate covariance matrix
+    // Calculate covariance matrix.
     for ( size_t iPoint( 0 ); iPoint != points.size(); ++iPoint )
     {
         for ( size_t i( 0 ); i != 3; ++i )
@@ -264,10 +266,6 @@ Vector3D operator*( const Vector3D & vector, const Matrix3D & matrix )
 Vector3D operator*( const Vector3D & vector, const SymmetricMatrix3D & matrix )
 {
     return vector * SymmetricMatrix3D2Matrix3D( matrix );
-//    return Vector3D( matrix.value( 0, 0 ) * vector.x() + matrix.value( 1, 0 ) * vector.y() + matrix.value( 2, 0 ) * vector.z(),
-//                     matrix.value( 0, 1 ) * vector.x() + matrix.value( 1, 1 ) * vector.y() + matrix.value( 2, 1 ) * vector.z(),
-//                     matrix.value( 0, 2 ) * vector.x() + matrix.value( 1, 2 ) * vector.y() + matrix.value( 2, 2 ) * vector.z()
-//                   );
 }
 
 // ********************************************************************************
@@ -275,10 +273,6 @@ Vector3D operator*( const Vector3D & vector, const SymmetricMatrix3D & matrix )
 Vector3D operator*( const NormalisedVector3D & vector, const Matrix3D & matrix )
 {
     return NormalisedVector3D2Vector3D( vector ) * matrix;
-//    return Vector3D( matrix.value( 0, 0 ) * vector.x() + matrix.value( 1, 0 ) * vector.y() + matrix.value( 2, 0 ) * vector.z(),
-//                     matrix.value( 0, 1 ) * vector.x() + matrix.value( 1, 1 ) * vector.y() + matrix.value( 2, 1 ) * vector.z(),
-//                     matrix.value( 0, 2 ) * vector.x() + matrix.value( 1, 2 ) * vector.y() + matrix.value( 2, 2 ) * vector.z()
-//                   );
 }
 
 // ********************************************************************************
@@ -286,10 +280,6 @@ Vector3D operator*( const NormalisedVector3D & vector, const Matrix3D & matrix )
 Vector3D operator*( const NormalisedVector3D & vector, const SymmetricMatrix3D & matrix )
 {
     return NormalisedVector3D2Vector3D( vector ) * SymmetricMatrix3D2Matrix3D( matrix );
-//    return Vector3D( matrix.value( 0, 0 ) * vector.x() + matrix.value( 1, 0 ) * vector.y() + matrix.value( 2, 0 ) * vector.z(),
-//                     matrix.value( 0, 1 ) * vector.x() + matrix.value( 1, 1 ) * vector.y() + matrix.value( 2, 1 ) * vector.z(),
-//                     matrix.value( 0, 2 ) * vector.x() + matrix.value( 1, 2 ) * vector.y() + matrix.value( 2, 2 ) * vector.z()
-//                   );
 }
 
 // ********************************************************************************
@@ -383,7 +373,7 @@ Matrix3D operator-( const SymmetricMatrix3D & lhs, const Matrix3D & rhs )
 
 // ********************************************************************************
 
-// The transposition is implied
+// The transposition is implied.
 double operator*( const NormalisedVector3D & lhs, const Vector3D & rhs )
 {
     return ( lhs.x() * rhs.x() + lhs.y() * rhs.y() + lhs.z() * rhs.z() );
@@ -496,16 +486,10 @@ Vector3D cylindrical2Cartesian( const double r, Angle phi, const double z )
 
 // ********************************************************************************
 
-// Takes two fractional coordinates and determines if they are the same, taking into acccount translations
+// Takes two fractional coordinates and determines if they are the same, taking into acccount translations.
 bool are_translationally_equivalent( const double x, const double y  )
 {
-    double tolerance = 0.0001;
-    double distance = std::abs( x - y );
-    double dummy;
-    distance = modf( distance, &dummy ); // modf() returns the fractional part
-    // One special case left: if distance is now 0.9999, then it should be 0.0001
-    return ( ( ( distance - tolerance ) < 0.0 ) ||
-             ( ( distance + tolerance ) > 1.0 ) );
+    return nearly_zero( adjust_for_translations( x - y ) );
 }
 
 // ********************************************************************************
@@ -519,7 +503,6 @@ bool are_translationally_equivalent( const Vector3D & lhs, const Vector3D & rhs 
 
 // ********************************************************************************
 
-// Atoms with coordinates like 0.999999: keep at 0.999999 or move to 0.0 or move to -0.000001?
 double adjust_for_translations( const double input )
 {
     double integer_part;
@@ -533,15 +516,9 @@ double adjust_for_translations( const double input )
 
 // ********************************************************************************
 
-// Atoms with coordinates like 0.999999: keep at 0.999999 or move to 0.0 or move to -0.000001?
-// This should probably change in place,
-// but our Vector3D class does not allow for its elements to be addressed that way
 Vector3D adjust_for_translations( const Vector3D & input )
 {
-    Vector3D result;
-    for ( size_t i( 0 ); i != 3; ++i )
-        result.set_value( i, adjust_for_translations( input.value( i ) ) );
-    return result;
+    return Vector3D( adjust_for_translations( input.x() ), adjust_for_translations( input.y() ), adjust_for_translations( input.z() ) );
 }
 
 // ********************************************************************************
@@ -612,7 +589,7 @@ Angle signed_torsion( const Vector3D & r1, const Vector3D & r2, const Vector3D &
     if ( nearly_zero( d ) ) // Our sign() function can return 0...
         s = 1.0;
     else
-        s = -sign( d ); // The minus is to ensure we get the same results as Mercury
+        s = -sign( d ); // The minus is to ensure we get the same results as Mercury.
     return s * torsion;
 }
 

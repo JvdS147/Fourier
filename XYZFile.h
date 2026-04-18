@@ -1,8 +1,8 @@
-#ifndef STRINGCONVERSIONS_H
-#define STRINGCONVERSIONS_H
+#ifndef XYZFILE_H
+#define XYZFILE_H
 
 /* *********************************************
-Copyright (c) 2013-2025, Cornelis Jan (Jacco) van de Streek
+Copyright (c) 2013-2026, Cornelis Jan (Jacco) van de Streek
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,32 +28,12 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ********************************************* */
 
-// This file exists to decouple low-lying classes like Angle and Matrix3D from conversions to and from a std::string.
+class CrystalStructure;
+class FileName;
 
-class Angle;
-class Matrix3D;
-class MillerIndices;
-class Vector3D;
+#include <vector>
 
-#include <string>
+void save_as_xyz( const CrystalStructure & crystal_structure, const FileName & file_name );
 
-Angle Angle_from_string( const std::string & input );
-
-// "[[-2,0,-1],[0,0,-1],[0,-1,0]]" or "I".
-Matrix3D Matrix3D_from_string( std::string input );
-
-MillerIndices MillerIndices_from_string( std::string input );
-
-// "[0,0.5,0]" or "O".
-Vector3D Vector3D_from_string( std::string input );
-
-//Angle Angle_from_string( const std::string & input );
-//Angle Angle_from_string( const std::string & input );
-
-std::string to_string( const Angle input );
-std::string to_string( const Matrix3D & input );
-std::string to_string( const MillerIndices & input );
-std::string to_string( const Vector3D & input );
-
-#endif // STRINGCONVERSIONS_H
+#endif // XYZFILE_H
 

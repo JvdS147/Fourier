@@ -216,7 +216,7 @@ PowderPattern add_powder_patterns( const std::vector< PowderPattern > & powder_p
 // In one case, the cumulative ESD is simply the original ESD, in the other case, the cumulative ESD is
 // sqrt(n) times the old ESD.
 // The proper algorithm depends on whether negative intensities can be present and whether all intensities are integers and the
-// intensities ae on a reasonable scale (e.g. NOT all between 0.0 and 1.0). This algorithm assume that all
+// intensities are on a reasonable scale (e.g. NOT all between 0.0 and 1.0). This algorithm assumes that all
 // intensities in the original pattern are non-negative integers (i.e. counts). All intensities in the output patterns
 // are non-negative integers.
 std::vector< PowderPattern > split( const PowderPattern & powder_pattern, const size_t n, const bool recalculate_ESDs = true );

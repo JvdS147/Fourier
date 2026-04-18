@@ -44,9 +44,16 @@ Angle Angle_from_string( const std::string & input )
 
 // ********************************************************************************
 
+// "[[-2,0,-1],[0,0,-1],[0,-1,0]]" or "I".
 Matrix3D Matrix3D_from_string( std::string input )
 {
+    if ( input == "I" )
+        return Matrix3D();
     input = remove( input, ' ' );
+    if ( input.length() < 25 )
+        throw std::runtime_error( "Matrix3D_from_string(): error: input string too short |" + input + "|" );
+    if ( input.substr( 0, 2 ) != "[[" )
+        throw std::runtime_error( "Matrix3D_from_string(): error: incorrect format |" + input + "|" );
     input = remove( input, '[' );
     input = remove( input, ']' );
     std::vector< std::string > words = split( input, ',' );
@@ -72,8 +79,11 @@ MillerIndices MillerIndices_from_string( std::string input )
 
 // ********************************************************************************
 
+// "[0,0.5,0]" or "O".
 Vector3D Vector3D_from_string( std::string input )
 {
+    if ( input == "O" )
+        return Vector3D();
     input = remove( input, ' ' );
     input = remove( input, '[' );
     input = remove( input, ']' );
